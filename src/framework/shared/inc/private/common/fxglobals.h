@@ -493,7 +493,7 @@ public:
 
 
 
-
+    //
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
     //
     // 0-based index into the BugCheckDriverInfo holding this driver info.
@@ -710,7 +710,7 @@ struct FxLibraryGlobalsType {
 
 
 
-
+    //
     PDRIVER_OBJECT DriverObject;
 
     //
@@ -819,14 +819,14 @@ struct FxLibraryGlobalsType {
     //
     BOOLEAN IsUserModeFramework;
 
+    //
 
 
 
 
 
 
-
-
+    //
 
     BOOLEAN MachineSleepStates[FxMachineSleepStatesMax];
 
@@ -936,6 +936,7 @@ FxFreeAllocatedMdlsDebugInfo(
     __in FxDriverGlobalsDebugExtension* DebugExtension
     );
 
+//
 
 
 
@@ -949,8 +950,7 @@ FxFreeAllocatedMdlsDebugInfo(
 
 
 
-
-
+//
 
 _Must_inspect_result_
 FORCEINLINE

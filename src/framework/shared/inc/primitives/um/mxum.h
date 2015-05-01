@@ -111,7 +111,7 @@ typedef IWudfIrp*               MdIrp;
 typedef LPCSTR                  MxFuncName;
 typedef PVOID                   MxThread;
 typedef PVOID                   MdEThread;
-typedef PVOID                   MdRemoveLock;
+typedef PWUDF_IO_REMOVE_LOCK    MdRemoveLock;
 typedef PVOID                   MdInterrupt;
     
 typedef struct _STACK_DEVICE_CAPABILITIES *PSTACK_DEVICE_CAPABILITIES;
@@ -192,7 +192,7 @@ typedef DRIVER_ADD_DEVICE_UM *PFN_DRIVER_ADD_DEVICE_UM;
 typedef
 VOID
 DRIVER_DISPATCH_UM (
-    _In_ IWudfDevice *             DeviceObject,
+    _In_ IWudfDevice *              DeviceObject,
     _In_ IWudfIrp *                 Irp,
     _In_opt_ IUnknown *             Context 
     );

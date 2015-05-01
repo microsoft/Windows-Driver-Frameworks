@@ -1,6 +1,6 @@
 //
 // Copyright (c) Microsoft. All rights reserved.
-
+//
 
 
 
@@ -134,6 +134,8 @@ public:
     
 };
 
+EXTERN_C const IID IID_IWudfDevice;
+
 struct IWudfDevice : public IUnknown
 //
 // *** Note: 
@@ -163,12 +165,16 @@ public:
     virtual void STDMETHODCALLTYPE SetContext( 
         /* [annotation][in] */ 
         __in  void *DeviceContext) = 0;
-    
+
     virtual void *STDMETHODCALLTYPE GetContext( void) = 0;
-    
+
     virtual ULONG STDMETHODCALLTYPE GetStackSize2( void) = 0;
 
     virtual void STDMETHODCALLTYPE SetStackSize2( _In_ ULONG StackSize) = 0;
+
+    virtual void *STDMETHODCALLTYPE GetDeviceExtension( void) = 0;
+
+    virtual NTSTATUS STDMETHODCALLTYPE InitializeEventForRemoveLock(_Out_ HANDLE *Handle) = 0;
 };
 
 struct IWudfDeviceStack : public IUnknown
@@ -572,6 +578,15 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE ReenumerateSelf( void) = 0;
 
+    virtual HRESULT STDMETHODCALLTYPE CreateDevice2( 
+        /* [annotation][in] */ 
+        __in  ULONG ulDriverID,
+        /* [annotation][in] */ 
+        __in  IFxMessageDispatch *pFxDevice,
+        /* [annotation][in] */ 
+        __in  ULONG deviceExtensionSize,
+        /* [annotation][out] */ 
+        __out  IWudfDevice2 **ppWudfDevice) = 0;
 };
 
 EXTERN_C const IID IID_IWudfIrpCompletionCallback;

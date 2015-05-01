@@ -736,8 +736,8 @@ typedef struct _WDF_DEVICE_STATE_V1_0 {
 
 
 
-
-
+    //
+    //
     // If set to WdfTrue, the device stack will be torn down.
     //
     WDF_TRI_STATE Removed;
@@ -1424,8 +1424,8 @@ typedef struct _WDF_QUERY_INTERFACE_CONFIG_V1_0 {
 
 
 
-
-
+    //
+    //
     // Driver supplied callback which is called after some basic interface
     // validation has been performed (size, version, and guid checking).  This
     // is an optional parameter and may be NULL unless ImportInterface is

@@ -111,7 +111,7 @@ Mx::MxDetachDevice(
 
 
 
-
+    
     HRESULT hrDetachDev = 
         Device->GetDeviceStackInterface()->DetachDevice(Device);
 

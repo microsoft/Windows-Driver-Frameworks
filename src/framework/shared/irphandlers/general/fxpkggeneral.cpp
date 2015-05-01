@@ -1581,7 +1581,7 @@ Return Value:
 
 
 
-
+    //
     // Check to see if the fileobject represents a stream fileobject
     // created using IoCreateStreamFileObjectLite. 
     //

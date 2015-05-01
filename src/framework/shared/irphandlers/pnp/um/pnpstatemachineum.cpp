@@ -131,7 +131,7 @@ Routine Description:
     recursively acquire the spinlock. On the other hand, with UMDF we are 
     always at passive IRQL and hence we process the event on the same thread 
     and run into the recursive acquire problem.
-
+    
 
 
 

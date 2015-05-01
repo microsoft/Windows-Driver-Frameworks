@@ -263,7 +263,7 @@ FxDevice::~FxDevice()
     //
     // If the device has been initialized but hasn't yet been
     // destroyed, destroy it now.
-
+    //
 
 
 
@@ -1340,13 +1340,6 @@ FxDevice::DispatchWithLock(
 {
     NTSTATUS status;
     FxIrp irp(Irp);
-
-#if (FX_CORE_MODE == FX_CORE_USER_MODE)
-    //
-    // For user mode this functioon should not have executed.
-    //
-    ASSERTMSG("This code path not expected for UMDF\n", FALSE);
-#endif
 
     switch (_RequiresRemLock(irp.GetMajorFunction(),
                              irp.GetMinorFunction())) {

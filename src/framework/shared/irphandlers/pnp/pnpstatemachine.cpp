@@ -1429,7 +1429,7 @@ Return Value:
 
 
 
-
+    //
     if (This->IsPowerPolicyOwner()) {
         //
         // Query the stack for capabilities before telling the stack hw is
@@ -4039,7 +4039,7 @@ Returns:
 
 
 
-
+    //
     // If there are any pended I/Os that were sent to the target
     // that were pended in the transition to stop, then this will
     // resend them.

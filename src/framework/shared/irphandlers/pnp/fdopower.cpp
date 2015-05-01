@@ -200,12 +200,8 @@ FxPkgFdo::_SystemPowerS0Completion(
         irp.MarkIrpPending();
     }
 
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     Mx::MxReleaseRemoveLock((&FxDevice::_GetFxWdmExtension(DeviceObject)->IoRemoveLock),
                             OriginalIrp);
-#else
-    UNREFERENCED_PARAMETER(DeviceObject);
-#endif
 
     return irp.GetStatus();
 }

@@ -25,6 +25,15 @@ Revision History:
 
 #define MAKE_MX_FUNC_NAME(x)    x
 
+
+
+
+
+
+
+
+#define REMOVE_LOCK_RELEASE_TIMEOUT_IN_SECONDS 45
+
 typedef VOID THREADPOOL_WAIT_CALLBACK (
     __inout     PTP_CALLBACK_INSTANCE Instance,
     __inout_opt PVOID                 Context,
@@ -254,19 +263,17 @@ Mx::MxDelayExecutionThread(
     )
 {
     UNREFERENCED_PARAMETER(WaitMode);
+    ASSERTMSG("Interval must be relative\n", Interval->QuadPart <= 0);
 
     LARGE_INTEGER intervalMillisecond;
 
-    if (Interval < 0)
-    {
-        intervalMillisecond.QuadPart = -1 * Interval->QuadPart;
-    }
-    else
-    {
-        intervalMillisecond.QuadPart = Interval->QuadPart;
-    }
-
-    intervalMillisecond.QuadPart /= 10000;
+    //
+    // This function uses KeDelayExecutionThread's contract, where relative
+    // intervals are negative numbers expressed in 100ns units. We must
+    // flip the sign and convert to ms units before calling SleepEx.
+    //
+    intervalMillisecond.QuadPart = -1 * Interval->QuadPart;
+    intervalMillisecond.QuadPart /= 10 * 1000;
 
     SleepEx((DWORD)intervalMillisecond.QuadPart, Alertable);
 }
@@ -343,14 +350,15 @@ Mx::MxInitializeRemoveLock(
     __in ULONG  HighWatermark
     )
 {
-    UNREFERENCED_PARAMETER(Lock);
     UNREFERENCED_PARAMETER(AllocateTag);
     UNREFERENCED_PARAMETER(MaxLockedMinutes);
     UNREFERENCED_PARAMETER(HighWatermark);
 
-
-
-
+    ZeroMemory(Lock, sizeof(*Lock));
+    Lock->IoCount = 1;
+    Lock->Removed = FALSE;
+    Lock->RemoveEvent = NULL;
+    Lock->ReleaseRemLockAndWaitStatus = (DWORD)-1;
 }
 
 FORCEINLINE
@@ -360,14 +368,28 @@ Mx::MxAcquireRemoveLock(
     __in_opt PVOID  Tag 
     )
 {
-    UNREFERENCED_PARAMETER(RemoveLock);
     UNREFERENCED_PARAMETER(Tag);
+    LONG lockValue;
+    NTSTATUS status;
 
+    lockValue = InterlockedIncrement(&RemoveLock->IoCount);
 
+    ASSERT(lockValue > 0);
 
+    if (! RemoveLock->Removed) {
+        return STATUS_SUCCESS;
+    }
+    else {
+        if (0 == InterlockedDecrement(&RemoveLock->IoCount)) {
+            if (! SetEvent(RemoveLock->RemoveEvent)) {
+                Mx::MxBugCheckEx(WDF_VIOLATION, 
+                                0, 0, 0, 0);
+            }
+        }
+        status = STATUS_DELETE_PENDING;
+    }
 
-
-    return STATUS_SUCCESS;
+    return status;
 }
 
 FORCEINLINE
@@ -377,12 +399,25 @@ Mx::MxReleaseRemoveLock(
     __in PVOID  Tag 
     )
 {
-    UNREFERENCED_PARAMETER(RemoveLock);
     UNREFERENCED_PARAMETER(Tag);
+    LONG lockValue;
 
+    lockValue = InterlockedDecrement(&RemoveLock->IoCount);
 
+    ASSERT(0 <= lockValue);
 
+    if (0 == lockValue) {
+        ASSERT (RemoveLock->Removed);
 
+        //
+        // The device needs to be removed.  Signal the remove event
+        // that it's safe to go ahead.
+        //
+        if (! SetEvent(RemoveLock->RemoveEvent)) {
+            Mx::MxBugCheckEx(WDF_VIOLATION, 
+                            0, 0, 0, 0);
+        }
+    }
 }
 
 FORCEINLINE
@@ -392,12 +427,23 @@ Mx::MxReleaseRemoveLockAndWait(
     __in PVOID  Tag 
     )
 {
-    UNREFERENCED_PARAMETER(RemoveLock);
     UNREFERENCED_PARAMETER(Tag);
+    LONG ioCount;
+    DWORD retVal = ERROR_SUCCESS;
 
+    RemoveLock->Removed = TRUE;
 
+    ioCount = InterlockedDecrement (&RemoveLock->IoCount);
+    ASSERT(0 < ioCount);
 
+    if (0 < InterlockedDecrement (&RemoveLock->IoCount)) {
+        retVal = WaitForSingleObject(RemoveLock->RemoveEvent,
+                        REMOVE_LOCK_RELEASE_TIMEOUT_IN_SECONDS*1000); 
+        ASSERT(retVal == WAIT_OBJECT_0);
+    }
 
+    // This only serves as a debugging aid.
+    RemoveLock->ReleaseRemLockAndWaitStatus = retVal;
 }
 
 FORCEINLINE
@@ -410,7 +456,7 @@ Mx::MxHasEnoughRemainingThreadStack(
 
 
 
-
+    //
     // Thread stack is not so scarce in UM so return TRUE always
     //
     return TRUE;
@@ -652,11 +698,11 @@ Mx::MxDeleteDevice(
     )
 {
     UNREFERENCED_PARAMETER(Device);
+    
 
 
 
-
-
+    //
     // Host's device stack object holds the only reference to the host devices. 
     // The infrastructure controls the device object's lifetime.
     // 
@@ -815,7 +861,8 @@ FORCEINLINE
 NTSTATUS
 Mx::MxDeleteKey(
     _In_ HANDLE KeyHandle
-    )
+    )
+
 {
     UNREFERENCED_PARAMETER(KeyHandle);
     

@@ -62,7 +62,7 @@ extern "C" {
 // PowerPolicyStop
 // PowerMarkPageable
 // PowerMarkNonpageable
-
+//
 
 
 

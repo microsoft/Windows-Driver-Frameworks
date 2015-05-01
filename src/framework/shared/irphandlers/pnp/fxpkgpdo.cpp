@@ -315,7 +315,7 @@ Returns:
 
         //
         // The only way we can have static children is if an FDO enumerates them.
-
+        //
 
 
 
@@ -1758,7 +1758,7 @@ FxPkgPdo::ProcessRemoveDeviceOverload(
         //
         // After this is called, any irp dispatched to FxDevice::DispatchWithLock
         // will fail with STATUS_INVALID_DEVICE_REQUEST.
-
+        //
 
 
 

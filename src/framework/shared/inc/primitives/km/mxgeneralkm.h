@@ -206,6 +206,8 @@ Mx::MxDelayExecutionThread(
     __in PLARGE_INTEGER  Interval
     )
 {
+    ASSERTMSG("Interval must be relative\n", Interval->QuadPart <= 0);
+    
     KeDelayExecutionThread(
         WaitMode,
         Alertable,

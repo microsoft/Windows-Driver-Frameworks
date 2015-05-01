@@ -227,7 +227,7 @@ FxSystemThread::CreateThread(
 
 
 
-
+//
 // This is called to tell the thread to exit.
 //
 // It must be called from thread context such as

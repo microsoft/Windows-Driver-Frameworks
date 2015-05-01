@@ -103,7 +103,7 @@ public:
 
 
 
-
+    //
     // This is called to tell the thread to exit.
     //
     // It must be called from thread context such as
@@ -236,7 +236,7 @@ private:
 
 
 
-
+    //
     // This is the reaper method
     //
     VOID
@@ -275,7 +275,7 @@ private:
 
 
 
-
+    //
     // This thunk is called from the workitem in another
     // thread that is reaping this thread
     //

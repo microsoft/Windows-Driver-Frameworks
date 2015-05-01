@@ -30,7 +30,11 @@ Revision History:
 #include "FxTelemetry.hpp"
 
 struct FxWdmDeviceExtension {
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    WUDF_IO_REMOVE_LOCK IoRemoveLock;
+#else
     IO_REMOVE_LOCK  IoRemoveLock;
+#endif
     ULONG           RemoveLockOptionFlags;
 };
 
@@ -918,7 +922,7 @@ public:
         }
     }
 
-    PIO_REMOVE_LOCK
+    MdRemoveLock
     GetRemoveLock(
         VOID
         );
@@ -975,7 +979,18 @@ public:
             return FxDeviceRemLockRequired;
 
         default:
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
             return FxDeviceRemLockOptIn;
+#else
+            //
+            // There is no forseeable scenario where a UMDF driver would need to 
+            // need to support remove lock for IO IRPs. While this ifdef can be safely
+            // removed and UMDF can also return FxDeviceRemLockOptIn, that is 
+            // being avoided here so that the caller does not need to test the 
+            // remove lock flags for IO which would never be set.
+            //
+            return FxDeviceRemLockNotRequired;
+#endif
         }
     }
 
@@ -1016,6 +1031,14 @@ public:
     static
     VOID
     DispatchUm(
+        _In_ MdDeviceObject DeviceObject,
+        _In_ MdIrp Irp,
+        _In_opt_ IUnknown* Context
+        );
+
+    static
+    VOID
+    DispatchWithLockUm(
         _In_ MdDeviceObject DeviceObject,
         _In_ MdIrp Irp,
         _In_opt_ IUnknown* Context

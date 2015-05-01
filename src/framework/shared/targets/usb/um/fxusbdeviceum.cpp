@@ -116,7 +116,7 @@ FxUsbDevice::InitDevice(
 
     FxSyncRequest request(GetDriverGlobals(), NULL);
     FxSyncRequest request2(GetDriverGlobals(), &context);
-
+    
 
 
 
@@ -199,7 +199,8 @@ FxUsbDevice::InitDevice(
         goto Done;
     }
 
-    if (config.wTotalLength < sizeof(USB_CONFIGURATION_DESCRIPTOR)) {
+    if (config.wTotalLength < sizeof(USB_CONFIGURATION_DESCRIPTOR)) {
+
         //
         // Not enough info returned
         //

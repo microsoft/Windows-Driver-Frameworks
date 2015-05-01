@@ -147,7 +147,7 @@ Return Value:
 
 
 
-
+    //
     // Get the IWudfDeviceStack interface
     //
     pDeviceStack = m_Device->GetDeviceStackInterface();

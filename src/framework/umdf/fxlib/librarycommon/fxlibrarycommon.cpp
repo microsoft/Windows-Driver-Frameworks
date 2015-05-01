@@ -312,9 +312,9 @@ FxLibraryCommonRegisterClient(
             __Print(("Framework function table size (%d) doesn't match "
                    "with client (%d). Rebuild the client driver.",
                    WdfFunctionTableNumEntries, Info->FuncCount));
-            __Print(("Ignoring the function count mismatch on Pre-production OS\n"));                        
-            // ASSERT(FALSE);
-            // goto Done;
+
+            ASSERT(FALSE);
+            goto Done;
         }
     }
 

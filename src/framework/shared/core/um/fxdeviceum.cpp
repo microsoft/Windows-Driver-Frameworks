@@ -45,6 +45,18 @@ FxDevice::DispatchUm(
     (void) Dispatch(DeviceObject, Irp);
 }
 
+VOID
+FxDevice::DispatchWithLockUm(
+    _In_ MdDeviceObject DeviceObject,
+    _In_ MdIrp Irp,
+    _In_opt_ IUnknown* Context
+    )
+{
+    UNREFERENCED_PARAMETER(Context);
+
+    (void) DispatchWithLock(DeviceObject, Irp);
+}
+
 FxDevice*
 FxDevice::GetFxDevice(
     __in MdDeviceObject DeviceObject
@@ -198,12 +210,12 @@ FxDevice::FdoInitialize(
             // Note that AttachDevice can return success with a NULL interface
             // for the attached device when this device is the first in the
             // stack.
+            //
 
 
 
 
-
-
+            //
             DO_NOTHING();
         }
 
@@ -229,16 +241,6 @@ FxDevice::FdoInitialize(
                 if (m_AttachedDevice.GetObject() != NULL) {
                     m_DeviceObject.SetFlags(m_DeviceObject.GetFlags() |
                         (m_AttachedDevice.GetFlags() & (DO_POWER_PAGABLE | DO_POWER_INRUSH)));
-
-
-
-
-
-
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-                    m_DeviceObject.SetDeviceType(m_AttachedDevice.GetDeviceType());
-                    m_DeviceObject.SetCharacteristics(m_AttachedDevice.GetCharacteristics());
-#endif
                 }
 
                 //
@@ -340,11 +342,13 @@ FxDevice::CreateDevice(
     __in PWDFDEVICE_INIT DeviceInit
     )
 {
-    MdDeviceObject  pNewDeviceObject;
+    MdDeviceObject  pNewDeviceObject = NULL;
     ULONG           characteristics;
     NTSTATUS        status;
     DEVICE_TYPE     devType;
     HRESULT hr;
+    IWudfDevice2* pNewDeviceObject2;
+    IWudfDeviceStack2* pDevStack2;
 
     status = m_PkgGeneral->Initialize(DeviceInit);
     if (!NT_SUCCESS(status)) {
@@ -371,32 +375,67 @@ FxDevice::CreateDevice(
         return status;
     }
 
+    hr = DeviceInit->DevStack->QueryInterface(IID_IWudfDeviceStack2,
+                                             (PVOID*)&pDevStack2);
+    FX_VERIFY(INTERNAL, CHECK_QI(hr, pDevStack2));
+    if (FAILED(hr)) {
+        status = FxDevice::NtStatusFromHr(DeviceInit->DevStack, hr);
+        return status;
+    }
+    pDevStack2->Release(); // weak ref. is sufficient.
+
     //
     // Create IWudfDevice
     //
-    hr = DeviceInit->DevStack->CreateDevice(DeviceInit->DriverID,
+    hr = pDevStack2->CreateDevice2(DeviceInit->DriverID,
                                static_cast<IFxMessageDispatch*>(m_Dispatcher),
-                               &pNewDeviceObject);
-    if (S_OK == hr) {
-        status = STATUS_SUCCESS;
-    }
-    else {
+                               sizeof(FxWdmDeviceExtension),
+                               &pNewDeviceObject2);
+    if (FAILED(hr)) {
         status = FxDevice::NtStatusFromHr(DeviceInit->DevStack, hr);
+        return status;
     }
 
+    hr = pNewDeviceObject2->QueryInterface(IID_IWudfDevice,
+                                          (PVOID*)&pNewDeviceObject);
+    FX_VERIFY(INTERNAL, CHECK_QI(hr, pNewDeviceObject));
+    if (FAILED(hr)) {
+        status = FxDevice::NtStatusFromHr(DeviceInit->DevStack, hr);
+        return status;
+    }
+    pNewDeviceObject->Release();  // weak ref. is sufficient.
+
     if (NT_SUCCESS(status)) {
-        IWudfDevice2* pNewDeviceObject2;
+
+        //
+        // Initialize the remove lock and the event for use with the remove lock
+        // The event is initiatalized via IWudfDevice so the host can close the 
+        // handle before destroying the allocated "WDM extension"
+        // In the KMDF implementation the "WDM device extension" is allocated by
+        // IoCreateDevice and destroyed when the WDM device object is deleted.
+        // In the kernel implementation the allocated extension only needs to be freed,
+        // where-as with UM the event handle needs to be closed as well.
+        //
+        FxWdmDeviceExtension* pWdmExt;
+        pWdmExt = _GetFxWdmExtension(pNewDeviceObject);
+
+        Mx::MxInitializeRemoveLock(&pWdmExt->IoRemoveLock,
+                               GetDriverGlobals()->Tag,
+                               0,          // max min
+                               0);         // highwater mark
+
+        status = pNewDeviceObject2->InitializeEventForRemoveLock(
+                                    &(pWdmExt->IoRemoveLock.RemoveEvent));
+        if (!NT_SUCCESS(status)) {
+            return status;
+        }
+        ASSERT(pWdmExt->IoRemoveLock.RemoveEvent);
 
         m_DeviceObject.SetObject(pNewDeviceObject);
 
         //
         // Set the context
-
-
-
-
-
-        pNewDeviceObject2 = static_cast<IWudfDevice2 *>(pNewDeviceObject);
+        //
         pNewDeviceObject2->SetContext(this);
 
         //
@@ -1052,7 +1091,7 @@ FxDevice::_OpenDeviceRegistryKey(
     // due to a bug in NtStatusFromHr. This preserves backwards
     // compatibility in case some exisiting driver took a dependency
     // on the exact return value.
-
+    //
 
 
 

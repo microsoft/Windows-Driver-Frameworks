@@ -844,12 +844,12 @@ public:
     // Queue DPC for KMDF and workitem for UMDF. Note that driver can either 
     // specify EvtInterruptDpc or EvtInterruptWorkItem, and therefore it can 
     // either call WdfInterruptQueueDpcForisr or WdfInterruptQueueWorkitemForIsr.
+    //
 
 
 
 
-
-
+    //
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
         return QueueDpcForIsr();
 #else

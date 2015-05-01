@@ -75,7 +75,8 @@ FxIoTargetRemote::InitRemoteModeSpecific(
 VOID
 FxIoTargetRemote::RemoveModeSpecific(
     VOID
-    )
+    )
+
 {
     //
     // Delete callback object

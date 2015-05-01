@@ -4221,7 +4221,7 @@ FxPkgPnp::PnpDeviceUsageNotification(
                 if (m_Device->IsPdo()) {
                     //
                     // need to revert our parent's stack
-
+                    //
 
 
 
@@ -4345,8 +4345,8 @@ FxPkgPnp::PnpDeviceUsageNotification(
                 if (m_Device->IsPdo()) {
                     //
                     // need to revert our parent's stack
-
-
+                    //
+            
 
 
 

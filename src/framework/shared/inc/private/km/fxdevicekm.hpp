@@ -43,7 +43,7 @@ FxDevice::_GetFxWdmExtension(
 }
 
 FORCEINLINE
-PIO_REMOVE_LOCK
+MdRemoveLock
 FxDevice::GetRemoveLock(
     VOID
     )

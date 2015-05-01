@@ -312,7 +312,7 @@ Return Value:
 
 
 
-
+    
     return found;
 }
 
@@ -475,6 +475,7 @@ FxRegisterBugCheckCallback(
                                    &FxDriverGlobals->ImageSize))) {
         goto Done;
     }
+    
 
 
 
@@ -484,8 +485,7 @@ FxRegisterBugCheckCallback(
 
 
 
-
-
+    //
     // The KeRegisterBugCheckReasonCallback exists for xp sp1 and above. So
     // check whether this function is defined on the current OS and register
     // for the bugcheck callback only if this function is defined.
@@ -653,6 +653,7 @@ FxInitializeBugCheckDriverInfo()
     FxLibraryGlobals.BugCheckDriverInfoCount = 0;
     FxLibraryGlobals.BugCheckDriverInfoIndex = 0;
     FxLibraryGlobals.BugCheckDriverInfo = NULL;
+    
 
 
 
@@ -662,8 +663,7 @@ FxInitializeBugCheckDriverInfo()
 
 
 
-
-
+    //
     // The KeRegisterBugCheckReasonCallback exists for xp sp1 and above. So
     // check whether this function is defined on the current OS and register
     // for the bugcheck callback only if this function is defined.
@@ -738,8 +738,8 @@ FxUninitializeBugCheckDriverInfo()
 
     //
     // Deregister callback.
-
-
+    //
+    
 
 
 

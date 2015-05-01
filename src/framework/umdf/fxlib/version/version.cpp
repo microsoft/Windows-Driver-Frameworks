@@ -189,7 +189,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 
 
 
-
+        //
         // this looks like the best status to return
         //
         return STATUS_OBJECT_TYPE_MISMATCH;

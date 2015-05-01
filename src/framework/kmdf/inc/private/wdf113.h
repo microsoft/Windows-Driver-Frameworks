@@ -1017,8 +1017,8 @@ typedef struct _WDF_DEVICE_STATE_V1_13 {
 
 
 
-
-
+    //
+    // 
     // If set to WdfTrue, the device stack will be torn down.
     // 
     WDF_TRI_STATE Removed;

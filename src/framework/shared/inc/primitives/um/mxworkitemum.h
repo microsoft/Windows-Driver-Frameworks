@@ -28,7 +28,8 @@ Abstract:
     The only way to resolve that is to move work-item code out of framework 
     binary and into the host so that host can take a reference on framework 
     binary around the work item callback invocation (similar to the way I/O 
-    manager keeps a reference on the device object around the invocation of 
+    manager keeps a reference on the device object around the invocation of 
+
     workitem callback).
     ****************************************************
 

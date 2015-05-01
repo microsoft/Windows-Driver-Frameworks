@@ -220,7 +220,7 @@ FxObject::FinalRelease(
 
 
 
-
+    //
     // No other access, OK to test flag without grabbing spinlock
     // since it can only be set at create.
     //
@@ -516,7 +516,7 @@ Return Value:
 // the parent, or removes the parent association.
 //
 // It is protected by the childs m_SpinLock field.
-
+//
 
 
 

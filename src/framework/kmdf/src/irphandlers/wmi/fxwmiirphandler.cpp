@@ -878,8 +878,8 @@ Return Value:
 
 
 
-
-
+    
+    //
     // All of the provider's access is guarded by the irp handler's lock
     //
     This->Lock(&irql);

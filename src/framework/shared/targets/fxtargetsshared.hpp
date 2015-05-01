@@ -80,7 +80,7 @@ extern "C" {
 
 
 
-
+//
 // Versioning of structures for wdfIoTarget.h
 //
 typedef struct _WDF_IO_TARGET_OPEN_PARAMS_V1_11 {

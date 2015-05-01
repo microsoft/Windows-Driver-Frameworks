@@ -354,7 +354,7 @@ FxObject::ProcessDestroy(
 
 
 
-
+    //
     // NOTE:  The delete of the tag tracker *MUST* occur before the SelfDestruct()
     // of this object.  The tag tracker has a back pointer to this object which
     // it dereferences in its own destructor.  If SelfDestruct() is called

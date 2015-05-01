@@ -240,20 +240,23 @@ typedef enum WdfErrorClass {
 #pragma warning(disable:4189)
 #pragma warning(disable:4100)
 
+
 typedef
 VOID
 (*PWUDF_STATIC_DRIVERSTOP_METHOD)(
-    __in WdfDriverStopType Type,
-    __in ULONGLONG ErrorNumber,
-    __in PCWSTR Location,
-    __in PCSTR Message
+    _In_ WdfDriverStopType Type,
+    _In_ ULONGLONG ErrorNumber,
+    _In_ PCWSTR Location,
+    _In_ PCSTR Message
     );
 
 VOID
 WudfVerify(
     _In_ WdfComponentType Component,
     _In_ IUMDFPlatform *Platform,
-    _In_ PCWSTR Location,
+    _In_z_ PCWSTR File,
+    _In_ ULONG Line,
+    _In_z_ PCSTR Function,
     _In_ WdfDriverStopType Kind,
     _In_ WdfErrorClass Class,
     _In_ ULONG Error,
@@ -264,14 +267,16 @@ WudfVerify(
 
 VOID
 WudfVerifyStatic(
-    __in WdfComponentType Component,
-    __in PWUDF_STATIC_DRIVERSTOP_METHOD DriverStop,
-    __in PCWSTR Location,
-    __in WdfDriverStopType Kind,
-    __in WdfErrorClass Class,
-    __in ULONG Error,
-    __in PCSTR Message,
-    __in bool test
+    _In_ WdfComponentType Component,
+    _In_ PWUDF_STATIC_DRIVERSTOP_METHOD DriverStop,
+    _In_z_ PCWSTR File,
+    _In_ ULONG Line,
+    _In_z_ PCSTR Function,
+    _In_ WdfDriverStopType Kind,
+    _In_ WdfErrorClass Class,
+    _In_ ULONG Error,
+    _In_ PCSTR Message,
+    _In_ bool test
     );
 
 #else
@@ -285,7 +290,7 @@ WudfNoReturn(
 {
 }
 
-#define WudfVerify(_Component, _Object, _Location, _ErrorCodeParts, _Test, _String) \
+#define WudfVerify(_Component, _Object, _File, _Line, _Function, _ErrorCodeParts, _Test, _String) \
 {                                                                                   \
 __pragma(warning(push));                                                            \
 __pragma(warning(disable:4127));                                                    \
@@ -311,7 +316,6 @@ __pragma(warning(pop));                                                         
 #define __WFUNCTION__   _WDF_WIDEN(__FUNCTION__)  
 #define __WLINE__       _WDF_MKWSTR(__LINE__)  
   
-#define __WFILE_FUNCTION_LINE__   __WFILE__ L":" __WLINE__ L"(" __WFUNCTION__ L")" 
 
 //
 // Component specific macros.  These take into account the appropriate way
@@ -326,7 +330,9 @@ __pragma(warning(pop));                                                         
     { \
         WudfVerify(WdfComponentFramework,                   \
                  g_IUMDFPlatform,                           \
-                 __WFILE_FUNCTION_LINE__,                   \
+                 __WFILE__,                                 \
+                 __LINE__,                                  \
+                 __FUNCTION__,                              \
                  ErrorCodeParts,                            \
                  MsgTestParts                               \
                  );                                         \
@@ -338,7 +344,9 @@ __pragma(warning(pop));                                                         
         { \
             WudfVerify(WdfComponentFramework,                   \
                      g_IUMDFPlatform,                           \
-                     __WFILE_FUNCTION_LINE__,                   \
+                     __WFILE__,                                 \
+                     __LINE__,                                  \
+                     __FUNCTION__,                              \
                      ErrorCodeParts,                            \
                      MsgTestParts                               \
                      );                                         \
@@ -347,7 +355,9 @@ __pragma(warning(pop));                                                         
 #define FX_VERIFY(ErrorCodeParts, MsgTestParts)         \
     WudfVerify(WdfComponentFramework,                   \
              g_IUMDFPlatform,                           \
-             __WFILE_FUNCTION_LINE__,                   \
+             __WFILE__,                                 \
+             __LINE__,                                  \
+             __FUNCTION__,                              \
              ErrorCodeParts,                            \
              MsgTestParts                               \
              )
@@ -355,7 +365,9 @@ __pragma(warning(pop));                                                         
 #define FX_VERIFY_WITH_NAME(ErrorCodeParts, MsgTestParts, DriverName) \
     WudfVerify(WdfComponentFramework,                                 \
                g_IUMDFPlatform,                                       \
-               __WFILE_FUNCTION_LINE__,                               \
+               __WFILE__,                                             \
+               __LINE__,                                              \
+               __FUNCTION__,                                          \
                ErrorCodeParts,                                        \
                MsgTestParts,                                          \
                DriverName                                             \
@@ -372,7 +384,9 @@ __pragma(warning(pop));                                                         
 #define HOST_VERIFY(ErrorCodeParts, MsgTestParts)   \
     WudfVerify(WdfComponentHost,                    \
              g_pPlatform,                           \
-             __WFILE_FUNCTION_LINE__,               \
+             __WFILE__,                             \
+             __LINE__,                              \
+             __FUNCTION__,                          \
              ErrorCodeParts,                        \
              MsgTestParts                           \
              )
@@ -380,7 +394,9 @@ __pragma(warning(pop));                                                         
 #define DM_VERIFY(ErrorCodeParts, MsgTestParts) \
     WudfVerify(WdfComponentDriverManager,       \
              g_Platform,                        \
-             __WFILE_FUNCTION_LINE__,           \
+             __WFILE__,                         \
+             __LINE__,                          \
+             __FUNCTION__,                      \
              ErrorCodeParts,                    \
              MsgTestParts                       \
              )
@@ -388,23 +404,29 @@ __pragma(warning(pop));                                                         
 #define PLATFORM_VERIFY(Platform, ErrorCodeParts, MsgTestParts) \
     WudfVerify(WdfComponentPlatform,                            \
              Platform,                                          \
-             __WFILE_FUNCTION_LINE__,                           \
+             __WFILE__,                                         \
+             __LINE__,                                          \
+             __FUNCTION__,                                      \
              ErrorCodeParts,                                    \
              MsgTestParts                                       \
              )
 
 #define WRAPPER_VERIFY(ErrorCodeParts, MsgTestParts)            \
     WudfVerifyStatic(WdfComponentPlatform,                      \
-             WdfPlatform::UmdfDriverStop,                             \
-             __WFILE_FUNCTION_LINE__,                           \
+             WdfPlatform::UmdfDriverStop,                       \
+             __WFILE__,                                         \
+             __LINE__,                                          \
+             __FUNCTION__,                                      \
              ErrorCodeParts,                                    \
              MsgTestParts                                       \
              )
 
 #define LPC_VERIFY(ErrorCodeParts, MsgTestParts)                \
     WudfVerifyStatic(WdfComponentPlatform,                      \
-             WdfPlatform::UmdfDriverStop,                             \
-             __WFILE_FUNCTION_LINE__,                           \
+             WdfPlatform::UmdfDriverStop,                       \
+             __WFILE__,                                         \
+             __LINE__,                                          \
+             __FUNCTION__,                                      \
              ErrorCodeParts,                                    \
              MsgTestParts                                       \
              )
@@ -560,7 +582,7 @@ extern "C" {
 
     VOID
     WudfDebugBreakPoint(
-        __in WUDF_BREAK_POINT_TYPE Type
+        _In_ WUDF_BREAK_POINT_TYPE Type
         );
 
     typedef enum _WUDF_DEBUGGER_TYPE {
@@ -570,8 +592,8 @@ extern "C" {
 
     VOID
     WudfWaitForDebugger(
-        __in ULONG TimeoutSeconds,
-        __in WUDF_DEBUGGER_TYPE Type
+        _In_ ULONG TimeoutSeconds,
+        _In_ WUDF_DEBUGGER_TYPE Type
         );
 }
 

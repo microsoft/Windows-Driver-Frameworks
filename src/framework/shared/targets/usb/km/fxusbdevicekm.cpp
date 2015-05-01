@@ -172,7 +172,7 @@ FxUsbDevice::InitDevice(
     // Allocate an additional memory at the end of the buffer so if we
     // accidentily access fields beyond the end of the buffer we don't crash
 
-
+    //
 
 
 

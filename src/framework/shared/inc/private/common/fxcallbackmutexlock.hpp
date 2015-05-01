@@ -101,6 +101,7 @@ public:
 
             //
             // For now we have decided not to allow this.
+            //
 
 
 
@@ -108,8 +109,7 @@ public:
 
 
 
-
-
+            //
             DoTraceLevelMessage(fxDriverGlobals, TRACE_LEVEL_FATAL, TRACINGDEVICE,
                                 "Recursive acquire of callback lock 0x%p", this);
 

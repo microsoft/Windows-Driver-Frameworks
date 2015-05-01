@@ -161,12 +161,12 @@ Return Value:
     FxDevice *pDevice;
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+    
 
 
 
 
-
-
+    
     pFxFO = NULL;
 
     //

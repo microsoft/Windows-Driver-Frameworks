@@ -196,7 +196,7 @@ public:
 
 
 
-
+ 
     FORCEINLINE
     WDFDRIVER
     GetHandle(

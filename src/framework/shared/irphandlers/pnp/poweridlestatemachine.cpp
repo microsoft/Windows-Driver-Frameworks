@@ -1528,8 +1528,8 @@ Return Value:
 
 
 
-
-
+    
+    //
     // Poke the state machine
     //
     status = IoIncrementWithFlags(Flags, &count);

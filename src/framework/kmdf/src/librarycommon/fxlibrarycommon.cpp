@@ -317,19 +317,14 @@ FxLibraryCommonRegisterClient(
 
 
 
-
-
-
         // Client version is same as framework version. Make
         // sure table count is exact. 
         if (Info->FuncCount != WdfFunctionTableNumEntries) {
             KdPrint(("Framework function table size (%d) doesn't match "
                    "with client (%d). Rebuild the client driver.",
                    WdfFunctionTableNumEntries, Info->FuncCount));
-
-            KdPrint(("Ignoring the function count mismatch on Pre-production OS.\n"));
-            //ASSERT(FALSE);
-            //goto Done;
+            ASSERT(FALSE);
+            goto Done;
         }
     }
 

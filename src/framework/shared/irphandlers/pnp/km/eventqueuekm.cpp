@@ -53,7 +53,7 @@ FxWorkItemEventQueue::QueueWorkItem(
     // We manually take a reference on the client so that we provide the same
     // functionality that IO workitems do.  The client driver's image will have
     // a reference on it after it has returned.
-
+    //
 
 
 

@@ -1074,7 +1074,7 @@ FX_VF_METHOD(FxRequest, VerifyPreProcessSendAndForget) (
             GetHandle(), m_CompletionRoutine.m_Completion);
 
         FxVerifierDbgBreakPoint(FxDriverGlobals);
-
+        
 
 
 
@@ -1204,7 +1204,7 @@ FxRequest::GetStatus(
         KIRQL irql;
 
         Lock(&irql);
-
+        
 
 
 
@@ -1492,7 +1492,7 @@ FxRequest::GetMemoryObject(
                 //
                 // System will automatically release the mapping PTE's when
                 // the MDL is released by the I/O request
-
+                //
 
 
 
@@ -1882,7 +1882,7 @@ FxRequest::InsertTailIrpQueue(
 
     //
     // If a request is on an IrpQueue, it must be referenced
-
+    //
 
 
 
@@ -1932,7 +1932,7 @@ FxRequest::InsertHeadIrpQueue(
 
     //
     // If a request is on an IrpQueue, it must be referenced
-
+    //
 
 
 
@@ -2212,7 +2212,7 @@ FxRequest::Reuse(
 
 
 
-
+            //
             currentIrp.Reuse(ReuseParams->Status);
 #endif
             m_Completed = FALSE;
@@ -2290,7 +2290,7 @@ FxRequest::Reuse(
 
 
 
-
+        //
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
         currentIrp.SetCancel(FALSE);
 #endif

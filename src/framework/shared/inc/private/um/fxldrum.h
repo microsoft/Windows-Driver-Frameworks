@@ -50,7 +50,7 @@ typedef struct _WDF_BIND_INFO {
 
 
 
-
+    //
     // This field is not used in UMDF
     //
     PVOID              Module;

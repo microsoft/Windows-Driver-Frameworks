@@ -21,12 +21,69 @@
 
 #ifndef _PREFAST_
 
+//
+// Size needs to be large enough for these added together (all WCHAR)
+//      *) File location (MAX_PATH) + 
+//      *) ':' 
+//      *) 6 digit line number
+//      *) "("
+//      *) FunctionName (MAX_PATH)
+//      *) ")"
+//      *) NULL
+//
+#define LOCATION_PATH_MAX       ((MAX_PATH * 2 + 10)* sizeof(WCHAR))
+#define LOCATION_PATH_FORMAT    (L"%s:%u(%S)")
+
+HRESULT
+WudfBuildFullFileLocation(
+    _Out_writes_bytes_(LocationSize) PWSTR Location,
+    _In_   ULONG LocationSize,
+    _In_z_ PCWSTR File,
+    _In_   ULONG Line,
+    _In_z_ PCSTR Function
+    )
+/*++
+
+Routine Description:
+
+    Called to create unique string describing the location of the verifier
+    call.
+
+    Location should be set to:
+        filename with full path ":" line number "(" function name ")"
+
+    Format is needed to maintain Watson logic for generating
+    bug hash, which ultimately leads to bug bucketization. A change
+    in format will result in bucket bugs getting a new bucket and disconnecting
+    from current bucket.
+
+Arguments:
+
+    Location - string to write the unique location/line number/function to
+    LocationSize - size of Location that can be written to
+    File - Full file name and path
+    Line - line number
+    Function - Function name
+
+Return Value:
+
+    S_OK if Location is been created correctly.
+
+    --*/
+{
+
+    return StringCbPrintf(Location, LocationSize, LOCATION_PATH_FORMAT,
+                          File, Line, Function);
+}
+
 DECLSPEC_NOINLINE
 VOID
 WudfVerify(
     _In_ WdfComponentType Component,
     _In_ IUMDFPlatform *Platform,
-    _In_ PCWSTR Location,
+    _In_z_ PCWSTR File,
+    _In_ ULONG Line,
+    _In_z_ PCSTR Function,
     _In_ WdfDriverStopType Kind,
     _In_ WdfErrorClass Class,
     _In_ ULONG Error,
@@ -34,9 +91,52 @@ WudfVerify(
     _In_ bool test,
     _In_ PSTR ActiveDriver
 )
+/*++
+
+Routine Description:
+
+    Invoked by the UMDF components to validate assumptions, similar to an
+    assert.
+
+    If an assumption fails then a UmdfDriverStop is issued, which ultimataly 
+    kills the driver after generating a watson report.
+
+    NOTE: Updating this function requires the update of !Analyze. The tool
+    looks at this frame in crashes to extraction the crash location.
+    The code that needs to be updated is in 
+    %SDXROOT%\sdktools\debuggers\exts\extdll\uanalysis.cpp
+    The function name is IMPL_ATTRIBUTE_EXTRACTOR(UMDFVerifierFailure)
+
+Arguments:
+
+    Component - The WDF component issueing the call.
+    Platform - Pointer to the platform interface.
+    File - File name this API is being called from.
+    Line - Line number that this API is being called from.
+    Function - Function name that this API is being called from.
+    Kind - The nature of the error (internal/external).
+    Class - The type of issue that occured; bad state/action/etc.
+    Error - Error code from the failing API causing this check.
+    Message - A string containing an error specific message.
+    test - Results of test condition being evaluated.
+    ActiveDriver - A string containing the framework determined active driver 
+
+Return Value:
+
+    None
+
+    --*/
 {
     if(!test) {
-
+        
+        // 
+        // !Analyze is looking for a variable named 'Location' with a capital 
+        // 'L'. To minimize !Analyze impact we ensure this variable 
+        // contains the full location of the verifier failure when
+        // UmdfDriverStopWithActiveDriver is called.
+        //
+        PCWSTR callerLocation;
+        WCHAR Location[LOCATION_PATH_MAX] = {0};
         HRESULT hr;
         IUMDFPlatform2 *platformEx = NULL;
         
@@ -65,12 +165,26 @@ WudfVerify(
         
         RtlCaptureContext(&driverStopContextRecord);
 
+        
+        if (SUCCEEDED(WudfBuildFullFileLocation(Location, 
+                                                sizeof(Location),
+                                                File,
+                                                Line,
+                                                Function))){
+            callerLocation = Location;
+        }
+        else {
+             
+            callerLocation = File;
+            ASSERT(0);                  // Not expected
+        }
+                
         hr = Platform->QueryInterface(IID_IUMDFPlatform2, (PVOID*)&platformEx);
         if (SUCCEEDED(hr)) {            
             platformEx->UmdfDriverStopWithActiveDriver(
                 Kind,
                 WUDF_ERROR_NUMBER(Component, Kind, Class, Error),
-                Location,
+                callerLocation,
                 Message,
                 &driverStopContextRecord,
                 ActiveDriver
@@ -90,20 +204,66 @@ WudfVerify(
 
 VOID
 WudfVerifyStatic(
-    __in WdfComponentType Component,
-    __in PWUDF_STATIC_DRIVERSTOP_METHOD DriverStop,
-    __in PCWSTR Location,
-    __in WdfDriverStopType Kind,
-    __in WdfErrorClass Class,
-    __in ULONG Error,
-    __in PCSTR Message,
-    __in bool test
+    _In_ WdfComponentType Component,
+    _In_ PWUDF_STATIC_DRIVERSTOP_METHOD DriverStop,
+    _In_z_ PCWSTR File,
+    _In_ ULONG Line,
+    _In_z_ PCSTR Function,
+    _In_ WdfDriverStopType Kind,
+    _In_ WdfErrorClass Class,
+    _In_ ULONG Error,
+    _In_ PCSTR Message,
+    _In_ bool test
     )
+/*++
+
+Routine Description:
+
+    Invoked by the UMDF components to validate assumptions, similar to an
+    assert.
+
+    If an assumption fails then a UmdfDriverStop is issued, which ultimataly 
+    kills the driver after generating a watson report.
+
+Arguments:
+
+    Component - The WDF component issueing the call.
+    DriverStop - UmdfDriverStop function pointer
+    File - File name this API is being called from.
+    Line - Line number that this API is being called from.
+    Function - Function name that this API is being called from.
+    Kind - The nature of the error (internal/external).
+    Class - The type of issue that occured; bad state/action/etc.
+    Error - Error code from the failing API causing this check.
+    Message - A string containing an error specific message.
+    test - Results of test condition being evaluated.
+
+Return Value:
+
+    None
+
+    --*/
 {
     if(!test) {
+        PCWSTR callerLocation;
+        WCHAR Location[LOCATION_PATH_MAX] = {0};
+        
+        if (SUCCEEDED(WudfBuildFullFileLocation(Location, 
+                                                sizeof(Location),
+                                                File,
+                                                Line,
+                                                Function))){
+        
+            callerLocation = Location;
+        }
+        else {
+            callerLocation = File;
+            ASSERT(0);                  // Not expected
+        }
+
         DriverStop(Kind, 
                    WUDF_ERROR_NUMBER(Component, Kind, Class, Error),
-                   Location,
+                   callerLocation,
                    Message);
     }
 }

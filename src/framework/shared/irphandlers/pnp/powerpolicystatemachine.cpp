@@ -7860,13 +7860,11 @@ FxPkgPnp::_PowerPolicyWaitWakeCompletionRoutine(
 
         status = STATUS_CONTINUE_COMPLETION;
 
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
         Mx::MxReleaseRemoveLock(
             &FxDevice::_GetFxWdmExtension(
                 DeviceObject)->IoRemoveLock,
             originalIrp.GetIrp()
             );
-#endif
     }
     else {
         //

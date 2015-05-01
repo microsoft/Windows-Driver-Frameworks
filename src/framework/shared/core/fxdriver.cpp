@@ -479,13 +479,12 @@ FxDriver::Initialize(
             }
 #else // USER_MODE
             for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++) {
-
-
-
-
-
-
-                m_DriverObject.SetMajorFunction(i, FxDevice::DispatchUm);
+                if (FxDevice::_RequiresRemLock(i, 0x0) == FxDeviceRemLockNotRequired) {
+                    m_DriverObject.SetMajorFunction(i, FxDevice::DispatchUm);
+                }
+                else {
+                    m_DriverObject.SetMajorFunction(i, FxDevice::DispatchWithLockUm);
+                }
             }
 #endif
         }
@@ -501,7 +500,7 @@ FxDriver::Initialize(
 
         //
         // Log this notable event after tracing has been initialized.
-
+        //
 
 
 
@@ -588,6 +587,7 @@ Returns:
 
     // Initialize the mutex lock
     m_CallbackMutexLock.Initialize(this);
+    
 
 
 
@@ -595,8 +595,7 @@ Returns:
 
 
 
-
-
+    
     MarkPassiveCallbacks(ObjectDoNotLock);
 
     m_CallbackLockPtr = &m_CallbackMutexLock;

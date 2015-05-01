@@ -370,11 +370,8 @@ FxDevice::_GetFxWdmExtension(
     __in MdDeviceObject DeviceObject
     )
 {
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    ASSERTMSG("Not implemented for UMDF\n", FALSE);
-
-    return NULL;
+    return (FxWdmDeviceExtension*)
+        ((static_cast<IWudfDevice2*> (DeviceObject))->GetDeviceExtension());
 }
 
 FORCEINLINE
@@ -383,22 +380,17 @@ FxDevice::IsRemoveLockEnabledForIo(
     VOID
     )
 {
-   ASSERTMSG("Not implemented for UMDF\n", FALSE);
-
    return FALSE;
 }
 
-
 FORCEINLINE
-PIO_REMOVE_LOCK
+MdRemoveLock
 FxDevice::GetRemoveLock(
     VOID
     )
 {
-    //
-    // Remove lock doesn't apply for UMDF
-    //
-    return NULL;
+    return &FxDevice::_GetFxWdmExtension(
+        GetDeviceObject())->IoRemoveLock;
 }
 
 FORCEINLINE

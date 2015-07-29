@@ -3845,6 +3845,12 @@ private:
         VOID
         );
 
+    BOOLEAN
+    PnpIncrementRestartCountLogic(
+        _In_ HANDLE RestartKey,
+        _In_ BOOLEAN CreatedNewKey
+        );
+
     VOID
     PnpCleanupForRemove(
         __in BOOLEAN GracefulRemove

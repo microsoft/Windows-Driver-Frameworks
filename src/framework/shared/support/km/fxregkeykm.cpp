@@ -124,17 +124,22 @@ FxRegKey::_OpenKey(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-FxRegKey::SetValue(
+FxRegKey::_SetValue(
+    _In_ HANDLE Key,
     __in PCUNICODE_STRING ValueName,
     __in ULONG ValueType,
     __in_bcount(ValueLength) PVOID Value,
     __in ULONG ValueLength
     )
 {
-
     AT_PASSIVE();
 
-    return ZwSetValueKey(m_Key, (PUNICODE_STRING)ValueName, 0, ValueType, Value, ValueLength);
+    return ZwSetValueKey(Key,
+                         (PUNICODE_STRING)ValueName,
+                         0,
+                         ValueType,
+                         Value,
+                         ValueLength);
 }
 
 _Must_inspect_result_

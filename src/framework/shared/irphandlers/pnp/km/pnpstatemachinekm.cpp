@@ -35,15 +35,6 @@ extern "C" {
 #endif
 }
 
-#define RESTART_START_TIME_NAME   L"StartTime"
-#define RESTART_COUNT_NAME      L"Count"
-
-const PWCHAR FxPkgPnp::m_RestartStartTimeName = RESTART_START_TIME_NAME;
-const PWCHAR FxPkgPnp::m_RestartCountName = RESTART_COUNT_NAME;
-
-const ULONG FxPkgPnp::m_RestartTimePeriodMaximum = 10;
-const ULONG FxPkgPnp::m_RestartCountMaximum = 5;
-
 BOOLEAN
 FxPkgPnp::PnpCheckAndIncrementRestartCount(
     VOID
@@ -51,49 +42,10 @@ FxPkgPnp::PnpCheckAndIncrementRestartCount(
 /*++
 
 Routine Description:
-    This routine determines if this device should ask the bus driver to
-    reenumerate the device.   This is determined by how many times the entire
-    stack has asked for a restart within a given period.  This is stack wide
-    because the settings are stored in a key in the device node itself (which all
-    devices share).
-
-    The period and number of times a restart are attempted are defined as constants
-    (m_RestartTimePeriodMaximum, m_RestartCountMaximum)in this class.   They are
-    current defined as a period of 10 seconds and a restart max count of 5.
-
-    The settings are stored in a volatile key so that they do not persist across
-    machine reboots.  Persisting across reboots makes no sense if we restrict the
-    number of restarts w/in a short period.
-
-    The rules are as follows
-    1)  if the key does not exist, treat this as the beginning of the period
-        and ask for a reenumeration
-    2)  if the key exists
-        a)  if the beginning of the period and the restart count cannot be read
-            do not ask for a reenumeration
-        b)  if the beginning of the period is after the current time, either the
-            current tick count has wrapped or the key has somehow survived a
-            reboot.  Either way, treat this as a reset of the period and ask
-            for a reenumeration
-        c)  if the current time is after the period start time and within the
-            restart period, increment the restart count.  if the count is <=
-            the max restart count, ask for a reenumeration.  If it exceeds the
-            max, do not ask for a reenumeration.
-        d)  if the current time is after the period stat time and exceeds the
-            maximum period, reset the period and count and ask for a reenumeration.
-
-Considerations:
-    A normal surprise removal will cause this routine to ask for a restart.  We
-    do not exclude normal surprise removes from our logic because you can also
-    receive a surprise remove by invalidating your device relations and marking
-    the device as failed or removed.
-
-    Furthermore, all this will do is increment the restart count.  If the device
-    is plugged in and successfully started and surprise removed multiple times
-    within the restart period, the reenumeration and restart of the device will
-    not be affected by the restart count.  All that will be affected is if the
-    device fails start within that period and we have exceeded the restart count,
-    we will not ask for a restart.
+    This is a mode-dependent wrapper for PnpIncrementRestartCountLogic,
+    which determines if this device should ask the bus driver to
+    reenumerate the device. Please refer to PnpIncrementRestartCountLogic's
+    comment block for more information.
 
 Arguments:
     None
@@ -101,31 +53,18 @@ Arguments:
 Return Value:
     TRUE if a restart should be requested.
 
-  --*/
-
+--*/
 {
-
     NTSTATUS status;
     FxAutoRegKey settings, restart;
-    ULONG disposition, count;
-    LARGE_INTEGER currentTickCount, startTickCount;
-    BOOLEAN writeTick, writeCount;
+    ULONG disposition = 0;
 
-    DECLARE_CONST_UNICODE_STRING(valueNameStartTime, RESTART_START_TIME_NAME);
-    DECLARE_CONST_UNICODE_STRING(valueNameCount, RESTART_COUNT_NAME);
     DECLARE_CONST_UNICODE_STRING(keyNameRestart, L"Restart");
 
-
     status = m_Device->OpenSettingsKey(&settings.m_Key);
-
     if (!NT_SUCCESS(status)) {
         return FALSE;
     }
-
-    count = 0;
-    writeTick = FALSE;
-    writeCount = FALSE;
-    disposition = 0;
 
     //
     // We ask for a volatile key so that upon reboot, the count is purged and we
@@ -137,138 +76,12 @@ Return Value:
                                KEY_ALL_ACCESS,
                                REG_OPTION_VOLATILE,
                                &disposition);
-
     if (!NT_SUCCESS(status)) {
         return FALSE;
     }
-
-    Mx::MxQueryTickCount(&currentTickCount);
-
-    //
-    // If the key was created right now, there is nothing to check, just write out
-    // the data.
-    //
-    if (disposition == REG_CREATED_NEW_KEY) {
-        writeTick = TRUE;
-        writeCount = TRUE;
-
-        //
-        // First restart
-        //
-        count = 1;
-    }
-    else {
-        ULONG length, type;
-
-        //
-        // First try to get the start time of when we first attempted a restart
-        //
-        status = FxRegKey::_QueryValue(GetDriverGlobals(),
-                                       restart.m_Key,
-                                       &valueNameStartTime,
-                                       sizeof(startTickCount.QuadPart),
-                                       &startTickCount.QuadPart,
-                                       &length,
-                                       &type);
-
-        if (NT_SUCCESS(status) &&
-            length == sizeof(startTickCount.QuadPart) && type == REG_BINARY) {
-
-            //
-            // Now try to get the last restart count
-            //
-            status = FxRegKey::_QueryULong(restart.m_Key,
-                                           &valueNameCount,
-                                           &count);
-
-            if (status == STATUS_OBJECT_NAME_NOT_FOUND) {
-                //
-                // We read the start time, but not the count.  Assume there was
-                // at least one previous restart.
-                //
-                count = 1;
-                status = STATUS_SUCCESS;
-            }
-        }
-
-        if (NT_SUCCESS(status)) {
-            if (currentTickCount.QuadPart < startTickCount.QuadPart) {
-                //
-                // Somehow the key survived a reboot or the clock overlfowed
-                // and the current time is less then the last time we started
-                // timing restarts.  Either way, just treat this as the first
-                // time we are restarting.
-                //
-                writeTick = TRUE;
-                writeCount = TRUE;
-                count = 1;
-            }
-            else {
-                LONGLONG delta;
-
-                //
-                // Compute the difference in time in 100 ns units
-                //
-                delta = (currentTickCount.QuadPart - startTickCount.QuadPart) *
-                         Mx::MxQueryTimeIncrement();
-
-                if (delta < WDF_ABS_TIMEOUT_IN_SEC(m_RestartTimePeriodMaximum)) {
-                    //
-                    // We are within the time limit, see if we are within the
-                    // count limit
-                    count++;
-
-                    //
-                    // The count starts at one, so include the maximum in the
-                    // compare.
-                    //
-                    if (count <= m_RestartCountMaximum) {
-                        writeCount = TRUE;
-                    }
-                    else {
-                        //
-                        // Exceeded the restart count, do not attempt to restart
-                        // the device.
-                        //
-                        status = STATUS_UNSUCCESSFUL;
-                    }
-                }
-                else {
-                    //
-                    // Exceeded the time limit.  This is treated as a reset of
-                    // the time limit, so we will try to restart and reset the
-                    // start time and restart count.
-                    //
-                    writeTick = TRUE;
-                    writeCount = TRUE;
-                    count = 1;
-                }
-            }
-        }
-    }
-
-    if (writeTick) {
-        //
-        // Write out the time and the count
-        //
-        status = ZwSetValueKey(restart.m_Key,
-                               (PUNICODE_STRING)&valueNameStartTime,
-                               0,
-                               REG_BINARY,
-                               &currentTickCount.QuadPart,
-                               sizeof(currentTickCount.QuadPart));
-    }
-
-    if (NT_SUCCESS(status) && writeCount) {
-        status = ZwSetValueKey(restart.m_Key,
-                               (PUNICODE_STRING)&valueNameCount,
-                               0,
-                               REG_DWORD,
-                               &count,
-                               sizeof(count));
-    }
-
-    return NT_SUCCESS(status) ? TRUE : FALSE;
+    
+    return PnpIncrementRestartCountLogic(restart.m_Key,
+                                         disposition == REG_CREATED_NEW_KEY);
 }
 
 BOOLEAN

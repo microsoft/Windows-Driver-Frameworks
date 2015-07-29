@@ -147,20 +147,22 @@ FxRegKey::_OpenKey(
 _Must_inspect_result_
 NTSTATUS
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
-FxRegKey::SetValue(
-    __in PCUNICODE_STRING ValueName,
-    __in ULONG ValueType,
-    __in_bcount(ValueLength) PVOID Value,
-    __in ULONG ValueLength
+FxRegKey::_SetValue(
+    _In_ HANDLE Key,
+    _In_ PCUNICODE_STRING ValueName,
+    _In_ ULONG ValueType,
+    _In_reads_bytes_(ValueLength) PVOID Value,
+    _In_ ULONG ValueLength
     )
 {
-    DWORD err = RegSetValueEx((HKEY)m_Key,
-                         ValueName->Buffer,
-                         0,
-                         ValueType,
-                         (BYTE*)Value,
-                         ValueLength);
-
+    DWORD err;
+    
+    err = RegSetValueEx((HKEY)Key,
+                        ValueName->Buffer,
+                        0,
+                        ValueType,
+                        (BYTE*)Value,
+                        ValueLength);
     if (ERROR_SUCCESS == err) {
         return STATUS_SUCCESS;
     }

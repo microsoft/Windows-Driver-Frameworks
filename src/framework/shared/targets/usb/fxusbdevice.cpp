@@ -931,8 +931,14 @@ FxUsbDevice::CreateInterfaces(
     }
 
     //
-    // Validate all interface descriptors in config descriptor are of the appropriate size
+    // Validate all interface descriptors in config descriptor are at least 
+    // sizeof(USB_INTERFACE_DESCRIPTOR).
     //
+
+
+
+
+
     status =  FxUsbValidateDescriptorType(
         pFxDriverGlobals,
         m_ConfigDescriptor,
@@ -940,7 +946,7 @@ FxUsbDevice::CreateInterfaces(
         WDF_PTR_ADD_OFFSET(m_ConfigDescriptor, m_ConfigDescriptor->wTotalLength),
         USB_INTERFACE_DESCRIPTOR_TYPE,
         sizeof(USB_INTERFACE_DESCRIPTOR),
-        FxUsbValidateDescriptorOpEqual,
+        FxUsbValidateDescriptorOpAtLeast,
         0
         );
 

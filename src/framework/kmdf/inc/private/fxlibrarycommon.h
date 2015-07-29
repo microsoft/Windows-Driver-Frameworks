@@ -18,12 +18,15 @@ extern RTL_OSVERSIONINFOW  gOsVersion;
 #define _LIT_(a)    # a
 #define LITERAL(a) _LIT_(a)
 
-#define __Print(_x_)                    \
-{                                       \
-    if (WdfLdrDbgPrintOn) {             \
-        DbgPrint("%s: ", WdfLdrType);   \
-        DbgPrint _x_ ;                  \
-    }                                   \
+#define __PrintUnfiltered(...)          \
+    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __VA_ARGS__);
+
+#define __Print(_x_)                                                           \
+{                                                                              \
+    if (WdfLdrDbgPrintOn) {                                                    \
+        DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, "%s: ", WdfLdrType); \
+        __PrintUnfiltered _x_                                                  \
+    }                                                                          \
 }
 
 #define WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME      L"EnhancedVerifierOptions"
@@ -66,6 +69,16 @@ GetEnhancedVerifierOptions(
     __in PCLIENT_INFO ClientInfo,
     __out PULONG Options
     );
+
+VOID
+LibraryLogEvent(
+    __in PDRIVER_OBJECT DriverObject,
+    __in NTSTATUS       ErrorCode,
+    __in NTSTATUS       FinalStatus,
+    __in PWSTR          ErrorInsertionString,
+    __in_bcount(RawDataLen) PVOID    RawDataBuf,
+    __in USHORT         RawDataLen
+);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -262,6 +262,13 @@ WDFEXPORT(WdfDriverCreate)(
     //
     if (NT_SUCCESS(status)) {
         //
+        // **** Note ****
+        // Do not introduce failures after this point without ensuring 
+        // FxObject::DeleteFromFailedCreate has a chance to clear out any 
+        // assigned callbacks on the object.
+        //
+
+        //
         // Store the WDFDRIVER and FxDriver* globally so the driver can retrieve
         // it anytime.
         //
@@ -310,11 +317,12 @@ WDFEXPORT(WdfDriverCreate)(
             FX_MAKE_WSTR(__WUDF_SERVICE_VERSION) ;
 #endif
 
-            status = GetImageName(pFxDriverGlobals, &imageName.m_UnicodeString);
-            if (!NT_SUCCESS(status))
-            {
-                ASSERT(imageName.m_UnicodeString.Buffer == NULL);
-            }
+            //
+            // GetImageName can fail if the registry cannot be accessed. This
+            // can happen during system shutdown. Since the image name is only 
+            // used for telemetry the failure can be ignored.
+            // 
+            (VOID) GetImageName(pFxDriverGlobals, &imageName.m_UnicodeString);
 
             WDF_CENSUS_EVT_WRITE_DRIVER_LOAD(g_TelemetryProvider, 
                                     pFxDriverGlobals, 

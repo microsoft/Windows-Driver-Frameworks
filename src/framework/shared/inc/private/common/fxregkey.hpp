@@ -149,6 +149,25 @@ public:
         __in ULONG ValueType,
         __in_bcount(ValueLength) PVOID Value,
         __in ULONG ValueLength
+        )
+    {
+        return _SetValue(m_Key,
+                         ValueName,
+                         ValueType,
+                         Value,
+                         ValueLength);
+    }
+
+    static
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NTSTATUS
+    _SetValue(
+        _In_ HANDLE Key,
+        _In_ PCUNICODE_STRING ValueName,
+        _In_ ULONG ValueType,
+        _In_reads_bytes_(ValueLength) PVOID Value,
+        _In_ ULONG ValueLength
         );
 
     _Must_inspect_result_

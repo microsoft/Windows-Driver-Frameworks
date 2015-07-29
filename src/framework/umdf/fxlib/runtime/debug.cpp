@@ -31,7 +31,7 @@
 //      *) ")"
 //      *) NULL
 //
-#define LOCATION_PATH_MAX       ((MAX_PATH * 2 + 10)* sizeof(WCHAR))
+#define LOCATION_PATH_MAX       (MAX_PATH * 2 + 10)
 #define LOCATION_PATH_FORMAT    (L"%s:%u(%S)")
 
 HRESULT
@@ -101,11 +101,14 @@ Routine Description:
     If an assumption fails then a UmdfDriverStop is issued, which ultimataly 
     kills the driver after generating a watson report.
 
-    NOTE: Updating this function requires the update of !Analyze. The tool
-    looks at this frame in crashes to extraction the crash location.
-    The code that needs to be updated is in 
-    %SDXROOT%\sdktools\debuggers\exts\extdll\uanalysis.cpp
+
+
+
+
+
+
     The function name is IMPL_ATTRIBUTE_EXTRACTOR(UMDFVerifierFailure)
+
 
 Arguments:
 

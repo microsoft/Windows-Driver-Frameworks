@@ -1085,24 +1085,7 @@ FxDevice::_OpenDeviceRegistryKey(
                                                                subpath,
                                                                (PHKEY)DevInstRegKey,
                                                                NULL);
-
-    //
-    // UMDF 2.0 returned E_INVALIDARG instead of an NTSTATUS code
-    // due to a bug in NtStatusFromHr. This preserves backwards
-    // compatibility in case some exisiting driver took a dependency
-    // on the exact return value.
-    //
-
-
-
-
-    if (hr == E_INVALIDARG &&
-        FxDriverGlobals->IsVersionGreaterThanOrEqualTo(2, 15)) {
-        status = STATUS_INVALID_PARAMETER;
-    }
-    else {
-        status = FxDevice::NtStatusFromHr(DeviceStack, hr);
-    }
+    status = FxDevice::NtStatusFromHr(DeviceStack, hr);
     
     return status;
 }

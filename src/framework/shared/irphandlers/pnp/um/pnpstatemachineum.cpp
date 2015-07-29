@@ -32,14 +32,6 @@ extern "C" {
 #endif
 }
 
-
-
-
-
-
-
-
-
 BOOLEAN
 FxPkgPnp::PnpCheckAndIncrementRestartCount(
     VOID
@@ -47,49 +39,10 @@ FxPkgPnp::PnpCheckAndIncrementRestartCount(
 /*++
 
 Routine Description:
-    This routine determines if this device should ask the bus driver to
-    reenumerate the device.   This is determined by how many times the entire
-    stack has asked for a restart within a given period.  This is stack wide
-    because the settings are stored in a key in the device node itself (which all
-    devices share).
-
-    The period and number of times a restart are attempted are defined as constants
-    (m_RestartTimePeriodMaximum, m_RestartCountMaximum)in this class.   They are
-    current defined as a period of 10 seconds and a restart max count of 5.
-
-    The settings are stored in a volatile key so that they do not persist across
-    machine reboots.  Persisting across reboots makes no sense if we restrict the
-    number of restarts w/in a short period.
-
-    The rules are as follows
-    1)  if the key does not exist, treat this as the beginning of the period
-        and ask for a reenumeration
-    2)  if the key exists
-        a)  if the beginning of the period and the restart count cannot be read
-            do not ask for a reenumeration
-        b)  if the beginning of the period is after the current time, either the
-            current tick count has wrapped or the key has somehow survived a
-            reboot.  Either way, treat this as a reset of the period and ask
-            for a reenumeration
-        c)  if the current time is after the period start time and within the
-            restart period, increment the restart count.  if the count is <=
-            the max restart count, ask for a reenumeration.  If it exceeds the
-            max, do not ask for a reenumeration.
-        d)  if the current time is after the period stat time and exceeds the
-            maximum period, reset the period and count and ask for a reenumeration.
-
-Considerations:
-    A normal surprise removal will cause this routine to ask for a restart.  We
-    do not exclude normal surprise removes from our logic because you can also
-    receive a surprise remove by invalidating your device relations and marking
-    the device as failed or removed.
-
-    Furthermore, all this will do is increment the restart count.  If the device
-    is plugged in and successfully started and surprise removed multiple times
-    within the restart period, the reenumeration and restart of the device will
-    not be affected by the restart count.  All that will be affected is if the
-    device fails start within that period and we have exceeded the restart count,
-    we will not ask for a restart.
+    This is a mode-dependent wrapper for PnpIncrementRestartCountLogic,
+    which determines if this device should ask the bus driver to
+    reenumerate the device. Please refer to PnpIncrementRestartCountLogic's
+    comment block for more information.
 
 Arguments:
     None
@@ -97,10 +50,34 @@ Arguments:
 Return Value:
     TRUE if a restart should be requested.
 
-  --*/
-
+--*/
 {
-    return FALSE;
+    HRESULT hr;
+    FxAutoRegKey restart;
+    FxDevice* device;
+    IWudfDeviceStack* deviceStack;
+    WDF_PROPERTY_STORE_ROOT propertyStore;
+    WDF_PROPERTY_STORE_DISPOSITION disposition;
+
+    device = GetDevice();
+    deviceStack = device->GetDeviceStack();
+
+    propertyStore.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
+    propertyStore.RootClass = WdfPropertyStoreRootClassHardwareKey;
+    propertyStore.Qualifier.HardwareKey.ServiceName = L"WudfDiagnostics";
+
+    hr = deviceStack->CreateRegistryEntry(&propertyStore,
+                                          WdfPropertyStoreCreateVolatile,
+                                          KEY_QUERY_VALUE | KEY_SET_VALUE,
+                                          L"Restart",
+                                          (HKEY*)&restart.m_Key,
+                                          &disposition);
+    if (FAILED(hr)) {
+        return FALSE;
+    }
+
+    return PnpIncrementRestartCountLogic(restart.m_Key,
+                                         disposition == CreatedNewStore);
 }
 
 BOOLEAN

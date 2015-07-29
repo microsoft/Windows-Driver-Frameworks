@@ -11,10 +11,18 @@ extern "C" {
 //
 #define  VF_FX_DYNAMICS_GENERATE_TABLE   1
 
+//
+// Compute the length based on the max. service name length and the rest of the
+// error string as seen in ReportDdiFunctionCountMismatch
+//
+#define EVTLOG_DDI_COUNT_ERROR_MAX_LEN (53 + MAX_PATH)
+
 #include "fx.hpp"
 #include "fxldr.h"
 #include "FxLibraryCommon.h"
 #include "FxTelemetry.hpp"
+#include "WdfVersionLog.h"
+#include "minwindef.h"
 
 extern "C" {
 //
@@ -135,6 +143,82 @@ GetTriageInfo(
     _WdfIrpTriageInfo.IrpPtr = FIELD_OFFSET(FxIrp, m_Irp);
 }
 
+BOOLEAN
+IsClientInfoValid(
+    _In_ PCLIENT_INFO ClientInfo
+    )
+{
+    if (ClientInfo == NULL ||
+        ClientInfo->Size != sizeof(CLIENT_INFO) ||
+        ClientInfo->RegistryPath == NULL ||
+        ClientInfo->RegistryPath->Length == 0 ||
+        ClientInfo->RegistryPath->Buffer == NULL) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+VOID
+ReportDdiFunctionCountMismatch(
+    _In_ PCUNICODE_STRING ServiceName,
+    _In_ ULONG ActualFunctionCount,
+    _In_ ULONG ExpectedFunctionCount
+    )
+{
+    WCHAR    insertString[EVTLOG_DDI_COUNT_ERROR_MAX_LEN] = { 0 };
+    NTSTATUS status;
+
+    //
+    // NOTE: Any single call to DbgPrintEx will only transmit 512 bytes of 
+    // information.
+    //
+    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
+            "\n\n************************* \n"
+            "* DDI function table mismatch detected in KMDF driver. The \n"
+            "* driver will not load until it is re-compiled using a \n"
+            "* newer version of the Windows Driver Kit (WDK). \n"
+            );
+
+    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
+            "* Service name                 : %wZ\n"
+            "* Actual function table count  : %d \n"
+            "* Expected function table count: %d \n"
+            "*************************** \n\n",
+            ServiceName,
+            ActualFunctionCount,
+            ExpectedFunctionCount
+            );
+
+    //
+    // Report a warning level ETW event to the system event log. "Wdf01000" is 
+    // the listed event provider. 
+    //
+    status = RtlStringCchPrintfW(insertString,
+                            RTL_NUMBER_OF(insertString),
+                            L"Service:%wZ Count:Actual %d Expected %d",
+                            ServiceName,
+                            ActualFunctionCount,
+                            ExpectedFunctionCount);
+    if (NT_SUCCESS(status)) {
+        LibraryLogEvent(FxLibraryGlobals.DriverObject,
+                    WDFVER_CLIENT_INVALID_DDI_COUNT,
+                    STATUS_INVALID_PARAMETER,
+                    insertString,
+                    NULL,
+                    0);
+    }
+
+    //
+    // Report a telemetry event that can be used to proactively fix drivers
+    //
+    TraceLoggingWrite(g_TelemetryProvider,
+                    "KmdfClientFunctionCountMismatch",
+                    WDF_TELEMETRY_EVT_KEYWORDS,
+                    TraceLoggingUnicodeString(ServiceName, "ServiceName"),
+                    TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
+                    TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+}
+
 _Must_inspect_result_
 NTSTATUS
 FxLibraryCommonCommission(
@@ -250,6 +334,7 @@ FxLibraryCommonRegisterClient(
     )
 {
     NTSTATUS           status;
+    UNICODE_STRING serviceName = { 0 };
 
     status = STATUS_INVALID_PARAMETER;
 
@@ -320,10 +405,30 @@ FxLibraryCommonRegisterClient(
         // Client version is same as framework version. Make
         // sure table count is exact. 
         if (Info->FuncCount != WdfFunctionTableNumEntries) {
-            KdPrint(("Framework function table size (%d) doesn't match "
-                   "with client (%d). Rebuild the client driver.",
-                   WdfFunctionTableNumEntries, Info->FuncCount));
-            ASSERT(FALSE);
+            RtlZeroMemory(&serviceName, sizeof(UNICODE_STRING));
+
+            if (IsClientInfoValid(ClientInfo)) {
+                GetNameFromPath(ClientInfo->RegistryPath, &serviceName);
+            }
+            else {
+                RtlInitUnicodeString(&serviceName, L"Unknown");
+            }
+
+            // 
+            // Report a DbgPrint message, telemetry event and an ETW event that 
+            // will serve as diagnostic aid.
+            //
+            ReportDdiFunctionCountMismatch((PCUNICODE_STRING)&serviceName,
+                                        Info->FuncCount,
+                                        WdfFunctionTableNumEntries);
+
+            //
+            // If loader diagnostics are enabled and KD is connected, break-in
+            //
+            if (WdfLdrDbgPrintOn && KD_DEBUGGER_ENABLED && 
+                !KD_DEBUGGER_NOT_PRESENT) {
+                DbgBreakPoint();
+            }
             goto Done;
         }
     }
@@ -486,11 +591,7 @@ GetEnhancedVerifierOptions(
     DECLARE_CONST_UNICODE_STRING(valueName, WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME);
 
     *Options = 0;
-    if (ClientInfo == NULL                       ||
-        ClientInfo->Size != sizeof(CLIENT_INFO)  ||
-        ClientInfo->RegistryPath == NULL         ||
-        ClientInfo->RegistryPath->Length == 0    ||
-        ClientInfo->RegistryPath->Buffer == NULL ||
+    if (!IsClientInfoValid(ClientInfo) ||
         Options == NULL) {
 
         __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
@@ -525,4 +626,91 @@ GetEnhancedVerifierOptions(
             *Options = value;
         }
     }
+}
+
+VOID
+LibraryLogEvent(
+    __in PDRIVER_OBJECT DriverObject,
+    __in NTSTATUS       ErrorCode,
+    __in NTSTATUS       FinalStatus,
+    __in PWSTR          ErrorInsertionString,
+    __in_bcount(RawDataLen) PVOID    RawDataBuf,
+    __in USHORT         RawDataLen
+    )
+/*++
+
+
+Routine Description:
+
+    Logs an error to the system event log.
+
+    Arguments:
+
+    DriverObject - Pointer to driver object reporting the error.
+
+    ErrorCode    - Indicates the type of error, system or driver-defined.
+
+    ErrorInsertionString - Null-terminated Unicode string inserted into error
+    description, as defined by error code.
+
+Return Value:
+
+None.
+
+--*/
+{
+    PIO_ERROR_LOG_PACKET errorLogEntry;
+    size_t               errorLogEntrySize;                  // [including null]
+    size_t               errorInsertionStringByteSize = 0;
+
+    if (ErrorInsertionString) {
+        errorInsertionStringByteSize = wcslen(ErrorInsertionString) * sizeof(WCHAR);
+        errorInsertionStringByteSize += sizeof(UNICODE_NULL);
+    }
+
+    errorLogEntrySize = sizeof(IO_ERROR_LOG_PACKET) + RawDataLen + errorInsertionStringByteSize;
+
+    //
+    // Log an error.
+    //
+    //
+    // prefast complains about comparison of constant with constant here
+    //
+#pragma prefast(suppress:__WARNING_CONST_CONST_COMP, "If ErrorInsertionString is not null then this is not a constant")
+    if (errorLogEntrySize <= ERROR_LOG_MAXIMUM_SIZE) {
+
+        errorLogEntry = (PIO_ERROR_LOG_PACKET)IoAllocateErrorLogEntry(DriverObject,
+            (UCHAR)errorLogEntrySize);
+
+        if (errorLogEntry != NULL) {
+
+            RtlZeroMemory(errorLogEntry, errorLogEntrySize);
+
+            errorLogEntry->ErrorCode = ErrorCode;
+            errorLogEntry->FinalStatus = FinalStatus;
+            errorLogEntry->NumberOfStrings = (ErrorInsertionString) ? 1 : 0;
+            errorLogEntry->DumpDataSize = RawDataLen;
+            errorLogEntry->StringOffset = (FIELD_OFFSET(IO_ERROR_LOG_PACKET, DumpData)) + errorLogEntry->DumpDataSize;
+
+            //
+            // Insertion strings follow dumpdata and since there is no dumpdata we place the
+            // insertion string at the start offset of the dumpdata.
+            //
+            if (RawDataBuf) {
+                RtlCopyMemory(errorLogEntry->DumpData,
+                    RawDataBuf,
+                    RawDataLen);
+            }
+
+            if (ErrorInsertionString) {
+                RtlCopyMemory(((PCHAR)errorLogEntry->DumpData) + RawDataLen,
+                    ErrorInsertionString,
+                    errorInsertionStringByteSize);
+            }
+
+            IoWriteErrorLogEntry(errorLogEntry);
+        }
+    }
+
+    return;
 }

@@ -186,6 +186,20 @@ Mx::MxQueryTickCount(
 }
 
 FORCEINLINE
+ULONG
+Mx::MxQueryTimeIncrement(
+    )
+{
+    //
+    // The way to get absolute time is TickCount * TimeIncrement.
+    // In UM, TickCount is expressed in miliseconds, so this
+    // conversion ensures that absolute time is expressed
+    // in 100ns units as it is in KM.
+    //
+    return 1000 * 10;
+}
+
+FORCEINLINE
 VOID
 Mx::MxDbgBreakPoint(
     )

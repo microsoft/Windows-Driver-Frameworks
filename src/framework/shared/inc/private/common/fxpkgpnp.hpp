@@ -4319,6 +4319,11 @@ private:
     BOOLEAN m_WakeInterruptsKeepConnected;
 
     //
+    // If TRUE, the PNP State has reached PnpEventStarted at least once.
+    //
+    BOOLEAN m_AchievedStart;
+
+    //
     // Non NULL when this device is exporting the power thread interface.  This
     // would be the lowest device in the stack that supports this interface.
     //
@@ -4494,8 +4499,10 @@ private:
 
     //
     // Names for registry values in which we will store the beginning of the
-    // restart time period and the number of restart attempts in that period.
+    // restart time period, the number of restart attempts in that period, and
+    // if the device successfully started.
     //
+    static const PWCHAR m_RestartStartAchievedName;
     static const PWCHAR m_RestartStartTimeName;
     static const PWCHAR m_RestartCountName;
 

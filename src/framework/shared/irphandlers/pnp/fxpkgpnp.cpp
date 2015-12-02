@@ -168,6 +168,7 @@ FxPkgPnp::FxPkgPnp(
     m_WakeInterruptPendingAckCount = 0;
     m_SystemWokenByWakeInterrupt = FALSE;
     m_WakeInterruptsKeepConnected = FALSE;
+    m_AchievedStart = FALSE;
 
     m_SharedPower.m_WaitWakeIrp = NULL;
     m_SharedPower.m_WaitWakeOwner = FALSE;

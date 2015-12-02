@@ -2356,6 +2356,8 @@ Return Value:
   --*/
 {
 
+    This->m_AchievedStart = TRUE;
+    
     //
     // Log Telemetry event for the FDO
     //
@@ -4504,13 +4506,15 @@ Done:
     return status;
 }
 
-#define RESTART_START_TIME_NAME L"StartTime"
-#define RESTART_COUNT_NAME      L"Count"
+#define RESTART_START_ACHIEVED_NAME L"StartAchieved"
+#define RESTART_START_TIME_NAME     L"StartTime"
+#define RESTART_COUNT_NAME          L"Count"
 
+const PWCHAR FxPkgPnp::m_RestartStartAchievedName = RESTART_START_ACHIEVED_NAME;
 const PWCHAR FxPkgPnp::m_RestartStartTimeName = RESTART_START_TIME_NAME;
 const PWCHAR FxPkgPnp::m_RestartCountName = RESTART_COUNT_NAME;
 
-const ULONG FxPkgPnp::m_RestartTimePeriodMaximum = 10;
+const ULONG FxPkgPnp::m_RestartTimePeriodMaximum = 60;
 const ULONG FxPkgPnp::m_RestartCountMaximum = 5;
 
 BOOLEAN
@@ -4529,11 +4533,11 @@ Routine Description:
 
     The period and number of times a restart are attempted are defined as constants
     (m_RestartTimePeriodMaximum, m_RestartCountMaximum)in this class.   They are
-    current defined as a period of 10 seconds and a restart max count of 5.
+    current defined as a period of 60 seconds and a restart max count of 5.
 
     The settings are stored in a volatile key so that they do not persist across
     machine reboots.  Persisting across reboots makes no sense if we restrict the
-    number of restarts w/in a short period.
+    number of restarts w/in a period.
 
     The rules are as follows
     1)  if the key does not exist, treat this as the beginning of the period
@@ -4550,20 +4554,20 @@ Routine Description:
             the max restart count, ask for a reenumeration.  If it exceeds the
             max, do not ask for a reenumeration.
         d)  if the current time is after the period stat time and exceeds the
-            maximum period, reset the period and count and ask for a reenumeration.
+            maximum period, and if the device as reached the started state, 
+            reset the period, count, and started state, then ask for a
+            reenumeration.
 
 Considerations:
-    A normal surprise removal will cause this routine to ask for a restart.  We
-    do not exclude normal surprise removes from our logic because you can also
-    receive a surprise remove by invalidating your device relations and marking
-    the device as failed or removed.
-
-    Furthermore, all this will do is increment the restart count.  If the device
-    is plugged in and successfully started and surprise removed multiple times
-    within the restart period, the reenumeration and restart of the device will
-    not be affected by the restart count.  All that will be affected is if the
-    device fails start within that period and we have exceeded the restart count,
-    we will not ask for a restart.
+    There is a reenumeration loop that a device can get caught in. If a device
+    takes more than m_RestartTimePeriodMaximum to fail m_RestartCountMaximum 
+    times then the device will be caught in this loop. If it is failing on the 
+    way to PnpEventStarted then the device will likely cause a 9F bugcheck. 
+    This is because they hold a power lock while in this loop. If the device 
+    fails after PnpEventStarted then pnp can progress and the device can loop 
+    here indefinitely. We have shipped with this behavior for several releases, 
+    so we are hesitant to completely change this behavior. The concern is that 
+    a device out there relies on this behavior.
 
 Arguments:
     RestartKey - opened handle to the Restart registry key
@@ -4575,18 +4579,45 @@ Return Value:
 --*/
 {
     NTSTATUS status = STATUS_SUCCESS;
-    ULONG count;
+    ULONG count, started;
     LARGE_INTEGER currentTickCount, startTickCount;
-    BOOLEAN writeTick, writeCount;
+    BOOLEAN writeTick, writeCount, writeStarted;
 
     DECLARE_CONST_UNICODE_STRING(valueNameStartTime, RESTART_START_TIME_NAME);
     DECLARE_CONST_UNICODE_STRING(valueNameCount, RESTART_COUNT_NAME);
+    DECLARE_CONST_UNICODE_STRING(valueNameStartAchieved, RESTART_START_ACHIEVED_NAME);
     
     count = 0;
+    started = FALSE;
     writeTick = FALSE;
     writeCount = FALSE;
+    writeStarted = FALSE;
 
     Mx::MxQueryTickCount(&currentTickCount);
+
+    started = m_AchievedStart;
+    if (!started) {
+        ULONG length, type;
+        status = FxRegKey::_QueryValue(GetDriverGlobals(),
+                                       RestartKey,
+                                       &valueNameStartAchieved,
+                                       sizeof(started),
+                                       &started,
+                                       &length,
+                                       &type);
+        if (!NT_SUCCESS(status) || length != sizeof(started) ||
+            type != REG_DWORD) {
+            started = FALSE;
+        }
+        status = STATUS_SUCCESS;
+    } 
+    else {
+        // 
+        // Save the fact the driver started without failing
+        //
+        writeStarted = TRUE;
+    }
+        
 
     //
     // If the key was created right now, there is nothing to check, just write out
@@ -4638,7 +4669,7 @@ Return Value:
         if (NT_SUCCESS(status)) {
             if (currentTickCount.QuadPart < startTickCount.QuadPart) {
                 //
-                // Somehow the key survived a reboot or the clock overlfowed
+                // Somehow the key survived a reboot or the clock overflowed
                 // and the current time is less then the last time we started
                 // timing restarts.  Either way, just treat this as the first
                 // time we are restarting.
@@ -4656,7 +4687,7 @@ Return Value:
                 delta = (currentTickCount.QuadPart - startTickCount.QuadPart) *
                          Mx::MxQueryTimeIncrement();
 
-                if (delta < WDF_ABS_TIMEOUT_IN_SEC(m_RestartTimePeriodMaximum)) {
+                if (delta <= WDF_ABS_TIMEOUT_IN_SEC(m_RestartTimePeriodMaximum)) {
                     //
                     // We are within the time limit, see if we are within the
                     // count limit
@@ -4677,7 +4708,7 @@ Return Value:
                         status = STATUS_UNSUCCESSFUL;
                     }
                 }
-                else {
+                else if (started) {
                     //
                     // Exceeded the time limit.  This is treated as a reset of
                     // the time limit, so we will try to restart and reset the
@@ -4686,6 +4717,19 @@ Return Value:
                     writeTick = TRUE;
                     writeCount = TRUE;
                     count = 1;
+
+                    //
+                    // Erase the fact the driver once achieved start and 
+                    // make it do it again to get another 5 attempts to
+                    // restart.
+                    writeStarted = TRUE;
+                    started = FALSE;
+                }
+                else {
+                    //
+                    // Device never started
+                    //
+                    status = STATUS_UNSUCCESSFUL;
                 }
             }
         }
@@ -4695,11 +4739,18 @@ Return Value:
         //
         // Write out the time and the count
         //
-        status = FxRegKey::_SetValue(RestartKey,
+        NTSTATUS status2;
+        status2 = FxRegKey::_SetValue(RestartKey,
                                      (PUNICODE_STRING)&valueNameStartTime,
                                      REG_BINARY,
                                      &currentTickCount.QuadPart,
                                      sizeof(currentTickCount.QuadPart));
+        //
+        // Don't let status report success if it was an error prior to _SetValue
+        //
+        if(NT_SUCCESS(status)) {
+            status = status2;
+        }
     }
 
     if (NT_SUCCESS(status) && writeCount) {
@@ -4708,6 +4759,21 @@ Return Value:
                                      REG_DWORD,
                                      &count,
                                      sizeof(count));
+    }
+
+    if (writeStarted) {
+        NTSTATUS status2;
+        status2 = FxRegKey::_SetValue(RestartKey,
+                                     (PUNICODE_STRING)&valueNameStartAchieved,
+                                     REG_DWORD,
+                                     &started,
+                                     sizeof(started));
+        //
+        // Don't let status report success if it was an error prior to _SetValue
+        //
+        if(NT_SUCCESS(status)) {
+            status = status2;
+        }
     }
 
     return NT_SUCCESS(status) ? TRUE : FALSE;

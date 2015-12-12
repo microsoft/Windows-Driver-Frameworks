@@ -268,15 +268,15 @@ FxMessageDispatch::SetInformationFile(
 
 VOID
 FxMessageDispatch::GetPreferredTransferMode(
-    _Out_ WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
-    _Out_ WDF_DEVICE_IO_TYPE             *RWPreference,
-    _Out_ WDF_DEVICE_IO_TYPE             *IoctlPreference
+    _Out_ UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
+    _Out_ UMINT::WDF_DEVICE_IO_TYPE *RWPreference,
+    _Out_ UMINT::WDF_DEVICE_IO_TYPE *IoctlPreference
     )
 {
     FxDevice::GetPreferredTransferMode(GetDeviceObject(),
                                        RetrievalMode,
-                                       RWPreference,
-                                       IoctlPreference);
+                                       (WDF_DEVICE_IO_TYPE*)RWPreference,
+                                       (WDF_DEVICE_IO_TYPE*)IoctlPreference);
 }
 
 ULONG

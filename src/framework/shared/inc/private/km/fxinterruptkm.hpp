@@ -29,7 +29,7 @@ Revision History:
 
 #include "FxInterrupt.hpp"
 
-FORCEINLINE
+__inline
 struct _KINTERRUPT*
 FxInterrupt::GetInterruptPtr(
     VOID
@@ -44,7 +44,7 @@ FxInterrupt::GetInterruptPtr(
     return interrupt;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxInterrupt::ResetInternal(
     VOID
@@ -55,7 +55,7 @@ FxInterrupt::ResetInternal(
     //
 }
 
-FORCEINLINE
+__inline
 VOID
 FxInterrupt::RevokeResourcesInternal(
     VOID
@@ -66,7 +66,7 @@ FxInterrupt::RevokeResourcesInternal(
     //
 }
 
-FORCEINLINE
+__inline
 VOID
 FxInterrupt::AssignResourcesInternal(
     __in PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescRaw,
@@ -83,7 +83,7 @@ FxInterrupt::AssignResourcesInternal(
     //
 }
 
-FORCEINLINE
+__inline
 VOID
 FxInterrupt::SetPolicyInternal(
     __in WDF_INTERRUPT_POLICY   Policy,
@@ -100,7 +100,7 @@ FxInterrupt::SetPolicyInternal(
     //
 }
 
-FORCEINLINE
+__inline
 BOOLEAN 
 _SynchronizeExecution(
     __in MdInterrupt  Interrupt,

@@ -127,9 +127,9 @@ public:
     VOID
     __stdcall
     GetPreferredTransferMode(
-        _Out_ WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
-        _Out_ WDF_DEVICE_IO_TYPE             *RWPreference,
-        _Out_ WDF_DEVICE_IO_TYPE             *IoctlPreference
+        _Out_ UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
+        _Out_ UMINT::WDF_DEVICE_IO_TYPE *RWPreference,
+        _Out_ UMINT::WDF_DEVICE_IO_TYPE *IoctlPreference
         );
      
     virtual void __stdcall

@@ -27,7 +27,7 @@
 
 
 VOID
-FORCEINLINE
+__inline
 FxRequestBase::FreeMdls(
     VOID
     )

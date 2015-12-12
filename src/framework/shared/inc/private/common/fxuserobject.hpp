@@ -69,7 +69,7 @@ public:
         return STATUS_SUCCESS;
     }
 
-    FORCEINLINE
+    __inline
     WDFOBJECT
     GetHandle(
         VOID

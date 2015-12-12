@@ -218,7 +218,7 @@ public:
     _Must_inspect_result_
     static
     NTSTATUS
-    FORCEINLINE
+    __inline
     CreateAndInitialize(
         __out       FxTagTracker ** TagTracker,
         __in        PFX_DRIVER_GLOBALS FxDriverGlobals,

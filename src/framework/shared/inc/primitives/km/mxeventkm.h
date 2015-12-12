@@ -27,7 +27,7 @@ typedef KEVENT MdEvent;
 
 #include "MxEvent.h"
 
-FORCEINLINE
+__inline
 MxEvent::MxEvent()
 {
     //
@@ -42,12 +42,12 @@ MxEvent::MxEvent()
     CLEAR_DBGFLAG_INITIALIZED;
 }
 
-FORCEINLINE
+__inline
 MxEvent::~MxEvent()
 {
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "_Must_inspect_result_ not needed in kernel mode as the function always succeeds");
 MxEvent::Initialize(
@@ -62,7 +62,7 @@ MxEvent::Initialize(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 PVOID
 MxEvent::GetEvent(
     )
@@ -73,7 +73,7 @@ MxEvent::GetEvent(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::SetWithIncrement(
     __in KPRIORITY Priority
@@ -84,7 +84,7 @@ MxEvent::SetWithIncrement(
     KeSetEvent(&m_Event, Priority, FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::Set(
     )
@@ -95,7 +95,7 @@ MxEvent::Set(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::Clear(
     )
@@ -108,7 +108,7 @@ MxEvent::Clear(
 __drv_when(Timeout == NULL && Alertable == FALSE, __drv_valueIs(==0))
 __drv_when(Timeout != NULL && Alertable == FALSE, __drv_valueIs(==0;==258))
 __drv_when(Timeout != NULL || Alertable == TRUE, _Must_inspect_result_)
-FORCEINLINE
+__inline
 NTSTATUS
 MxEvent::WaitFor(
     __in     KWAIT_REASON  WaitReason,
@@ -129,7 +129,7 @@ MxEvent::WaitFor(
 }
 
 LONG
-FORCEINLINE
+__inline
 MxEvent::ReadState(
     )
 {
@@ -139,7 +139,7 @@ MxEvent::ReadState(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::Uninitialize(
     )

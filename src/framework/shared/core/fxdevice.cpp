@@ -224,7 +224,7 @@ FxDevice::SetInitialState(
     m_KernelDeviceName = NULL;
     m_DeviceInstanceId = NULL;
 
-    m_RetrievalMode = WdfDeviceIoBufferRetrievalDeferred;
+    m_RetrievalMode = UMINT::WdfDeviceIoBufferRetrievalDeferred;
     m_IoctlIoType = WdfDeviceIoBuffered;
     m_DirectTransferThreshold = 0;
 
@@ -1403,7 +1403,7 @@ FxDevice::DispatchWithLock(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 BOOLEAN
 IsPreprocessIrp(
     __in MdIrp       Irp,
@@ -1446,7 +1446,7 @@ IsPreprocessIrp(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 NTSTATUS
 PreprocessIrp(
     __in FxDevice*  Device,
@@ -1504,7 +1504,7 @@ PreprocessIrp(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 NTSTATUS
 DispatchWorker(
     __in FxDevice*  Device,

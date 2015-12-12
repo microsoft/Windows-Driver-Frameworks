@@ -200,7 +200,7 @@ Returns:
 }
 
 
-FORCEINLINE
+__inline
 BOOLEAN
 MxTimer::StartWithReturn(
     __in LARGE_INTEGER DueTime,

@@ -62,7 +62,7 @@ FX_VF_NAME_TO_IMP_NAME( fnName )
 // zero parameters
 //
 #define FX_VF_STUB( qf, rt, rtDef, fnName )                        \
-FORCEINLINE                                                        \
+__inline                                                           \
 qf                                                                 \
 rt                                                                 \
 fnName( _In_ PFX_DRIVER_GLOBALS FxDriverGlobals )                  \
@@ -79,7 +79,7 @@ FX_DECLARE_VF_FUNCTION_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnName 
 // 1-Parameter Stub Macro
 //
 #define FX_VF_STUB_P1( qf, rt, rtDef, fnName, at1 )                  \
-FORCEINLINE                                                          \
+__inline                                                             \
 qf                                                                   \
 rt                                                                   \
 fnName( _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,  at1 a1 )           \
@@ -98,7 +98,7 @@ FX_DECLARE_VF_FUNCTION_P1_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 // 2-Parameter Stub Macro
 //
 #define FX_VF_STUB_P2( qf, rt, rtDef, fnName, at1, at2 )                  \
-FORCEINLINE                                                               \
+__inline                                                               \
 qf                                                                        \
 rt                                                                        \
 fnName( _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,  at1 a1, at2 a2 )        \
@@ -117,7 +117,7 @@ FX_DECLARE_VF_FUNCTION_P2_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 // 3-Parameter Stub Macro
 //
 #define FX_VF_STUB_P3( qf, rt, rtDef, fnName, at1, at2, at3 )              \
-FORCEINLINE                                                                \
+__inline                                                                \
 qf                                                                         \
 rt                                                                         \
 fnName( _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,  at1 a1, at2 a2, at3 a3 ) \
@@ -136,7 +136,7 @@ FX_DECLARE_VF_FUNCTION_P3_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 // 4-Parameter Stub Macro
 //
 #define FX_VF_STUB_P4( qf, rt, rtDef, fnName, at1, at2, at3, at4 )                  \
-FORCEINLINE                                                                         \
+__inline                                                                         \
 qf                                                                                  \
 rt                                                                                  \
 fnName( _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,  at1 a1, at2 a2, at3 a3,  at4 a4 ) \
@@ -180,7 +180,7 @@ FX_DECLARE_VF_FUNCTION_P4_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 // evaluating to a constant, we can use this in WDFCASSERT.
 
 // size_t
-// FORCEINLINE
+// __inline
 // FX_ALIGN_SIZE_DOWN_CONSTANT(
 //     IN size_t Length,
 //     IN size_t AlignTo
@@ -188,7 +188,7 @@ FX_DECLARE_VF_FUNCTION_P4_EX( FX_VF_QF_ ## rt, rt, FX_VF_DEFAULT_RT_ ## rt, fnNa
 #define FX_ALIGN_SIZE_DOWN_CONSTANT(Length, AlignTo) ((Length) & ~((AlignTo) - 1))
 
 // size_t
-// FORCEINLINE
+// __inline
 // FX_ALIGN_SIZE_UP_CONSTANT(
 //     IN size_t Length,
 //     IN size_t AlignTo

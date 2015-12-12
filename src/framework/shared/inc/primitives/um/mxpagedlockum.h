@@ -31,7 +31,7 @@ typedef struct {
 
 #include "MxPagedLock.h"
 
-FORCEINLINE
+__inline
 MxPagedLock::MxPagedLock(
     )
 {
@@ -40,7 +40,7 @@ MxPagedLock::MxPagedLock(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 NTSTATUS
 MxPagedLockNoDynam::Initialize(
     )
@@ -56,7 +56,7 @@ MxPagedLockNoDynam::Initialize(
     }    
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 MxPagedLockNoDynam::Acquire(
@@ -73,7 +73,7 @@ MxPagedLockNoDynam::Acquire(
     m_Lock.OwnerThreadId = GetCurrentThreadId();            
 }
 
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::AcquireUnsafe(
     )
@@ -81,7 +81,7 @@ MxPagedLockNoDynam::AcquireUnsafe(
     MxPagedLockNoDynam::Acquire();
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 MxPagedLockNoDynam::TryToAcquire(
@@ -91,7 +91,7 @@ MxPagedLockNoDynam::TryToAcquire(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 MxPagedLockNoDynam::Release(
@@ -102,7 +102,7 @@ MxPagedLockNoDynam::Release(
     LeaveCriticalSection(&m_Lock.Lock);    
 }
 
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::ReleaseUnsafe(
     )
@@ -110,7 +110,7 @@ MxPagedLockNoDynam::ReleaseUnsafe(
     MxPagedLockNoDynam::Release();
 }
 
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::Uninitialize(
     )
@@ -119,7 +119,7 @@ MxPagedLockNoDynam::Uninitialize(
     m_Lock.Initialized = false;
 }
 
-FORCEINLINE
+__inline
 MxPagedLock::~MxPagedLock(
     )
 {

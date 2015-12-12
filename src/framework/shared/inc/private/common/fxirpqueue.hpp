@@ -275,7 +275,7 @@ private:
     //
     // Lock functions accessed from WDM cancel callback
     //
-    FORCEINLINE
+    __inline
     void
     LockFromCancel(
         __out PKIRQL PreviousIrql
@@ -284,7 +284,7 @@ private:
         m_LockObject->Lock(PreviousIrql);
     }
 
-    FORCEINLINE
+    __inline
     void
     UnlockFromCancel(
         __in KIRQL PreviousIrql

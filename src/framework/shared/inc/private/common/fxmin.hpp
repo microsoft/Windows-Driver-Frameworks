@@ -190,12 +190,14 @@ typedef enum _TRACE_INFORMATION_CLASS {
 #include "FxForward.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-#include "cobbledum.hpp"
-#include "temptypedefinitions.h"
-#include "debug.h"
-#include "wudfx.h"
+#include "HostFxUtil.h"
 #include "wdfplatform.h"
 #include "wdfplatformimpl.h"
+#include "debug.h"
+#include "devreg.h"
+#include "wudfx_namespace_on.h"
+#include "wudfx.h"
+#include "wudfx_namespace_off.h"
 #include "DriverFrameworks-UserMode-UmEvents.h"
 #endif
 

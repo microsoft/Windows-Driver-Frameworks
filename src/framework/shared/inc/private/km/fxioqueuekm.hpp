@@ -25,7 +25,7 @@
 #ifndef _FXIOQUEUEKM_HPP_
 #define _FXIOQUEUEKM_HPP_
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIoQueue::IsPagingIo(
     __in MdIrp Irp

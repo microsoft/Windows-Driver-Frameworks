@@ -36,9 +36,9 @@ public:
     //friend FxUsbTarget;
 
     FxUsbInterface(
-        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
-        __in FxUsbDevice* UsbDevice,
-        __in PUSB_INTERFACE_DESCRIPTOR  InterfaceDescriptor
+        _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+        _In_ FxUsbDevice* UsbDevice,
+        _In_ PUSB_INTERFACE_DESCRIPTOR  InterfaceDescriptor
         );
 
     VOID
@@ -211,8 +211,8 @@ protected:
 public:
     NTSTATUS
     SetWinUsbHandle(
-        VOID
-        );
+        _In_ UCHAR FrameworkInterfaceIndex
+    );
     
     NTSTATUS
     MakeAndConfigurePipes(

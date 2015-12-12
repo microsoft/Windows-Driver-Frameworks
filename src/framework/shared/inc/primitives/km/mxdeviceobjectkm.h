@@ -16,7 +16,7 @@ Abstract:
 
 #include "MxDeviceObject.h"
 
-FORCEINLINE
+__inline
 CCHAR
 MxDeviceObject::GetStackSize(
     VOID
@@ -25,7 +25,7 @@ MxDeviceObject::GetStackSize(
     return m_DeviceObject->StackSize;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::SetStackSize(
     _In_ CCHAR Size
@@ -34,7 +34,7 @@ MxDeviceObject::SetStackSize(
     m_DeviceObject->StackSize = Size;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::ReferenceObject(
     )
@@ -42,7 +42,7 @@ MxDeviceObject::ReferenceObject(
     ObReferenceObject(m_DeviceObject);
 }
 
-FORCEINLINE
+__inline
 MdDeviceObject
 MxDeviceObject::GetAttachedDeviceReference(
     VOID
@@ -51,7 +51,7 @@ MxDeviceObject::GetAttachedDeviceReference(
     return IoGetAttachedDeviceReference(m_DeviceObject);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::DereferenceObject(
     )
@@ -59,7 +59,7 @@ MxDeviceObject::DereferenceObject(
     ObDereferenceObject(m_DeviceObject);
 }
 
-FORCEINLINE
+__inline
 ULONG
 MxDeviceObject::GetFlags(
     VOID
@@ -69,7 +69,7 @@ MxDeviceObject::GetFlags(
     return m_DeviceObject->Flags;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::SetFlags(
     ULONG Flags
@@ -79,7 +79,7 @@ MxDeviceObject::SetFlags(
     m_DeviceObject->Flags = Flags;
 }
 
-FORCEINLINE
+__inline
 POWER_STATE
 MxDeviceObject::SetPowerState(
     __in POWER_STATE_TYPE  Type,
@@ -89,7 +89,7 @@ MxDeviceObject::SetPowerState(
     return PoSetPowerState(m_DeviceObject, Type, State);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::InvalidateDeviceRelations(
     __in DEVICE_RELATION_TYPE Type
@@ -98,7 +98,7 @@ MxDeviceObject::InvalidateDeviceRelations(
     IoInvalidateDeviceRelations(m_DeviceObject, Type);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::InvalidateDeviceState(
     __in MdDeviceObject Fdo
@@ -116,7 +116,7 @@ MxDeviceObject::InvalidateDeviceState(
     IoInvalidateDeviceState(m_DeviceObject);
 }
 
-FORCEINLINE
+__inline
 PVOID
 MxDeviceObject::GetDeviceExtension(
     VOID
@@ -125,7 +125,7 @@ MxDeviceObject::GetDeviceExtension(
     return m_DeviceObject->DeviceExtension;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::SetDeviceExtension(
     PVOID Value
@@ -134,7 +134,7 @@ MxDeviceObject::SetDeviceExtension(
     m_DeviceObject->DeviceExtension = Value;
 }
 
-FORCEINLINE
+__inline
 DEVICE_TYPE
 MxDeviceObject::GetDeviceType(
     VOID
@@ -143,7 +143,7 @@ MxDeviceObject::GetDeviceType(
     return m_DeviceObject->DeviceType;
 }
 
-FORCEINLINE
+__inline
 ULONG
 MxDeviceObject::GetCharacteristics(
     VOID
@@ -152,7 +152,7 @@ MxDeviceObject::GetCharacteristics(
     return m_DeviceObject->Characteristics;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::SetDeviceType(
     DEVICE_TYPE Value
@@ -161,7 +161,7 @@ MxDeviceObject::SetDeviceType(
     m_DeviceObject->DeviceType = Value;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::SetCharacteristics(
     ULONG Characteristics
@@ -170,7 +170,7 @@ MxDeviceObject::SetCharacteristics(
     m_DeviceObject->Characteristics = Characteristics;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDeviceObject::SetAlignmentRequirement(
     _In_ ULONG Value
@@ -179,7 +179,7 @@ MxDeviceObject::SetAlignmentRequirement(
     m_DeviceObject->AlignmentRequirement = Value;
 }
 
-FORCEINLINE
+__inline
 ULONG
 MxDeviceObject::GetAlignmentRequirement(
     VOID

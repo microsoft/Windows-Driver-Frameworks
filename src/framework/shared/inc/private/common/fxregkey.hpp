@@ -89,7 +89,7 @@ public:
         __in     ACCESS_MASK DesiredAccess = KEY_ALL_ACCESS
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetHandle(
         __in HANDLE Key
@@ -98,7 +98,7 @@ public:
         m_Key = Key;
     }
 
-    FORCEINLINE
+    __inline
     HANDLE
     GetHandle(
         VOID
@@ -226,7 +226,7 @@ public:
 
     static
     BOOLEAN
-    FORCEINLINE
+    __inline
     _IsValidSzType(
         __in ULONG RegValueType
         )
@@ -273,7 +273,7 @@ private:
 public:
     
     VOID
-    FORCEINLINE
+    __inline
     SetCanCloseHandle(
         BOOLEAN CanCloseHandle
         )

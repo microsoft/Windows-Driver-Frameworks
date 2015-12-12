@@ -369,13 +369,14 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_13) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_15) {
         //
         // Make sure table count matches exactly with previously
         // released framework version table sizes.
         //
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V1_15:
         case WdfFunctionTableNumEntries_V1_13:
         case WdfFunctionTableNumEntries_V1_11:
         case WdfFunctionTableNumEntries_V1_9:

@@ -26,13 +26,20 @@ extern "C" {
 
 NTSTATUS
 FxUsbInterface::SetWinUsbHandle(
-    VOID
-    )
+    _In_ UCHAR FrameworkInterfaceIndex
+)
 {
     NTSTATUS status = STATUS_SUCCESS;
     UMURB urb;
+
+    if (m_InterfaceNumber != FrameworkInterfaceIndex) {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGIOTARGET,
+                            "Composite device detected: Converting absolute interface "
+                            "index %d to relative interface index %d", m_InterfaceNumber,
+                            FrameworkInterfaceIndex);
+    }
     
-    if (m_InterfaceNumber == 0) {
+    if (FrameworkInterfaceIndex == 0) {
         m_WinUsbHandle = m_UsbDevice->m_WinUsbHandle;
     }
     else {
@@ -43,12 +50,21 @@ FxUsbInterface::SetWinUsbHandle(
         urb.UmUrbGetAssociatedInterface.Hdr.Length = sizeof(_UMURB_GET_ASSOCIATED_INTERFACE);
 
         //
-        // This will ultimately call WinUsb_GetAssociatedInterface
-        // which expects a 0-based index but starts counting from index 1.
-        // To get the handle for interface n, we pass n-1 and WinUsb
-        // will return the handle for (n-1)+1.
+        // If this is using the WinUSB dispatcher, this will ultimately call 
+        // WinUsb_GetAssociatedInterface which expects a 0-based index but starts
+        // counting from index 1. To get the handle for interface n, we pass n-1
+        // and WinUSB will return the handle for (n-1)+1.
         //
-        urb.UmUrbGetAssociatedInterface.InterfaceIndex = m_InterfaceNumber - 1;
+        // The NativeUSB dispatcher ultimately calls WdfUsbTargetDeviceGetInterface.
+        // Unlike WinUSB.sys, this starts counting from index zero. The NativeUSB
+        // dispatcher expects this framework quirk and adjusts accordingly. See 
+        // WudfNativeUsbDispatcher.cpp for more information. 
+        //
+        // The actual interface number may differ from the interface index in
+        // composite devices. In all cases, the interface index (starting from zero)
+        // must be used. 
+        //
+        urb.UmUrbGetAssociatedInterface.InterfaceIndex = FrameworkInterfaceIndex - 1;
 
         status = m_UsbDevice->SendSyncUmUrb(&urb, 5);
 

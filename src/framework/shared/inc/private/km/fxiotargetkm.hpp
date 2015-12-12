@@ -28,7 +28,7 @@ Revision History:
 #ifndef _FXIOTARGETKM_H_
 #define _FXIOTARGETKM_H_
 
-FORCEINLINE
+__inline
 FxIoContext::FxIoContext(
     VOID
     ) :
@@ -47,7 +47,7 @@ FxIoContext::FxIoContext(
 {
 }
 
-FORCEINLINE
+__inline
 FxIoContext::~FxIoContext(
     VOID
     )
@@ -77,7 +77,7 @@ FxIoContext::~FxIoContext(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::ReleaseAndRestore(
     __in FxRequestBase* Request
@@ -130,7 +130,7 @@ FxIoContext::ReleaseAndRestore(
     __super::ReleaseAndRestore(Request);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::ClearBuffer(
     VOID
@@ -145,7 +145,7 @@ FxIoContext::ClearBuffer(
     m_CopyBackToBuffer = FALSE;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::CopyParameters(
     __in FxRequestBase* Request
@@ -197,7 +197,7 @@ FxIoContext::CopyParameters(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::CaptureState(
     __in FxIrp* Irp
@@ -210,7 +210,7 @@ FxIoContext::CaptureState(
     m_OriginalFlags = Irp->GetFlags();
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::SetBufferAndLength(
     __in PVOID Buffer,
@@ -231,7 +231,7 @@ FxIoContext::SetBufferAndLength(
 }
 
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 FxIoTarget::InitModeSpecific(
@@ -245,7 +245,7 @@ FxIoTarget::InitModeSpecific(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIoTarget::HasValidStackSize(
     VOID
@@ -254,7 +254,7 @@ FxIoTarget::HasValidStackSize(
     return (m_TargetStackSize == 0 ? FALSE : TRUE);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoTarget::Send(
     _In_ MdIrp Irp

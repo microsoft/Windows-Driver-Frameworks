@@ -99,7 +99,7 @@ enum FxPropertyType {
 // object class value and checking the file object class's flags.
 //
 WDF_FILEOBJECT_CLASS
-FORCEINLINE
+__inline
 FxFileObjectClassNormalize(
     __in WDF_FILEOBJECT_CLASS FileObjectClass
     )
@@ -108,7 +108,7 @@ FxFileObjectClassNormalize(
 }
 
 BOOLEAN
-FORCEINLINE
+__inline
 FxIsFileObjectOptional(
     __in WDF_FILEOBJECT_CLASS FileObjectClass
     )
@@ -159,7 +159,7 @@ public:
         );
     // end IFxHasCallbacks overrides
 
-    FORCEINLINE
+    __inline
     FxDriver*
     GetDriver(
         VOID
@@ -170,7 +170,7 @@ public:
 
 
     MdDeviceObject
-    FORCEINLINE
+    __inline
     GetDeviceObject(
         VOID
         )
@@ -178,7 +178,7 @@ public:
         return m_DeviceObject.GetObject();
     }
 
-    FORCEINLINE
+    __inline
     MxDeviceObject*
     GetMxDeviceObject(
         VOID
@@ -188,7 +188,7 @@ public:
     }
 
     ULONG
-    FORCEINLINE
+    __inline
     GetDeviceObjectFlags(
         VOID
         )
@@ -197,7 +197,7 @@ public:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     SetDeviceObjectFlags(
         _In_ ULONG Flags
         )
@@ -206,7 +206,7 @@ public:
     }
 
     MdDeviceObject
-    FORCEINLINE
+    __inline
     GetAttachedDevice(
         VOID
         )
@@ -215,7 +215,7 @@ public:
     }
 
     ULONG
-    FORCEINLINE
+    __inline
     GetAttachedDeviceObjectFlags(
         VOID
         )
@@ -224,7 +224,7 @@ public:
     }
 
     MdDeviceObject
-    FORCEINLINE
+    __inline
     GetPhysicalDevice(
         VOID
         )
@@ -233,7 +233,7 @@ public:
     }
 
     WDFDEVICE
-    FORCEINLINE
+    __inline
     GetHandle(
         VOID
         )
@@ -348,7 +348,7 @@ public:
         UNREFERENCED_PARAMETER(Flag);
     }
 
-    FORCEINLINE
+    __inline
     _Must_inspect_result_
     NTSTATUS
     AcquireDmaPacketTransaction(
@@ -368,7 +368,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ReleaseDmaPacketTransaction(
         VOID
@@ -424,7 +424,7 @@ public:
         __in_opt MdDeviceObject TargetDevice = NULL
         );
 
-    FORCEINLINE
+    __inline
     MdDeviceObject
     GetAttachedDeviceReference(
         VOID
@@ -767,7 +767,7 @@ public:
     // by this device. Note that ReadWriteIoType is common to both KMDF and UMDF
     // so no new UM-specific field is required.
     //
-    WDF_DEVICE_IO_BUFFER_RETRIEVAL m_RetrievalMode;
+    UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL m_RetrievalMode;
     WDF_DEVICE_IO_TYPE             m_IoctlIoType;
     ULONG                          m_DirectTransferThreshold;
 
@@ -885,7 +885,7 @@ public:
         __in BOOLEAN UseStateMachine
         );
 
-    FORCEINLINE
+    __inline
     FxPackage*
     GetDispatchPackage(
         __in UCHAR MajorFunction
@@ -929,7 +929,7 @@ public:
 
     static
     FxDeviceRemLockAction
-    FORCEINLINE
+    __inline
     _RequiresRemLock(
         __in UCHAR MajorCode,
         __in UCHAR MinorCode
@@ -1001,7 +1001,7 @@ public:
         );
 
     MdDeviceObject
-    FORCEINLINE
+    __inline
     GetSafePhysicalDevice(
         VOID
         )
@@ -1077,7 +1077,7 @@ public:
         __in PVOID      DispatchContext
         );
 
-    FORCEINLINE
+    __inline
     WDF_DEVICE_IO_TYPE
     GetIoType(
         VOID
@@ -1086,7 +1086,7 @@ public:
         return m_ReadWriteIoType;
     }
 
-    FORCEINLINE
+    __inline
     WDF_DEVICE_IO_TYPE
     GetIoTypeForReadWriteBufferAccess(
         VOID
@@ -1104,7 +1104,7 @@ public:
 #endif
     }
 
-    FORCEINLINE
+    __inline
     CHAR
     GetDefaultPriorityBoost(
         VOID
@@ -1116,7 +1116,7 @@ public:
     //
     // Return FileObjectClass
     //
-    __forceinline
+    __inline
     WDF_FILEOBJECT_CLASS
     GetFileObjectClass(
         VOID
@@ -1128,7 +1128,7 @@ public:
     //
     // Configuration time fileobject support setting
     //
-    __forceinline
+    __inline
     VOID
     SetFileObjectClass(
         __in WDF_FILEOBJECT_CLASS FileObjectClass
@@ -1142,7 +1142,7 @@ public:
         __inout FxPackage *Package
         );
 
-    __forceinline
+    __inline
     WDF_DEVICE_PNP_STATE
     GetDevicePnpState(
         )
@@ -1150,7 +1150,7 @@ public:
         return m_CurrentPnpState;
     }
 
-    __forceinline
+    __inline
     WDF_DEVICE_POWER_STATE
     GetDevicePowerState(
         )
@@ -1158,7 +1158,7 @@ public:
         return m_CurrentPowerState;
     }
 
-    __forceinline
+    __inline
     WDF_DEVICE_POWER_POLICY_STATE
     GetDevicePowerPolicyState(
         )
@@ -1166,7 +1166,7 @@ public:
         return m_CurrentPowerPolicyState;
     }
 
-    __forceinline
+    __inline
     VOID
     SetDevicePnpState(
         __in WDF_DEVICE_PNP_STATE DeviceState
@@ -1175,7 +1175,7 @@ public:
         m_CurrentPnpState = DeviceState;
     }
 
-    __forceinline
+    __inline
     VOID
     SetDevicePowerState(
         __in WDF_DEVICE_POWER_STATE DeviceState
@@ -1184,7 +1184,7 @@ public:
         m_CurrentPowerState = DeviceState;
     }
 
-    __forceinline
+    __inline
     VOID
     SetDevicePowerPolicyState(
         __in WDF_DEVICE_POWER_POLICY_STATE DeviceState
@@ -1193,7 +1193,7 @@ public:
         m_CurrentPowerPolicyState = DeviceState;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPnp(
         VOID
@@ -1202,7 +1202,7 @@ public:
         return m_PkgPnp != NULL ? TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsLegacy(
         VOID
@@ -1211,7 +1211,7 @@ public:
         return m_Legacy;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsExclusive(
         VOID
@@ -1220,7 +1220,7 @@ public:
         return m_Exclusive;
     }
 
-    __forceinline
+    __inline
     BOOLEAN
     IsFdo(
         VOID
@@ -1229,7 +1229,7 @@ public:
         return m_PkgPnp->GetType() == FX_TYPE_PACKAGE_FDO;
     }
 
-    __forceinline
+    __inline
     FxPkgFdo*
     GetFdoPkg(
         VOID
@@ -1238,7 +1238,7 @@ public:
         return (FxPkgFdo*) m_PkgPnp;
     }
 
-    __forceinline
+    __inline
     BOOLEAN
     IsPdo(
         VOID
@@ -1247,7 +1247,7 @@ public:
         return (IsPnp() && m_PkgPnp->GetType() == FX_TYPE_PACKAGE_PDO);
     }
 
-    __forceinline
+    __inline
     FxPkgPdo*
     GetPdoPkg(
         VOID
@@ -1262,7 +1262,7 @@ public:
         __in PWDFDEVICE_INIT DeviceInit
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetParentWaitingOnRemoval(
         VOID
@@ -1308,7 +1308,7 @@ public:
         );
     // <end> FxObject overrides
 
-    FORCEINLINE
+    __inline
     PWDF_OBJECT_ATTRIBUTES
     GetRequestAttributes(
         VOID
@@ -1401,7 +1401,7 @@ public:
     //
     // Filter Driver Support
     //
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsFilter()
     {
@@ -1414,7 +1414,7 @@ public:
         __in BOOLEAN Value
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPowerPageableCapable(
         VOID
@@ -1485,7 +1485,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     BYTE
     GetCallbackFlagsLocked(
         VOID
@@ -1494,7 +1494,7 @@ public:
         return m_CallbackFlags;
     }
 
-    FORCEINLINE
+    __inline
     BYTE
     GetCallbackFlags(
         VOID
@@ -1510,7 +1510,7 @@ public:
         return flags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetCallbackFlagsLocked(
         __in BYTE Flags
@@ -1519,7 +1519,7 @@ public:
         m_CallbackFlags |= Flags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetCallbackFlags(
         __in BYTE Flags
@@ -1532,7 +1532,7 @@ public:
         Unlock(irql);
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ClearCallbackFlagsLocked(
         __in BYTE Flags
@@ -1541,7 +1541,7 @@ public:
         m_CallbackFlags &= ~Flags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ClearCallbackFlags(
         __in BYTE Flags
@@ -1578,7 +1578,7 @@ public:
         return NULL;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsCxDriverInIoPath(
         __in FxDriver* CxDriver
@@ -1587,7 +1587,7 @@ public:
         return (GetCxDeviceInfo(CxDriver) != NULL) ? TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsCxInIoPath(
         VOID
@@ -1597,7 +1597,7 @@ public:
     }
 
 #if DBG
-    FORCEINLINE
+    __inline
     FxCxDeviceInfo*
     GetFirstCxDeviceInfo(
         VOID
@@ -1613,7 +1613,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     FxCxDeviceInfo*
     GetNextCxDeviceInfo(
         __in FxCxDeviceInfo* CxDeviceInfo
@@ -1632,7 +1632,7 @@ public:
 
 #endif
 
-    FORCEINLINE
+    __inline
     static
     CCHAR
     GetCxDriverIndex(
@@ -1647,7 +1647,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     FxDriver*
     GetCxDriver(
         __in FxCxDeviceInfo* CxDeviceInfo
@@ -1664,7 +1664,7 @@ public:
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
 
     static
-    FORCEINLINE
+    __inline
     NTSTATUS
     _OpenDeviceRegistryKey(
         _In_ MdDeviceObject DeviceObject,
@@ -1673,7 +1673,7 @@ public:
         _Out_ PHANDLE DevInstRegKey
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     _GetDeviceProperty(
@@ -1815,7 +1815,7 @@ public:
         return m_DeviceTelemetryInfoFlags;
     }
 
-    FORCEINLINE
+    __inline
     CHAR
     GetStackSize(
         VOID
@@ -1824,7 +1824,7 @@ public:
         return m_DeviceObject.GetStackSize();
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetStackSize(
         _In_ CHAR Size
@@ -1950,8 +1950,8 @@ public:
         _Out_ WDF_DEVICE_IO_TYPE* IoControlIoType
         );
 
-    FORCEINLINE
-    WDF_DEVICE_IO_BUFFER_RETRIEVAL
+    __inline
+    UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL
     GetRetrievalMode(
         VOID
         )
@@ -1959,7 +1959,7 @@ public:
         return m_RetrievalMode;
     }
 
-    FORCEINLINE
+    __inline
     WDF_DEVICE_IO_TYPE
     GetPreferredRWTransferMode(
         VOID
@@ -1968,7 +1968,7 @@ public:
         return m_ReadWriteIoType;
     }
 
-    FORCEINLINE
+    __inline
     WDF_DEVICE_IO_TYPE
     GetPreferredIoctlTransferMode(
         VOID
@@ -1977,7 +1977,7 @@ public:
         return m_IoctlIoType;
     }
 
-    FORCEINLINE
+    __inline
     ULONG
     GetDirectTransferThreshold(
         VOID
@@ -1990,7 +1990,7 @@ public:
     VOID
     GetPreferredTransferMode(
         _In_ MdDeviceObject DeviceObject,
-        _Out_ WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
+        _Out_ UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
         _Out_ WDF_DEVICE_IO_TYPE *RWPreference,
         _Out_ WDF_DEVICE_IO_TYPE *IoctlPreference
         );
@@ -2110,7 +2110,7 @@ public:
 
     static
     ULONG
-    FORCEINLINE
+    __inline
     GetLength(
         __in WDF_DEVICE_HWACCESS_TARGET_SIZE Size
         )

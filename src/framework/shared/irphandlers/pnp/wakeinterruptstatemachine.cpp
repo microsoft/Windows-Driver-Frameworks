@@ -30,6 +30,7 @@ FxWakeInterruptMachine::m_D0States[] =
 {
     {WakeInterruptEventIsr, WakeInterruptInvokingEvtIsrInD0 DEBUGGED_EVENT},
     {WakeInterruptEventLeavingD0, WakeInterruptDx DEBUGGED_EVENT},
+    {WakeInterruptEventLeavingD0NotArmedForWake, WakeInterruptDxNotArmedForWake DEBUGGED_EVENT}
 };
 
 const FxWakeInterruptTargetState
@@ -38,6 +39,14 @@ FxWakeInterruptMachine::m_DxStates[] =
     {WakeInterruptEventEnteringD0, WakeInterruptCompletingD0 DEBUGGED_EVENT},
     {WakeInterruptEventIsr, WakeInterruptWaking DEBUGGED_EVENT},
     {WakeInterruptEventD0EntryFailed, WakeInterruptFailed DEBUGGED_EVENT}
+};
+
+const FxWakeInterruptTargetState
+FxWakeInterruptMachine::m_DxNotArmedForWakeStates[] =
+{
+    { WakeInterruptEventEnteringD0, WakeInterruptCompletingD0 DEBUGGED_EVENT },
+    { WakeInterruptEventIsr, WakeInterruptInvokingEvtIsrInDxNotArmedForWake DEBUGGED_EVENT },
+    { WakeInterruptEventD0EntryFailed, WakeInterruptFailed DEBUGGED_EVENT }
 };
 
 const FxWakeInterruptTargetState
@@ -91,6 +100,18 @@ FxWakeInterruptMachine::m_StateTable[] =
     {   FxWakeInterruptMachine::InvokingEvtIsrInD0,
         NULL,
         0,
+    },
+
+    // WakeInterruptDxNotArmedForWake
+    {   FxWakeInterruptMachine::DxNotArmedForWake,
+        FxWakeInterruptMachine::m_DxNotArmedForWakeStates,
+        ARRAY_SIZE(FxWakeInterruptMachine::m_DxNotArmedForWakeStates),
+    },
+
+    // WakeInterruptInvokingEvtIsrInDxNotArmedForWake
+    { FxWakeInterruptMachine::InvokingEvtIsrInDxNotArmedForWake,
+      NULL,
+      0,
     },
 };
 
@@ -413,10 +434,40 @@ FxWakeInterruptMachine::Dx(
     This->m_Interrupt->FlushQueuedWorkitem();
 
 #endif
-    
-    This->m_PkgPnp->AckPendingWakeInterruptOperation();
+
+    This->m_PkgPnp->AckPendingWakeInterruptOperation(FALSE);
 
     return WakeInterruptMax;
+}
+
+FxWakeInterruptStates
+FxWakeInterruptMachine::DxNotArmedForWake(
+    __in FxWakeInterruptMachine* This
+    )
+{
+    //
+    // Ask power state machine to process the acknowledgement event 
+    // on a different thread as we could be running the state machine's
+    // engine in the context of a wake ISR, and the power
+    // state machine will attempt to disconnect this interrupt when
+    // it processes the acknowledgement event.
+    // 
+    This->m_PkgPnp->AckPendingWakeInterruptOperation(TRUE);
+
+    return WakeInterruptMax;
+}
+
+
+FxWakeInterruptStates
+FxWakeInterruptMachine::InvokingEvtIsrInDxNotArmedForWake(
+    __in FxWakeInterruptMachine* This
+    )
+{
+    This->m_Interrupt->InvokeWakeInterruptEvtIsr();
+
+    This->m_IsrEvent.Set();
+
+    return WakeInterruptDxNotArmedForWake;
 }
 
 FxWakeInterruptStates
@@ -436,7 +487,7 @@ FxWakeInterruptMachine::CompletingD0(
     __in FxWakeInterruptMachine* This
     )
 {
-    This->m_PkgPnp->AckPendingWakeInterruptOperation();
+    This->m_PkgPnp->AckPendingWakeInterruptOperation(FALSE);
     
     return WakeInterruptD0;
 }

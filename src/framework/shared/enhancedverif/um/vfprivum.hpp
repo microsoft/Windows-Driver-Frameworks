@@ -120,7 +120,7 @@ PerfIoComplete(
     return status;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerformanceAnalysisPowerProcess(
    __in PCEVENT_DESCRIPTOR EventDescriptor,
@@ -151,7 +151,7 @@ PerformanceAnalysisPowerProcess(
     return status;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDeviceD0EntryStart(
     __in WDFDEVICE Handle,
@@ -162,7 +162,7 @@ PerfEvtDeviceD0EntryStart(
     return PerformanceAnalysisPowerProcess(&FX_POWER_D0_ENTRY_START, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDeviceD0EntryStop(
     __in WDFDEVICE Handle,
@@ -172,7 +172,7 @@ PerfEvtDeviceD0EntryStop(
     PerformanceAnalysisPowerProcess(&FX_POWER_D0_ENTRY_STOP, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDeviceD0ExitStart(
     __in WDFDEVICE Handle,
@@ -183,7 +183,7 @@ PerfEvtDeviceD0ExitStart(
     return PerformanceAnalysisPowerProcess(&FX_POWER_D0_EXIT_START, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDeviceD0ExitStop(
     __in WDFDEVICE Handle,
@@ -193,7 +193,7 @@ PerfEvtDeviceD0ExitStop(
     PerformanceAnalysisPowerProcess(&FX_POWER_D0_EXIT_STOP, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDevicePrepareHardwareStart(
     __in WDFDEVICE Handle,
@@ -204,7 +204,7 @@ PerfEvtDevicePrepareHardwareStart(
     return PerformanceAnalysisPowerProcess(&FX_POWER_HW_PREPARE_START, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDevicePrepareHardwareStop(
     __in WDFDEVICE Handle,
@@ -214,7 +214,7 @@ PerfEvtDevicePrepareHardwareStop(
     PerformanceAnalysisPowerProcess(&FX_POWER_HW_PREPARE_STOP, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDeviceReleaseHardwareStart(
     __in WDFDEVICE Handle,
@@ -225,7 +225,7 @@ PerfEvtDeviceReleaseHardwareStart(
     return PerformanceAnalysisPowerProcess(&FX_POWER_HW_RELEASE_START, pActivityId, Handle);
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDeviceReleaseHardwareStop(
     __in WDFDEVICE Handle,
@@ -236,7 +236,7 @@ PerfEvtDeviceReleaseHardwareStop(
 }
 
 // EvtIoStop callback started.
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtIoStopStart(
     __in WDFQUEUE Queue,
@@ -261,7 +261,7 @@ PerfEvtIoStopStart(
 }
 
 // EvtIoStop callback returned.
-FORCEINLINE
+__inline
 VOID
 PerfEvtIoStopStop(
     __in WDFQUEUE Queue,
@@ -284,7 +284,7 @@ PerfEvtIoStopStop(
     PerformanceAnalysisPowerProcess(&FX_EVTIOSTOP_STOP, pActivityId, device);
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyIrqlEntry(
     __out KIRQL *Irql
@@ -293,7 +293,7 @@ VerifyIrqlEntry(
     DO_NOTHING(); 
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyIrqlExit(
     __in PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -303,7 +303,7 @@ VerifyIrqlExit(
     DO_NOTHING(); 
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyCriticalRegionEntry(
     __out BOOLEAN *CritRegion
@@ -312,7 +312,7 @@ VerifyCriticalRegionEntry(
     DO_NOTHING(); 
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyCriticalRegionExit(
     __in PWDF_DRIVER_GLOBALS DriverGlobals,

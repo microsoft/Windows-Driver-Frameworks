@@ -41,7 +41,7 @@ public:
         __in MdIrp Irp
         ) = 0;
 
-    FORCEINLINE
+    __inline
     CfxDevice*
     GetDevice(
         VOID

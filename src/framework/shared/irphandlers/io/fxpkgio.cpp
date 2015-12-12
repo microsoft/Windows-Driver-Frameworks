@@ -159,7 +159,7 @@ FX_VF_METHOD(FxPkgIo, VerifyDispatchContext) (
     return status;
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 __fastcall
@@ -337,7 +337,7 @@ CompleteIrp:
     return status;
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 __fastcall
@@ -540,7 +540,7 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 FxDriver*
 FxPkgIo::GetDriver(
     VOID

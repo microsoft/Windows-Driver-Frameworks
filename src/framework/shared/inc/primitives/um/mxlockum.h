@@ -32,7 +32,7 @@ typedef struct {
 #include "DbgMacros.h"
 #include "MxLock.h"
 
-FORCEINLINE
+__inline
 MxLock::MxLock(
     )
 {
@@ -44,7 +44,7 @@ MxLock::MxLock(
     MxLock::Initialize();
 }
 
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::Initialize(
     )
@@ -68,7 +68,7 @@ MxLockNoDynam::Initialize(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
 MxLockNoDynam::Acquire(
@@ -90,7 +90,7 @@ MxLockNoDynam::Acquire(
     *OldIrql = PASSIVE_LEVEL;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 MxLockNoDynam::TryToAcquire(
     VOID
@@ -115,7 +115,7 @@ MxLockNoDynam::TryToAcquire(
     return acquired;
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 MxLockNoDynam::AcquireAtDpcLevel(
@@ -128,7 +128,7 @@ MxLockNoDynam::AcquireAtDpcLevel(
     Acquire(&dontCare);
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 MxLockNoDynam::Release(
@@ -144,7 +144,7 @@ MxLockNoDynam::Release(
     LeaveCriticalSection(&m_Lock.Lock);    
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 MxLockNoDynam::ReleaseFromDpcLevel(
@@ -155,7 +155,7 @@ MxLockNoDynam::ReleaseFromDpcLevel(
     Release(PASSIVE_LEVEL);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::Uninitialize(
     )
@@ -168,7 +168,7 @@ MxLockNoDynam::Uninitialize(
     CLEAR_DBGFLAG_INITIALIZED;
 }
 
-FORCEINLINE
+__inline
 MxLock::~MxLock(
     )
 {

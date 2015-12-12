@@ -69,7 +69,7 @@ enum FxEnhancedVerifierBitFlags {
 // FxVerifierDbgBreakPoint and FxVerifierBreakOnDeviceStateError are mapped
 // to FX_VERIFY in UMDF and break regardless of any flags
 //
-FORCEINLINE
+__inline
 VOID
 FxVerifierDbgBreakPoint(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -96,7 +96,7 @@ FxVerifierDbgBreakPoint(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxVerifierBreakOnDeviceStateError(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -122,7 +122,7 @@ FxVerifierBreakOnDeviceStateError(
     }
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsFxVerifierFunctionTableHooking(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -153,7 +153,7 @@ FxVerifierNullBugCheck(
     __in PVOID ReturnAddress
     );
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxVerifierCheckIrqlLevel(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -200,7 +200,7 @@ Return Value:
 }
 
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsFxVerifierTestForwardProgressFailAll(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -215,7 +215,7 @@ IsFxVerifierTestForwardProgressFailAll(
     }
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsFxVerifierTestForwardProgressFailRandom(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -230,7 +230,7 @@ IsFxVerifierTestForwardProgressFailRandom(
     }
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsFxVerifierTestForwardProgress(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -245,7 +245,7 @@ IsFxVerifierTestForwardProgress(
     }
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsFxPerformanceAnalysis(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals

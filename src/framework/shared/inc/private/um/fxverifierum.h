@@ -23,7 +23,7 @@ Revision History:
 #ifndef _FXVERIFIERUM_H_
 #define _FXVERIFIERUM_H_
 
-FORCEINLINE
+__inline
 VOID
 FxVerifierCheckNxPoolType(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,

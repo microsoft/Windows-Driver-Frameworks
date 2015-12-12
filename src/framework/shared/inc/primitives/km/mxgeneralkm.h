@@ -40,7 +40,7 @@ typedef KSYNCHRONIZE_ROUTINE    MdInterruptSynchronizeRoutineType, *MdInterruptS
 #include "MxGeneral.h"
 #include <ntstrsafe.h>
 
-FORCEINLINE
+__inline
 BOOLEAN
 Mx::IsUM(
     )
@@ -48,7 +48,7 @@ Mx::IsUM(
     return FALSE;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 Mx::IsKM(
     )
@@ -56,7 +56,7 @@ Mx::IsKM(
     return TRUE;
 }
 
-FORCEINLINE
+__inline
 MxThread
 Mx::MxGetCurrentThread(
     )
@@ -64,7 +64,7 @@ Mx::MxGetCurrentThread(
     return KeGetCurrentThread();
 }
 
-FORCEINLINE
+__inline
 MdEThread
 Mx::GetCurrentEThread(
     )
@@ -72,7 +72,7 @@ Mx::GetCurrentEThread(
     return PsGetCurrentThread();
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxTerminateCurrentThread(
     __in NTSTATUS Status
@@ -81,7 +81,7 @@ Mx::MxTerminateCurrentThread(
     return PsTerminateSystemThread(Status);
 }
 
-FORCEINLINE
+__inline
 KIRQL
 Mx::MxGetCurrentIrql(
     )
@@ -91,7 +91,7 @@ Mx::MxGetCurrentIrql(
 
 __drv_maxIRQL(HIGH_LEVEL)
 __drv_raisesIRQL(NewIrql)
-FORCEINLINE
+__inline
 VOID
 Mx::MxRaiseIrql(
     __in KIRQL                              NewIrql,
@@ -102,7 +102,7 @@ Mx::MxRaiseIrql(
 }
 
 __drv_maxIRQL(HIGH_LEVEL)
-FORCEINLINE
+__inline
 VOID
 Mx::MxLowerIrql(
     __in __drv_restoresIRQL __drv_nonConstant KIRQL NewIrql
@@ -111,7 +111,7 @@ Mx::MxLowerIrql(
     KeLowerIrql(NewIrql);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxQueryTickCount(
     __out PLARGE_INTEGER  TickCount
@@ -120,7 +120,7 @@ Mx::MxQueryTickCount(
     KeQueryTickCount(TickCount);
 }
 
-FORCEINLINE
+__inline
 ULONG 
 Mx::MxQueryTimeIncrement(
     )
@@ -128,7 +128,7 @@ Mx::MxQueryTimeIncrement(
     return KeQueryTimeIncrement();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxBugCheckEx(
     __in ULONG  BugCheckCode,
@@ -148,7 +148,7 @@ Mx::MxBugCheckEx(
         );
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDbgBreakPoint(
     )
@@ -156,7 +156,7 @@ Mx::MxDbgBreakPoint(
     DbgBreakPoint();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxAssert(
     __in BOOLEAN Condition
@@ -167,7 +167,7 @@ Mx::MxAssert(
     ASSERT(Condition); //this get defined as RtlAssert
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxAssertMsg(
     __in LPSTR Message,
@@ -181,7 +181,7 @@ Mx::MxAssertMsg(
 }
 
 _Acquires_lock_(_Global_critical_region_)
-FORCEINLINE
+__inline
 VOID
 Mx::MxEnterCriticalRegion(
     )
@@ -190,7 +190,7 @@ Mx::MxEnterCriticalRegion(
 }
 
 _Releases_lock_(_Global_critical_region_)
-FORCEINLINE
+__inline
 VOID
 Mx::MxLeaveCriticalRegion(
     )
@@ -198,7 +198,7 @@ Mx::MxLeaveCriticalRegion(
     KeLeaveCriticalRegion();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDelayExecutionThread(
     __in KPROCESSOR_MODE  WaitMode,
@@ -215,7 +215,7 @@ Mx::MxDelayExecutionThread(
         );
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetSystemRoutineAddress(
     __in MxFuncName FuncName
@@ -227,7 +227,7 @@ Mx::MxGetSystemRoutineAddress(
     return MmGetSystemRoutineAddress(&funcName);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReferenceObject(
     __in PVOID Object
@@ -236,7 +236,7 @@ Mx::MxReferenceObject(
     ObReferenceObject(Object);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDereferenceObject(
     __in PVOID Object
@@ -245,7 +245,7 @@ Mx::MxDereferenceObject(
     ObDereferenceObject(Object);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxInitializeRemoveLock(
     __in MdRemoveLock  Lock,
@@ -257,7 +257,7 @@ Mx::MxInitializeRemoveLock(
     IoInitializeRemoveLock(Lock, AllocateTag, MaxLockedMinutes, HighWatermark);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxAcquireRemoveLock(
     __in MdRemoveLock  RemoveLock,
@@ -267,7 +267,7 @@ Mx::MxAcquireRemoveLock(
     return IoAcquireRemoveLock(RemoveLock, Tag);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReleaseRemoveLock(
     __in MdRemoveLock  RemoveLock,
@@ -277,7 +277,7 @@ Mx::MxReleaseRemoveLock(
     IoReleaseRemoveLock(RemoveLock, Tag);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReleaseRemoveLockAndWait(
     __in MdRemoveLock  RemoveLock,
@@ -287,7 +287,7 @@ Mx::MxReleaseRemoveLockAndWait(
     IoReleaseRemoveLockAndWait(RemoveLock, Tag);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 Mx::MxHasEnoughRemainingThreadStack(
     VOID
@@ -298,7 +298,7 @@ Mx::MxHasEnoughRemainingThreadStack(
 
 _Releases_lock_(_Global_cancel_spin_lock_)
 __drv_requiresIRQL(DISPATCH_LEVEL)
-FORCEINLINE
+__inline
 VOID
 Mx::ReleaseCancelSpinLock(
     __in __drv_restoresIRQL __drv_useCancelIRQL  KIRQL  Irql
@@ -307,7 +307,7 @@ Mx::ReleaseCancelSpinLock(
     IoReleaseCancelSpinLock(Irql);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::CreateCallback(
     __out PCALLBACK_OBJECT  *CallbackObject,
@@ -323,7 +323,7 @@ Mx::CreateCallback(
         AllowMultipleCallbacks);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::RegisterCallback(
     __in PCALLBACK_OBJECT  CallbackObject,
@@ -337,7 +337,7 @@ Mx::RegisterCallback(
         CallbackContext);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::UnregisterCallback(
     __in PVOID  CbRegistration
@@ -346,7 +346,7 @@ Mx::UnregisterCallback(
     ExUnregisterCallback(CbRegistration);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxUnlockPages(
     __in PMDL Mdl
@@ -355,7 +355,7 @@ Mx::MxUnlockPages(
     MmUnlockPages(Mdl);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetSystemAddressForMdlSafe(
     __inout PMDL Mdl,
@@ -365,7 +365,7 @@ Mx::MxGetSystemAddressForMdlSafe(
     return MmGetSystemAddressForMdlSafe(Mdl, Priority);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxBuildMdlForNonPagedPool(
     __inout PMDL Mdl
@@ -374,7 +374,7 @@ Mx::MxBuildMdlForNonPagedPool(
     MmBuildMdlForNonPagedPool(Mdl);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetDriverObjectExtension(
     __in PDRIVER_OBJECT DriverObject,
@@ -385,7 +385,7 @@ Mx::MxGetDriverObjectExtension(
                                         ClientIdentificationAddress);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxAllocateDriverObjectExtension(
     _In_  MdDriverObject DriverObject,
@@ -404,7 +404,7 @@ Mx::MxAllocateDriverObjectExtension(
                                             DriverObjectExtension);
 }
 
-FORCEINLINE
+__inline
 MdDeviceObject
 Mx::MxGetAttachedDeviceReference(
     __in PDEVICE_OBJECT DriverObject
@@ -413,7 +413,7 @@ Mx::MxGetAttachedDeviceReference(
     return IoGetAttachedDeviceReference(DriverObject);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeleteSymbolicLink(
     __in PUNICODE_STRING Value
@@ -422,7 +422,7 @@ Mx::MxDeleteSymbolicLink(
     IoDeleteSymbolicLink(Value);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeleteNPagedLookasideList(
     _In_ PNPAGED_LOOKASIDE_LIST LookasideList
@@ -431,7 +431,7 @@ Mx::MxDeleteNPagedLookasideList(
     ExDeleteNPagedLookasideList(LookasideList);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeletePagedLookasideList(
     _In_ PPAGED_LOOKASIDE_LIST LookasideList
@@ -440,7 +440,7 @@ Mx::MxDeletePagedLookasideList(
     ExDeletePagedLookasideList(LookasideList);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxInitializeNPagedLookasideList(
     _Out_     PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -461,7 +461,7 @@ Mx::MxInitializeNPagedLookasideList(
                                         Depth);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxInitializePagedLookasideList(
     _Out_     PPAGED_LOOKASIDE_LIST Lookaside,
@@ -482,7 +482,7 @@ Mx::MxInitializePagedLookasideList(
                                         Depth);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeleteDevice(
     _In_ MdDeviceObject Device
@@ -491,7 +491,7 @@ Mx::MxDeleteDevice(
     IoDeleteDevice(Device);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDetachDevice(
     _Inout_ MdDeviceObject Device
@@ -500,7 +500,7 @@ Mx::MxDetachDevice(
     IoDetachDevice(Device);
 }
 
-FORCEINLINE
+__inline
 MdDeviceObject
 Mx::MxAttachDeviceToDeviceStack(
     _In_ MdDeviceObject SourceDevice,
@@ -510,7 +510,7 @@ Mx::MxAttachDeviceToDeviceStack(
     return IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
 }
 
-FORCEINLINE 
+__inline 
 NTSTATUS
 Mx::MxCreateDeviceSecure(
       _In_      PDRIVER_OBJECT DriverObject,
@@ -535,7 +535,7 @@ Mx::MxCreateDeviceSecure(
                 DeviceObject);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS 
 Mx::MxCreateDevice(
     _In_      PDRIVER_OBJECT DriverObject,
@@ -557,7 +557,7 @@ Mx::MxCreateDevice(
 
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxCreateSymbolicLink(
     _In_ PUNICODE_STRING SymbolicLinkName,
@@ -567,7 +567,7 @@ Mx::MxCreateSymbolicLink(
     return IoCreateSymbolicLink(SymbolicLinkName, DeviceName);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxFlushQueuedDpcs(
     )
@@ -575,7 +575,7 @@ Mx::MxFlushQueuedDpcs(
     KeFlushQueuedDpcs();
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxOpenKey(
     _Out_ PHANDLE KeyHandle,
@@ -586,7 +586,7 @@ Mx::MxOpenKey(
     return ZwOpenKey(KeyHandle, DesiredAccess, ObjectAttributes);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxSetDeviceInterfaceState(
     _In_ PUNICODE_STRING SymbolicLinkName,
@@ -597,7 +597,7 @@ Mx::MxSetDeviceInterfaceState(
 }
 
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxRegisterDeviceInterface(
     _In_      PDEVICE_OBJECT PhysicalDeviceObject,
@@ -612,7 +612,7 @@ Mx::MxRegisterDeviceInterface(
                                      SymbolicLinkName);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxDeleteKey(
     _In_ HANDLE KeyHandle
@@ -621,7 +621,7 @@ Mx::MxDeleteKey(
     return ZwDeleteKey(KeyHandle);
 }
 
-FORCEINLINE
+__inline
 VOID 
 Mx::MxInitializeMdl(
     _In_  PMDL MemoryDescriptorList,
@@ -632,7 +632,7 @@ Mx::MxInitializeMdl(
     MmInitializeMdl(MemoryDescriptorList, BaseVa, Length);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetMdlVirtualAddress(
     _In_ PMDL Mdl
@@ -641,7 +641,7 @@ Mx::MxGetMdlVirtualAddress(
     return MmGetMdlVirtualAddress(Mdl);
 }
 
-FORCEINLINE
+__inline
 VOID 
 Mx::MxBuildPartialMdl(
     _In_     PMDL SourceMdl,
@@ -657,7 +657,7 @@ Mx::MxBuildPartialMdl(
                         );
 }
 
-FORCEINLINE
+__inline
 VOID 
 Mx::MxQuerySystemTime(
     _Out_ PLARGE_INTEGER CurrentTime
@@ -666,7 +666,7 @@ Mx::MxQuerySystemTime(
     KeQuerySystemTime(CurrentTime);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS 
 Mx::MxSetValueKey(
     _In_      HANDLE KeyHandle,
@@ -686,7 +686,7 @@ Mx::MxSetValueKey(
                           );
 }
 
-FORCEINLINE
+__inline
 NTSTATUS 
 Mx::MxQueryValueKey(
     _In_       HANDLE KeyHandle,
@@ -706,7 +706,7 @@ Mx::MxQueryValueKey(
                             );
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxReferenceObjectByHandle(
     __in HANDLE Handle,
@@ -726,7 +726,7 @@ Mx::MxReferenceObjectByHandle(
                 HandleInformation);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxUnRegisterPlugPlayNotification(
     __in __drv_freesMem(Pool) PVOID NotificationEntry
@@ -736,7 +736,7 @@ Mx::MxUnRegisterPlugPlayNotification(
 }
 
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxClose(
     __in HANDLE Handle
@@ -745,7 +745,7 @@ Mx::MxClose(
     return ZwClose(Handle);
 }
 
-FORCEINLINE
+__inline
 KIRQL
 Mx::MxAcquireInterruptSpinLock(
     _Inout_ PKINTERRUPT Interrupt
@@ -754,7 +754,7 @@ Mx::MxAcquireInterruptSpinLock(
     return KeAcquireInterruptSpinLock(Interrupt);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReleaseInterruptSpinLock(
     _Inout_ PKINTERRUPT Interrupt,
@@ -764,7 +764,7 @@ Mx::MxReleaseInterruptSpinLock(
     KeReleaseInterruptSpinLock(Interrupt, OldIrql);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN 
 Mx::MxInsertQueueDpc(
   __inout   PRKDPC Dpc,

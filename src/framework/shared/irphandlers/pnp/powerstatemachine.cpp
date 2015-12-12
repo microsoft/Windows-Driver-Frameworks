@@ -1154,7 +1154,8 @@ PowerProcessEventInner    -- Implements steps 10-15.
 
 VOID
 FxPkgPnp::PowerProcessEvent(
-    __in FxPowerEvent Event
+    __in FxPowerEvent Event,
+    __in BOOLEAN ProcessOnDifferentThread
     )
 /*++
 
@@ -1163,6 +1164,9 @@ Routine Description:
 
 Arguments:
     Event - Current Power event
+
+    ProcessOnDifferentThread - Process the event on a different thread 
+        regardless of IRQL. By default this is FALSE as per the declaration.
 
 Return Value:
 
@@ -1258,7 +1262,8 @@ Return Value:
     // machine on this thread.  If we can't do that, then queue a work item.
     //
 
-    if (irql == PASSIVE_LEVEL) {
+    if (irql == PASSIVE_LEVEL &&
+        FALSE == ProcessOnDifferentThread) {
         LONGLONG timeout = 0;
 
         status = m_PowerMachine.m_StateMachineLock.AcquireLock(
@@ -4645,8 +4650,29 @@ Return Value:
     if (This->m_WakeInterruptCount == 0) {
         return WdfDevStatePowerGotoDxIoStopped;
     }
-    
-    This->SendEventToAllWakeInterrupts(WakeInterruptEventLeavingD0);
+
+    //
+    // Indiciate to the wake interrupt state machine that the device is 
+    // leaving D0 and also whether the device is armed for wake. The wake 
+    // interrupt machine treats these differently as described below.
+    //
+    if (This->m_WakeInterruptsKeepConnected == TRUE ||
+        This->m_SharedPower.m_WaitWakeIrp != NULL) {
+        This->SendEventToAllWakeInterrupts(WakeInterruptEventLeavingD0);
+    }
+    else {
+        //
+        // When a wake interrupt is not armed for wake it will be disconnected
+        // by the power state machine once the wake interrupt state machine
+        // acknowledges the transition. If the interrupt fires between
+        // the time this event is posted and it is disconnected, it needs to be 
+        // delivered to the driver or a deadlock could occur between PO state machine
+        // trying to disconnect the interrupt and the wake interrupt machine 
+        // holding on to the ISR waiting for the device to return to D0 before 
+        // delivering the interrupt. 
+        //
+        This->SendEventToAllWakeInterrupts(WakeInterruptEventLeavingD0NotArmedForWake);
+    }
 
     return WdfDevStatePowerNull;;
 }
@@ -4701,8 +4727,29 @@ Return Value:
     if (This->m_WakeInterruptCount == 0) {
         return WdfDevStatePowerGotoDxIoStoppedNP;
     }
-    
-    This->SendEventToAllWakeInterrupts(WakeInterruptEventLeavingD0);
+
+    //
+    // Indiciate to the wake interrupt state machine that the device is 
+    // leaving D0 and also whether the device is armed for wake. The wake 
+    // interrupt machine treats these differently as described below
+    //
+    if (This->m_WakeInterruptsKeepConnected == TRUE ||
+        This->m_SharedPower.m_WaitWakeIrp != NULL) {
+        This->SendEventToAllWakeInterrupts(WakeInterruptEventLeavingD0);
+    }
+    else {
+        //
+        // When a wake interrupt is not armed for wake it will be disconnected by
+        // the power state machine once the wake interrupt state machine
+        // acknowledges the transition. If the interrupt fires between
+        // the time this event is posted and it is disconnected, it needs to be 
+        // delivered to the driver or a deadlock could occur between PO state machine
+        // trying to disconnect the interrupt and the wake interrupt machine holding on
+        // to the ISR waiting for the device to return to D0 before delivering the 
+        // interrupt. 
+        //
+        This->SendEventToAllWakeInterrupts(WakeInterruptEventLeavingD0NotArmedForWake);
+    }
 
     return WdfDevStatePowerNull;;
 }

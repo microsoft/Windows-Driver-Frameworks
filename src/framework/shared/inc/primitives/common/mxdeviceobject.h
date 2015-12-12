@@ -27,7 +27,7 @@ private:
     MdDeviceObject m_DeviceObject;
 
 public:
-    FORCEINLINE
+    __inline
     MxDeviceObject(
         __in MdDeviceObject DeviceObject
         ) :
@@ -35,7 +35,7 @@ public:
     {
     }
     
-    FORCEINLINE
+    __inline
     MxDeviceObject(
         VOID
         ) :
@@ -43,7 +43,7 @@ public:
     {
     }
 
-    FORCEINLINE
+    __inline
     MdDeviceObject
     GetObject(
         VOID
@@ -52,7 +52,7 @@ public:
         return m_DeviceObject;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetObject(
         __in_opt MdDeviceObject DeviceObject
@@ -61,15 +61,6 @@ public:
         m_DeviceObject = DeviceObject;
     }
 
-
-
-
-
-
-
-
-
-    
     CCHAR
     GetStackSize(
         VOID

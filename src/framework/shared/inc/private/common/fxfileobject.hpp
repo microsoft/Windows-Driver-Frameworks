@@ -76,7 +76,7 @@ public:
     ~FxFileObject(
        );
 
-    FORCEINLINE
+    __inline
     WDFFILEOBJECT
     GetHandle(
         VOID
@@ -85,7 +85,7 @@ public:
         return (WDFFILEOBJECT) GetObjectHandle();
     }
 
-    FORCEINLINE
+    __inline
     MdFileObject
     GetWdmFileObject(
         VOID
@@ -94,7 +94,7 @@ public:
         return m_FileObject.GetFileObject();
     }
 
-    FORCEINLINE
+    __inline
     CfxDevice*
     GetDevice(
         VOID
@@ -103,7 +103,7 @@ public:
         return m_Device;
     }
 
-    FORCEINLINE
+    __inline
     PUNICODE_STRING
     GetFileName(
         VOID
@@ -116,7 +116,7 @@ public:
     #endif    
     }
 
-    FORCEINLINE
+    __inline
     PLARGE_INTEGER
     GetCurrentByteOffset(
         VOID
@@ -125,7 +125,7 @@ public:
         return m_FileObject.GetCurrentByteOffset();
     }
 
-    FORCEINLINE
+    __inline
     ULONG
     GetFlags(
         VOID
@@ -134,7 +134,7 @@ public:
         return m_FileObject.GetFlags();
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetPkgCleanupCloseContext(
         PVOID Context
@@ -143,7 +143,7 @@ public:
         m_PkgContext = Context;
     }
 
-    FORCEINLINE
+    __inline
     PVOID
     GetPkgCleanupCloseContext(
         VOID

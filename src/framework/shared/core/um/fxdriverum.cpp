@@ -317,8 +317,8 @@ FxDriver::OpenParametersKey(
     PDRIVER_OBJECT_UM pDrvObj = GetDriverObject();
     IWudfDeviceStack* pDevStack = (IWudfDeviceStack*)pDrvObj->WudfDevStack;
 
-    WDF_PROPERTY_STORE_ROOT rootSpecifier;
-    WDF_PROPERTY_STORE_RETRIEVE_FLAGS flags;
+    UMINT::WDF_PROPERTY_STORE_ROOT rootSpecifier;
+    UMINT::WDF_PROPERTY_STORE_RETRIEVE_FLAGS flags;
     CANSI_STRING serviceNameA;
     DECLARE_UNICODE_STRING_SIZE(serviceNameW, WDF_DRIVER_GLOBALS_NAME_LEN);
     HKEY hKey;
@@ -328,11 +328,11 @@ FxDriver::OpenParametersKey(
                                           &serviceNameA,
                                           FALSE);
     if (NT_SUCCESS(status)) {
-        rootSpecifier.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-        rootSpecifier.RootClass = WdfPropertyStoreRootDriverParametersKey;
+        rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+        rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootDriverParametersKey;
         rootSpecifier.Qualifier.ParametersKey.ServiceName = serviceNameW.Buffer;
         
-        flags = WdfPropertyStoreCreateIfMissing;
+        flags = UMINT::WdfPropertyStoreCreateIfMissing;
 
         hr = pDevStack->CreateRegistryEntry(&rootSpecifier,
                                             flags,

@@ -38,16 +38,16 @@ private:
     DECLARE_DBGFLAG_INITIALIZED;
     
 public:
-    FORCEINLINE
+    __inline
     MxEvent(
         );
     
-    FORCEINLINE
+    __inline
     ~MxEvent(
         );
 
     CHECK_RETURN_IF_USER_MODE
-    FORCEINLINE
+    __inline
     NTSTATUS
     Initialize(
         __in EVENT_TYPE Type,
@@ -58,23 +58,23 @@ public:
     // GetEvent will return the underlying primitive event
     // PKEVENT in case of kernel mode and event HANDLE in case of user-mode
     //
-    FORCEINLINE
+    __inline
     PVOID        
     GetEvent(
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Set(
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetWithIncrement(
         __in KPRIORITY Priority
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Clear(
         );
@@ -82,7 +82,7 @@ public:
     __drv_when(Timeout == NULL && Alertable == FALSE, __drv_valueIs(==0))
     __drv_when(Timeout != NULL && Alertable == FALSE, __drv_valueIs(==0;==258))
     __drv_when(Timeout != NULL || Alertable == TRUE, _Must_inspect_result_)
-    FORCEINLINE
+    __inline
     NTSTATUS
     WaitFor(
         __in     KWAIT_REASON  WaitReason,
@@ -96,12 +96,12 @@ public:
     // for a notification event (and not for a
     // synchronization event)
     //
-    FORCEINLINE
+    __inline
     LONG
     ReadState(
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Uninitialize(
         );

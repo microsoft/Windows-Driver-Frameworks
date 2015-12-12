@@ -37,7 +37,7 @@ extern PCHAR WdfLdrType;
 // forward definitions
 typedef struct _FX_DRIVER_GLOBALS *PFX_DRIVER_GLOBALS;
 typedef struct _FX_DUMP_DRIVER_INFO_ENTRY *PFX_DUMP_DRIVER_INFO_ENTRY;
-    
+
 struct FxMdlDebugInfo {
     PMDL Mdl;
     FxObject* Owner;
@@ -52,8 +52,8 @@ struct FxAllocatedMdls {
     struct FxAllocatedMdls* Next;
 };
 
-#define DDI_ENTRY_IMPERSONATION_OK() 
-#define DDI_ENTRY() 
+#define DDI_ENTRY_IMPERSONATION_OK()
+#define DDI_ENTRY()
 
 typedef
 BOOLEAN
@@ -165,16 +165,16 @@ VOID
     );
 
 typedef
-KAFFINITY  
+KAFFINITY
 (*PFN_KE_QUERY_ACTIVE_PROCESSORS)(
     VOID
     );
 
 typedef
-VOID  
+VOID
 (*PFN_KE_SET_TARGET_PROCESSOR_DPC)(
     __in PRKDPC  Dpc,
-    __in CCHAR  Number    
+    __in CCHAR  Number
     );
 
 typedef
@@ -188,9 +188,9 @@ BOOLEAN
     );
 
 typedef
-ULONG   
+ULONG
 (*PFN_KE_GET_CURRENT_PROCESSOR_NUMBER)(
-    VOID    
+    VOID
     );
 
 typedef
@@ -349,7 +349,7 @@ typedef struct _FX_DRIVER_TRACKER_CACHE_AWARE {
     //
 private:
     typedef struct _FX_DRIVER_TRACKER_ENTRY {
-         volatile PFX_DRIVER_GLOBALS FxDriverGlobals;        
+         volatile PFX_DRIVER_GLOBALS FxDriverGlobals;
     } FX_DRIVER_TRACKER_ENTRY, *PFX_DRIVER_TRACKER_ENTRY;
 
     //
@@ -359,7 +359,7 @@ public:
     _Must_inspect_result_
     NTSTATUS
     Initialize();
-    
+
     VOID
     Uninitialize();
 
@@ -379,16 +379,16 @@ public:
     // KeGetCurrentProcessorNumberEx is called directly because the procgrp.lib
     // provides the downlevel support for Vista, XP and Win2000.
     //
-    FORCEINLINE
+    __inline
     VOID
     TrackDriver(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         )
     {
         ASSERT(m_PoolToFree != NULL);
-        
+
         GetProcessorDriverEntryRef(
-            KeGetCurrentProcessorNumberEx(NULL))->FxDriverGlobals = 
+            KeGetCurrentProcessorIndex())->FxDriverGlobals =
                 FxDriverGlobals;
     }
 
@@ -398,7 +398,7 @@ public:
     // provides the downlevel support for Vista, XP and Win2000.
     //
     _Must_inspect_result_
-    FORCEINLINE
+    __inline
     PFX_DRIVER_GLOBALS
     GetCurrentTrackedDriver()
     {
@@ -407,7 +407,7 @@ public:
         ASSERT(m_PoolToFree != NULL);
 
         fxDriverGlobals = GetProcessorDriverEntryRef(
-            KeGetCurrentProcessorNumberEx(NULL))->FxDriverGlobals;
+            KeGetCurrentProcessorIndex())->FxDriverGlobals;
 
         return fxDriverGlobals;
     }
@@ -420,7 +420,7 @@ private:
     // Returns the per-processor cache-aligned driver usage ref structure for
     // given processor.
     //
-    FORCEINLINE
+    __inline
     PFX_DRIVER_TRACKER_ENTRY
     GetProcessorDriverEntryRef(
         __in ULONG Index
@@ -438,7 +438,7 @@ private:
     // Pointer to array of cache-line aligned tracking driver structures.
     //
     PFX_DRIVER_TRACKER_ENTRY    m_DriverUsage;
-        
+
     //
     // Points to pool of per-proc tracking entries that needs to be freed.
     //
@@ -460,27 +460,27 @@ private:
 
 
 //
-// This inline function tracks driver usage; This info is used by the 
-// debug dump callback routine for selecting which driver's log to save 
+// This inline function tracks driver usage; This info is used by the
+// debug dump callback routine for selecting which driver's log to save
 // in the minidump. At this time we track the following OS to framework calls:
 //  (a) IRP dispatch (general, I/O, PnP, WMI).
 //  (b) Request's completion callbacks.
 //  (c) Work Item's (& System Work Item's) callback handlers.
 //  (d) Timer's callback handlers.
 //
-FORCEINLINE
+__inline
 VOID
 FX_TRACK_DRIVER(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
     )
-{  
+{
     if (FxDriverGlobals->FxTrackDriverForMiniDumpLog) {
         FxLibraryGlobals.DriverTracker.TrackDriver(FxDriverGlobals);
     }
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 PVOID
 FxAllocateFromNPagedLookasideListNoTracking (
     __in PNPAGED_LOOKASIDE_LIST Lookaside
@@ -509,7 +509,7 @@ Return Value:
 {
 
     PVOID Entry;
-    
+
     Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
 
     if (Entry == NULL) {
@@ -521,7 +521,7 @@ Return Value:
     return Entry;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxFreeToNPagedLookasideListNoTracking (
     __in PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -558,7 +558,7 @@ Return Value:
     }
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxAllocateFromNPagedLookasideList (
     _In_ PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -604,7 +604,7 @@ Return Value:
     return Entry;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxFreeToNPagedLookasideList (
     __in PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -645,7 +645,7 @@ Return Value:
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 PVOID
 FxAllocateFromPagedLookasideList (
     __in PPAGED_LOOKASIDE_LIST Lookaside
@@ -675,7 +675,7 @@ Return Value:
     PVOID Entry;
 
     Lookaside->L.TotalAllocates += 1;
-    
+
     Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
     if (Entry == NULL) {
         Lookaside->L.AllocateMisses += 1;
@@ -687,7 +687,7 @@ Return Value:
     return Entry;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxFreeToPagedLookasideList (
     __in PPAGED_LOOKASIDE_LIST Lookaside,
@@ -715,7 +715,7 @@ Return Value:
 
 {
     Lookaside->L.TotalFrees += 1;
-    
+
     if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
         Lookaside->L.FreeMisses += 1;
         (Lookaside->L.Free)(Entry);
@@ -727,7 +727,7 @@ Return Value:
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 BOOLEAN
 FxIsProcessorGroupSupported(
     VOID

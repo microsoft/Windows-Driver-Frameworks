@@ -25,7 +25,7 @@
 #ifndef _FXREQUESTBUFFERKM_HPP_
 #define _FXREQUESTBUFFERKM_HPP_
 
-FORCEINLINE
+__inline
 VOID
 FxRequestBuffer::SetMdl(
     __in PMDL Mdl,

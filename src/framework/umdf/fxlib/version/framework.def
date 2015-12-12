@@ -1,6 +1,0 @@
-; Framework.def : Declares the module parameters.
-
-LIBRARY      "WUDFx02000.DLL"
-
-EXPORTS
-    FxFrameworkEntryUm    PRIVATE

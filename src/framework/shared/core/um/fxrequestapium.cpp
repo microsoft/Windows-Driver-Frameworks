@@ -443,7 +443,7 @@ WDFEXPORT(WdfRequestGetEffectiveIoType)(
         return WdfDeviceIoUndefined;
     }
 
-    return pRequest->GetFxIrp()->GetIoIrp()->GetTransferMode();
+    return (WDF_DEVICE_IO_TYPE)(pRequest->GetFxIrp()->GetIoIrp()->GetTransferMode());
 }
 
 } // extern "C" the whole file

@@ -295,7 +295,7 @@ protected:
         __in FxUsbPipeRepeatReader* Repeater
         );
 
-    FORCEINLINE
+    __inline
     VOID
     FxUsbPipeRequestWorkItemHandler(
         __in FxUsbPipeRepeatReader* FailedRepeater
@@ -475,7 +475,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetNoCheckPacketSize(
         VOID
@@ -508,7 +508,7 @@ public:
         return (WDFUSBPIPE) GetObjectHandle();
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsInEndpoint(
         VOID
@@ -526,7 +526,7 @@ public:
 #endif
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsOutEndpoint(
         VOID

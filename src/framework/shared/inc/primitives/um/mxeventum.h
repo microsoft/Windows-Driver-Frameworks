@@ -33,7 +33,7 @@ typedef struct {
 #include "DbgMacros.h"
 #include "MxEvent.h"
 
-FORCEINLINE
+__inline
 MxEvent::MxEvent()
 {
     CLEAR_DBGFLAG_INITIALIZED;
@@ -41,7 +41,7 @@ MxEvent::MxEvent()
     m_Event.Event = NULL;
 }
 
-FORCEINLINE
+__inline
 MxEvent::~MxEvent()
 {
     //
@@ -54,7 +54,7 @@ MxEvent::~MxEvent()
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 NTSTATUS
 MxEvent::Initialize(
     __in EVENT_TYPE Type,
@@ -99,7 +99,7 @@ exit:
     return status;
 }
 
-FORCEINLINE
+__inline
 PVOID        
 MxEvent::GetEvent(
     )
@@ -109,7 +109,7 @@ MxEvent::GetEvent(
     return m_Event.Event;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::Set(
     )
@@ -119,7 +119,7 @@ MxEvent::Set(
     SetEvent(m_Event.Event);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::SetWithIncrement(
     __in KPRIORITY Priority
@@ -132,7 +132,7 @@ MxEvent::SetWithIncrement(
     Set();
 }
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::Clear(
     )
@@ -143,7 +143,7 @@ MxEvent::Clear(
 }
 
 __drv_when(Timeout != NULL, _Must_inspect_result_)
-FORCEINLINE
+__inline
 NTSTATUS
 MxEvent::WaitFor(
     __in     KWAIT_REASON  WaitReason,
@@ -253,7 +253,7 @@ Return Value:
 }
 
 LONG
-FORCEINLINE
+__inline
 MxEvent::ReadState(
     )
 {
@@ -275,7 +275,7 @@ MxEvent::ReadState(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 MxEvent::Uninitialize(
     )

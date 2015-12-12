@@ -188,7 +188,7 @@ Return Value:
     //
     // Register the I/O in-caller context callback
     //
-    FORCEINLINE
+    __inline
     VOID
     SetIoInCallerContextCallback(
         __inout PFN_WDF_IO_IN_CALLER_CONTEXT       EvtIoInCallerContext
@@ -229,7 +229,7 @@ Return Value:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     CfxDevice*
     GetDevice(
         VOID
@@ -238,7 +238,7 @@ Return Value:
         return m_Device;
     }
 
-    FORCEINLINE
+    __inline
     FxIoQueue*
     GetDefaultQueue(
         VOID
@@ -247,7 +247,7 @@ Return Value:
         return m_DefaultQueue;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsFilter(
         VOID
@@ -350,7 +350,7 @@ Return Value:
         __in MdFileObject FileObject
         );
 
-    FORCEINLINE
+    __inline
     VOID
     RequestCompletedCallback(
         __in FxRequest* Request
@@ -368,7 +368,7 @@ Return Value:
         //
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsTopLevelQueue(
         __in FxIoQueue* Queue
@@ -391,7 +391,7 @@ Return Value:
         __inout MdIrp      Irp
         );
     
-    FORCEINLINE
+    __inline
     FxIoInCallerContext*
     GetIoInCallerContextCallback(
         __in_opt FxCxDeviceInfo* CxDeviceInfo

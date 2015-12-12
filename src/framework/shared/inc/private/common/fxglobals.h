@@ -160,7 +160,7 @@ typedef struct _FX_TELEMETRY_CONTEXT{
 typedef struct _FX_DRIVER_GLOBALS {
 public:
     ULONG
-    FORCEINLINE
+    __inline
     AddRef(
         __in_opt   PVOID Tag = NULL,
         __in       LONG Line = 0,
@@ -184,7 +184,7 @@ public:
     }
 
     ULONG
-    FORCEINLINE
+    __inline
     Release(
         __in_opt    PVOID Tag = NULL,
         __in        LONG Line = 0,
@@ -303,7 +303,7 @@ public:
     // To be used in code path where it is already determined that the driver
     // is down-level, otherwise use IsVerificationEnabled.
     //
-    FORCEINLINE
+    __inline
     _Must_inspect_result_
     BOOLEAN
     IsDownlevelVerificationEnabled(
@@ -587,7 +587,7 @@ FxPoolAllocateWithTag(
 //
 // Get FxDriverGlobals from api's DriverGlobals
 //
-FORCEINLINE
+__inline
 PFX_DRIVER_GLOBALS
 GetFxDriverGlobals(
     __in PWDF_DRIVER_GLOBALS DriverGlobals
@@ -953,7 +953,7 @@ FxFreeAllocatedMdlsDebugInfo(
 //
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 BOOLEAN
 FxIsClassExtension(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -966,7 +966,7 @@ FxIsClassExtension(
 
 _Must_inspect_result_
 BOOLEAN
-FORCEINLINE
+__inline
 FxIsEqualGuid(
     __in CONST GUID* Lhs,
     __in CONST GUID* Rhs
@@ -975,7 +975,7 @@ FxIsEqualGuid(
     return RtlCompareMemory(Lhs, Rhs, sizeof(GUID)) == sizeof(GUID);
 }
 
-FORCEINLINE
+__inline
 size_t
 FxSizeTMax(
     __in size_t A,
@@ -985,7 +985,7 @@ FxSizeTMax(
     return A > B ? A : B;
 }
 
-FORCEINLINE
+__inline
 size_t
 FxSizeTMin(
     __in size_t A,
@@ -995,7 +995,7 @@ FxSizeTMin(
     return A < B ? A : B;
 }
 
-FORCEINLINE
+__inline
 LONG
 FxInterlockedIncrementFloor(
     __inout LONG  volatile *Target,
@@ -1033,7 +1033,7 @@ FxInterlockedIncrementFloor(
     return startVal+1;
 }
 
-FORCEINLINE
+__inline
 LONG
 FxInterlockedIncrementGTZero(
     __inout LONG  volatile *Target
@@ -1042,7 +1042,7 @@ FxInterlockedIncrementGTZero(
     return FxInterlockedIncrementFloor(Target, 0);
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxRandom(
     __inout PULONG RandomSeed
@@ -1069,7 +1069,7 @@ Return Value:
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 BOOLEAN
 FxIsPassiveLevelInterruptSupported(
     VOID
@@ -1081,7 +1081,7 @@ FxIsPassiveLevelInterruptSupported(
     return FxLibraryGlobals.PassiveLevelInterruptSupport;
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 BOOLEAN
 IsOsVersionGreaterThanOrEqualTo(

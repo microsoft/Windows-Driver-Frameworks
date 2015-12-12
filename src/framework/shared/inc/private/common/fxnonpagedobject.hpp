@@ -139,7 +139,7 @@ public:
 
     _Releases_lock_(this->m_NPLock.m_Lock)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     VOID
     Unlock(
         __in __drv_restoresIRQL KIRQL PreviousIrql
@@ -198,7 +198,7 @@ public:
     _Requires_lock_held_(this->m_NPLock.m_Lock)
     _Releases_lock_(this->m_NPLock.m_Lock)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    __forceinline
+    __inline
     VOID
     UnlockFromDispatch(
         VOID

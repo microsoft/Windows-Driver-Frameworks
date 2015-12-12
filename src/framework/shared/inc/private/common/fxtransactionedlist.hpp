@@ -272,7 +272,7 @@ public:
         UNREFERENCED_PARAMETER(FxDriverGlobals);
     }
 
-    FORCEINLINE
+    __inline
     NTSTATUS
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "_Must_inspect_result_ not needed in kernel mode as the function always succeeds");
     Initialize(

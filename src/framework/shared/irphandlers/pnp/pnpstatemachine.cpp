@@ -3291,6 +3291,12 @@ Return Value:
     //
     This->m_WakeInterruptsKeepConnected = FALSE;
 
+
+    //
+    // This flag is cleared so we can reacquire the start time and state
+    //
+    This->m_AchievedStart = FALSE;
+
     return WdfDevStatePnpHardwareAvailable;
 }
 
@@ -4579,9 +4585,9 @@ Return Value:
 --*/
 {
     NTSTATUS status = STATUS_SUCCESS;
-    ULONG count, started;
+    ULONG count;
     LARGE_INTEGER currentTickCount, startTickCount;
-    BOOLEAN writeTick, writeCount, writeStarted;
+    BOOLEAN started, writeTick, writeCount, writeStarted;
 
     DECLARE_CONST_UNICODE_STRING(valueNameStartTime, RESTART_START_TIME_NAME);
     DECLARE_CONST_UNICODE_STRING(valueNameCount, RESTART_COUNT_NAME);
@@ -4596,22 +4602,7 @@ Return Value:
     Mx::MxQueryTickCount(&currentTickCount);
 
     started = m_AchievedStart;
-    if (!started) {
-        ULONG length, type;
-        status = FxRegKey::_QueryValue(GetDriverGlobals(),
-                                       RestartKey,
-                                       &valueNameStartAchieved,
-                                       sizeof(started),
-                                       &started,
-                                       &length,
-                                       &type);
-        if (!NT_SUCCESS(status) || length != sizeof(started) ||
-            type != REG_DWORD) {
-            started = FALSE;
-        }
-        status = STATUS_SUCCESS;
-    } 
-    else {
+    if (started) {
         // 
         // Save the fact the driver started without failing
         //
@@ -4708,28 +4699,48 @@ Return Value:
                         status = STATUS_UNSUCCESSFUL;
                     }
                 }
-                else if (started) {
-                    //
-                    // Exceeded the time limit.  This is treated as a reset of
-                    // the time limit, so we will try to restart and reset the
-                    // start time and restart count.
-                    //
-                    writeTick = TRUE;
-                    writeCount = TRUE;
-                    count = 1;
-
-                    //
-                    // Erase the fact the driver once achieved start and 
-                    // make it do it again to get another 5 attempts to
-                    // restart.
-                    writeStarted = TRUE;
-                    started = FALSE;
-                }
                 else {
-                    //
-                    // Device never started
-                    //
-                    status = STATUS_UNSUCCESSFUL;
+                    if (started == FALSE) {
+                        ULONG length, type, value;
+                        status = FxRegKey::_QueryValue(GetDriverGlobals(),
+                                                       RestartKey,
+                                                       &valueNameStartAchieved,
+                                                       sizeof(value),
+                                                       &value,
+                                                       &length,
+                                                       &type);
+                        if (!NT_SUCCESS(status) || length != sizeof(value) ||
+                            type != REG_DWORD) {
+                            value = 0;
+                        }
+                        started = value != 0;
+                        status = STATUS_SUCCESS;
+                    }
+                    
+                    if (started) {
+                        //
+                        // Exceeded the time limit.  This is treated as a reset of
+                        // the time limit, so we will try to restart and reset the
+                        // start time and restart count.
+                        //
+                        writeTick = TRUE;
+                        writeCount = TRUE;
+                        count = 1;
+
+                        //
+                        // Erase the fact the driver once started and 
+                        // make it do it again to get another 5 attempts to
+                        // restart.
+                        //
+                        writeStarted = TRUE;
+                        started = FALSE;
+                    }
+                    else {
+                        //
+                        // Device never started
+                        //
+                        status = STATUS_UNSUCCESSFUL;
+                    }
                 }
             }
         }
@@ -4763,11 +4774,12 @@ Return Value:
 
     if (writeStarted) {
         NTSTATUS status2;
+        DWORD value = started;
         status2 = FxRegKey::_SetValue(RestartKey,
                                      (PUNICODE_STRING)&valueNameStartAchieved,
                                      REG_DWORD,
-                                     &started,
-                                     sizeof(started));
+                                     &value,
+                                     sizeof(value));
         //
         // Don't let status report success if it was an error prior to _SetValue
         //

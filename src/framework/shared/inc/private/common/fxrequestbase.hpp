@@ -168,7 +168,7 @@ class FxRequestBase : public FxNonPagedObject {
 
 public:
 
-    FORCEINLINE
+    __inline
     VOID
     SetCompletionRoutine(
         __in_opt PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine = NULL,
@@ -205,7 +205,7 @@ public:
         return pContext;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsCompletionRoutineSet(
         VOID
@@ -215,7 +215,7 @@ public:
                     TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsCancelRoutineSet(
         VOID
@@ -225,7 +225,7 @@ public:
                     TRUE : FALSE;
     }
     
-    FORCEINLINE
+    __inline
     FxRequestContext*
     GetContext(
         VOID
@@ -234,7 +234,7 @@ public:
         return m_RequestContext;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetContext(
         __in FxRequestContext* RequestContext = NULL
@@ -273,7 +273,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     VOID
     EnableContextDisposeNotification(
         VOID
@@ -282,7 +282,7 @@ public:
         MarkDisposeOverride();
     }
         
-    FORCEINLINE
+    __inline
     BOOLEAN
     HasContextType(
         __in FX_REQUEST_CONTEXT_TYPE Type
@@ -292,7 +292,7 @@ public:
                 m_RequestContext->m_RequestType == Type) ? TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     HasContext(
         VOID
         )
@@ -302,7 +302,7 @@ public:
                     FX_REQUEST_CONTEXT_TYPE_NONE) ? TRUE : FALSE;
     }
     
-    FORCEINLINE
+    __inline
     MdIrp
     GetSubmitIrp(
         VOID
@@ -311,7 +311,7 @@ public:
         return m_Irp.GetIrp();
     }
 
-    FORCEINLINE
+    __inline
     FxIrp*
     GetSubmitFxIrp(
         VOID
@@ -326,7 +326,7 @@ public:
         __in BOOLEAN FreeIrp = TRUE
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     CanComplete(
         VOID
@@ -349,7 +349,7 @@ public:
         __in FxIoTarget* Target
         );
 
-    FORCEINLINE
+    __inline
     FxIoTarget*
     GetTarget(
         VOID
@@ -359,7 +359,7 @@ public:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     SetTarget(
         __in FxIoTarget* Target
         )
@@ -367,7 +367,7 @@ public:
         m_Target = Target;
     }
 
-    FORCEINLINE
+    __inline
     UCHAR
     GetTargetFlags(
         VOID
@@ -377,7 +377,7 @@ public:
         return m_TargetFlags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetTargetFlags(
         __in UCHAR Flags
@@ -387,7 +387,7 @@ public:
         m_TargetFlags |= Flags;
     }
 
-    FORCEINLINE
+    __inline
     ULONG
     ClearTargetFlags(
         __in UCHAR Flags
@@ -403,7 +403,7 @@ public:
         return oldFlags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetRequestBaseFlags(
         __in UCHAR Flags
@@ -422,7 +422,7 @@ public:
         return m_VerifierFlags;
     }
 
-    FORCEINLINE
+    __inline
     SHORT
     GetVerifierFlags(
         VOID
@@ -438,7 +438,7 @@ public:
         return flags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetVerifierFlagsLocked(
         __in SHORT Flags
@@ -447,7 +447,7 @@ public:
         m_VerifierFlags |= Flags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetVerifierFlags(
         __in SHORT Flags
@@ -462,7 +462,7 @@ public:
         Unlock(irql);
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ClearVerifierFlagsLocked(
         __in SHORT Flags
@@ -471,7 +471,7 @@ public:
         m_VerifierFlags &= ~Flags;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ClearVerifierFlags(
         __in SHORT Flags
@@ -486,7 +486,7 @@ public:
         Unlock(irql);
     }
 
-    FORCEINLINE
+    __inline
     VOID
     VerifierSetFormatted(
         VOID
@@ -498,7 +498,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     VOID
     VerifierClearFormatted(
         VOID
@@ -510,7 +510,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     VerifierIsFormatted(
         VOID
@@ -528,7 +528,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     ShouldClearContext(
         VOID
@@ -561,7 +561,7 @@ public:
         );
 
     BOOLEAN
-    FORCEINLINE
+    __inline
     IsAllocatedFromIo(
         VOID
         )
@@ -570,7 +570,7 @@ public:
     }
 
     BOOLEAN
-    FORCEINLINE
+    __inline
     IsAllocatedDriver(
         VOID
         )
@@ -579,7 +579,7 @@ public:
     }
 
     BOOLEAN
-    FORCEINLINE
+    __inline
     IsCanComplete(
         VOID
         )
@@ -587,7 +587,7 @@ public:
         return m_CanComplete;
     }
     
-    FORCEINLINE
+    __inline
     VOID
     SetCompleted(
         __in BOOLEAN Value
@@ -597,7 +597,7 @@ public:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     SetPriorityBoost(
         CCHAR PriorityBoost
         )
@@ -606,7 +606,7 @@ public:
     }
 
     CCHAR
-    FORCEINLINE
+    __inline
     GetPriorityBoost(
         VOID
         )
@@ -627,7 +627,7 @@ public:
 
 
 
-    FORCEINLINE
+    __inline
     WDFREQUEST
     GetHandle(
         VOID
@@ -636,7 +636,7 @@ public:
         return (WDFREQUEST) GetObjectHandle();
     }
 
-    FORCEINLINE
+    __inline
     static
     FxRequestBase*
     _FromListEntry(
@@ -646,7 +646,7 @@ public:
         return CONTAINING_RECORD(Entry, FxRequestBase, m_ListEntry);
     }
 
-    FORCEINLINE
+    __inline
     static
     FxRequestBase*
     _FromDrainEntry(
@@ -657,7 +657,7 @@ public:
     }
 
 
-    FORCEINLINE
+    __inline
     static
     FxRequestBase*
     _FromCsqContext(
@@ -667,7 +667,7 @@ public:
         return CONTAINING_RECORD(Context, FxRequestBase, m_CsqContext);
     }
 
-    FORCEINLINE
+    __inline
     PVOID
     GetTraceObjectHandle(
         VOID

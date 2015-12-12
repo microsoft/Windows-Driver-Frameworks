@@ -29,7 +29,7 @@ typedef FAST_MUTEX MdPagedLock;
 
 #include "MxPagedLock.h"
 
-FORCEINLINE
+__inline
 MxPagedLock::MxPagedLock(
     )
 {
@@ -44,7 +44,7 @@ MxPagedLock::MxPagedLock(
 #endif
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "_Must_inspect_result_ not needed in kernel mode as the function always succeeds");
 MxPagedLockNoDynam::Initialize(
@@ -61,7 +61,7 @@ __drv_maxIRQL(APC_LEVEL)
 __drv_setsIRQL(APC_LEVEL)
 __drv_savesIRQLGlobal(FastMutexObject, this->m_Lock) 
 _Acquires_lock_(this->m_Lock)
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::Acquire(
     )
@@ -71,7 +71,7 @@ MxPagedLockNoDynam::Acquire(
     ExAcquireFastMutex(&m_Lock);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::AcquireUnsafe(
     )
@@ -87,7 +87,7 @@ __drv_savesIRQLGlobal(FastMutexObject, this->m_Lock)
 __drv_valueIs(==1;==0) 
 __drv_when(return==1, __drv_setsIRQL(APC_LEVEL))
 _When_(return==1, _Acquires_lock_(this->m_Lock))
-FORCEINLINE
+__inline
 BOOLEAN
 MxPagedLockNoDynam::TryToAcquire(
     )
@@ -100,7 +100,7 @@ MxPagedLockNoDynam::TryToAcquire(
 __drv_requiresIRQL(APC_LEVEL) 
 __drv_restoresIRQLGlobal(FastMutexObject, this->m_Lock)
 _Releases_lock_(this->m_Lock)
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::Release(
     )
@@ -110,7 +110,7 @@ MxPagedLockNoDynam::Release(
     ExReleaseFastMutex(&m_Lock);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::ReleaseUnsafe(
     )
@@ -121,7 +121,7 @@ MxPagedLockNoDynam::ReleaseUnsafe(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 MxPagedLockNoDynam::Uninitialize(
     )
@@ -129,7 +129,7 @@ MxPagedLockNoDynam::Uninitialize(
     CLEAR_DBGFLAG_INITIALIZED;
 }
 
-FORCEINLINE
+__inline
 MxPagedLock::~MxPagedLock(
     )
 {

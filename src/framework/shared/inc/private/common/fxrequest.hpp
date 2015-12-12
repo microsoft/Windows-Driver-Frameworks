@@ -163,7 +163,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsBufferSet(
         VOID
@@ -172,7 +172,7 @@ public:
         return m_Buffer != NULL ? TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ClearBufferMdl(
         VOID
@@ -183,7 +183,7 @@ public:
     }
     
 protected:
-    FORCEINLINE
+    __inline
     VOID
     SetBuffer(
         PVOID Buffer
@@ -193,7 +193,7 @@ protected:
         m_Buffer = Buffer;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetMdl(
         PMDL Mdl
@@ -309,7 +309,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsBufferSet(
         VOID
@@ -318,7 +318,7 @@ public:
         return m_Buffer != NULL ? TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ClearBufferMdl(
         VOID
@@ -329,7 +329,7 @@ public:
     }
     
 protected:
-    FORCEINLINE
+    __inline
     VOID
     SetBuffer(
         __in PVOID Buffer
@@ -339,7 +339,7 @@ protected:
         m_Buffer = Buffer;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetMdl(
         __in PMDL Mdl
@@ -470,7 +470,7 @@ public:
     // If FxRequests must go on a general typeless list, then
     // the IFxListEntry interface should be added to FxRequest.
     //
-    FORCEINLINE
+    __inline
     PLIST_ENTRY
     GetListEntry(
         __in FxListEntryNames Index
@@ -504,7 +504,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     VOID
     CopyCurrentIrpStackLocationToNext(
         VOID
@@ -520,7 +520,7 @@ public:
         __in PWDF_REQUEST_REUSE_PARAMS ReuseParams
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsCancelled(
         VOID
@@ -529,7 +529,7 @@ public:
         return m_Irp.IsCanceled() || m_Canceled;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     CopyCompletionParams(
         __in PWDF_REQUEST_COMPLETION_PARAMS Params
@@ -554,7 +554,7 @@ public:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     SetPresented(
         VOID
         )
@@ -595,7 +595,7 @@ public:
         __in_opt PSTR File = NULL
         );
 
-    FORCEINLINE
+    __inline
     CfxDevice*
     GetDevice(
         VOID
@@ -604,7 +604,7 @@ public:
         return m_Device;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN 
     IsReserved(
         )
@@ -612,7 +612,7 @@ public:
         return m_Reserved;
     }
 
-    FORCEINLINE
+    __inline
     VOID 
     SetReserved(
         )
@@ -620,7 +620,7 @@ public:
         m_Reserved = TRUE;
     }
 
-    FORCEINLINE
+    __inline
     VOID 
     SetForwardProgressQueue(
         __in FxIoQueue *Queue
@@ -644,7 +644,7 @@ protected:
         );
     #endif // DBG
 
-    FORCEINLINE
+    __inline
     VOID
     SetCurrentQueue(
         __in FxIoQueue *Queue
@@ -742,7 +742,7 @@ public:
         );
 
     VOID
-    FORCEINLINE
+    __inline
     SetStatus(
         __in NTSTATUS Status
         )
@@ -765,7 +765,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     NTSTATUS
     Complete(
         __in NTSTATUS Status
@@ -805,7 +805,7 @@ public:
         return CompleteInternal(Status);
     }  
 
-    FORCEINLINE
+    __inline
     NTSTATUS
     CompleteWithInformation(
         __in NTSTATUS Status,
@@ -820,7 +820,7 @@ public:
         return Complete(Status);
     }
 
-    FORCEINLINE
+    __inline
     NTSTATUS
     CompleteWithPriority(
         __in NTSTATUS Status,
@@ -961,7 +961,7 @@ public:
         return &m_Irp;
     }
 
-    FORCEINLINE
+    __inline
     FxIoQueue*
     GetIoQueue(
         VOID
@@ -1095,7 +1095,7 @@ public:
     //
     // Mark that this request is no longer on the IrpQueue
     //
-    FORCEINLINE
+    __inline
     VOID
     MarkRemovedFromIrpQueue(
         VOID
@@ -1108,7 +1108,7 @@ public:
     //
     // Return the FxRequest's CsqContext address
     //
-    FORCEINLINE
+    __inline
     PMdIoCsqIrpContext
     GetCsqContext(
         VOID
@@ -1157,7 +1157,7 @@ public:
     // structure from a pointer to its CsqContext
     // member.
     //
-    FORCEINLINE
+    __inline
     static
     FxRequest*
     RetrieveFromCsqContext(
@@ -1168,7 +1168,7 @@ public:
     }
 
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsInIrpQueue(
         __in FxIrpQueue*          pIrpQueue
@@ -1190,7 +1190,7 @@ public:
         __in BOOLEAN Requeue
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPowerStopAcknowledged(
         VOID
@@ -1201,7 +1201,7 @@ public:
                 (m_PowerStopState == FxRequestPowerStopAcknowledgedWithRequeue))? TRUE : FALSE;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPowerStopAcknowledgedWithRequeue(
         VOID
@@ -1289,7 +1289,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     VOID
     ClearFieldsForReuse(
         VOID
@@ -1311,7 +1311,7 @@ public:
         __in_opt PSTR File
     );
   
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsRequestForwardedToParent(
         VOID
@@ -1477,7 +1477,7 @@ private:
 
 
 public:
-    FORCEINLINE
+    __inline
     VOID
     SetInternalContext(
         PVOID Context
@@ -1487,7 +1487,7 @@ public:
         m_InternalContext = Context;
     }
 
-    FORCEINLINE
+    __inline
     PVOID
     GetInternalContext(
         VOID

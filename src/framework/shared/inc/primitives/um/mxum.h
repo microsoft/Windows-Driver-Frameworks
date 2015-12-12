@@ -38,13 +38,8 @@ Revision History:
 
 #ifdef UMDF_INFRASTRUCTURE
 #ifndef WUDF_KERNEL
-#define PKINTERRUPT     PVOID  
-#define PDEVICE_OBJECT  PVOID  
-#define PIO_WORKITEM    PVOID  
-#define PIRP            PVOID  
-#define PDRIVER_OBJECT  PVOID  
-#define PIO_REMOVE_LOCK PVOID
-typedef VOID KDPC, *PKDPC;
+typedef PVOID PIRP;
+typedef PVOID PIO_REMOVE_LOCK;
 #endif
 #endif
 
@@ -213,11 +208,6 @@ typedef DRIVER_UNLOAD_UM *PFN_DRIVER_UNLOAD_UM;
 #ifdef UMDF_INFRASTRUCTURE
 #ifndef WUDF_KERNEL
 typedef CCHAR KPROCESSOR_MODE; 
-typedef enum _MODE {  
-    KernelMode,  
-    UserMode,  
-    MaximumMode  
-} MODE;
 typedef PVOID PMDL;
 typedef  
 _IRQL_requires_same_  
@@ -237,49 +227,6 @@ FREE_FUNCTION (
     _In_ __drv_freesMem(Mem) PVOID Buffer  
     );  
 typedef FREE_FUNCTION *PFREE_FUNCTION;  
-typedef PVOID POBJECT_TYPE;
-typedef PVOID PRKDPC;
-typedef PVOID POBJECT_HANDLE_INFORMATION;
-typedef enum _KWAIT_REASON {  
-    Executive,  
-    FreePage,  
-    PageIn,  
-    PoolAllocation,  
-    DelayExecution,  
-    Suspended,  
-    UserRequest,  
-    WrExecutive,  
-    WrFreePage,  
-    WrPageIn,  
-    WrPoolAllocation,  
-    WrDelayExecution,  
-    WrSuspended,  
-    WrUserRequest,  
-    WrEventPair,  
-    WrQueue,  
-    WrLpcReceive,  
-    WrLpcReply,  
-    WrVirtualMemory,  
-    WrPageOut,  
-    WrRendezvous,  
-    Spare2,  
-    Spare3,  
-    Spare4,  
-    Spare5,  
-    WrCalloutStack,  
-    WrKernel,  
-    WrResource,  
-    WrPushLock,  
-    WrMutex,  
-    WrQuantumEnd,  
-    WrDispatchInt,  
-    WrPreempted,  
-    WrYieldExecution,  
-    WrFastMutex,  
-    WrGuardedMutex,  
-    WrRundown,  
-    MaximumWaitReason  
-} KWAIT_REASON;
 #endif
 #endif
 

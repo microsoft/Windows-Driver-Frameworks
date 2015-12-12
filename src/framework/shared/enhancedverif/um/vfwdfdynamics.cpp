@@ -38,6 +38,8 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfCxVerifierKeBugCheck), \
     VFWDFEXPORT(WdfDeviceGetDeviceState), \
     VFWDFEXPORT(WdfDeviceSetDeviceState), \
+    VFWDFEXPORT(WdfDeviceWdmDispatchIrp), \
+    VFWDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue), \
     VFWDFEXPORT(WdfDeviceGetDriver), \
     VFWDFEXPORT(WdfDeviceGetIoTarget), \
     VFWDFEXPORT(WdfDeviceAssignS0IdleSettings), \
@@ -68,6 +70,7 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfDeviceGetFileObject), \
     VFWDFEXPORT(WdfDeviceGetDefaultQueue), \
     VFWDFEXPORT(WdfDeviceConfigureRequestDispatching), \
+    VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback), \
     VFWDFEXPORT(WdfDeviceGetSystemPowerAction), \
     VFWDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure), \
     VFWDFEXPORT(WdfDeviceInitSetIoTypeEx), \
@@ -142,6 +145,7 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfIoTargetPurge), \
     VFWDFEXPORT(WdfIoTargetGetState), \
     VFWDFEXPORT(WdfIoTargetGetDevice), \
+    VFWDFEXPORT(WdfIoTargetWdmGetTargetFileHandle), \
     VFWDFEXPORT(WdfIoTargetSendReadSynchronously), \
     VFWDFEXPORT(WdfIoTargetFormatRequestForRead), \
     VFWDFEXPORT(WdfIoTargetSendWriteSynchronously), \
@@ -509,6 +513,46 @@ VFWDFEXPORT(WdfDeviceSetDeviceState)(
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETDEVICESTATE) WdfVersion.Functions.pfnWdfDeviceSetDeviceState)(DriverGlobals, Device, DeviceState);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceWdmDispatchIrp)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP Irp,
+    _In_
+    WDFCONTEXT DispatchContext
+    )    
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDEVICEWDMDISPATCHIRP) WdfVersion.Functions.pfnWdfDeviceWdmDispatchIrp)(DriverGlobals, Device, Irp, DispatchContext);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP Irp,
+    _In_
+    WDFQUEUE Queue,
+    _In_
+    ULONG Flags
+    )    
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDEVICEWDMDISPATCHIRPTOIOQUEUE) WdfVersion.Functions.pfnWdfDeviceWdmDispatchIrpToIoQueue)(DriverGlobals, Device, Irp, Queue, Flags);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -1066,6 +1110,29 @@ VFWDFEXPORT(WdfDeviceConfigureRequestDispatching)(
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICECONFIGUREREQUESTDISPATCHING) WdfVersion.Functions.pfnWdfDeviceConfigureRequestDispatching)(DriverGlobals, Device, Queue, RequestType);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_opt_
+    WDFDRIVER Driver,
+    _In_
+    UCHAR MajorFunction,
+    _In_
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    _In_opt_
+    WDFCONTEXT DriverContext
+    )    
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK) WdfVersion.Functions.pfnWdfDeviceConfigureWdmIrpDispatchCallback)(DriverGlobals, Device, Driver, MajorFunction, EvtDeviceWdmIrpDisptach, DriverContext);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -2427,6 +2494,20 @@ VFWDFEXPORT(WdfIoTargetGetDevice)(
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETGETDEVICE) WdfVersion.Functions.pfnWdfIoTargetGetDevice)(DriverGlobals, IoTarget);
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+HANDLE
+VFWDFEXPORT(WdfIoTargetWdmGetTargetFileHandle)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFIOTARGET IoTarget
+    )    
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFIOTARGETWDMGETTARGETFILEHANDLE) WdfVersion.Functions.pfnWdfIoTargetWdmGetTargetFileHandle)(DriverGlobals, IoTarget);
 }
 
 _Must_inspect_result_

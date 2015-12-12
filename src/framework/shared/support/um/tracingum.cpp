@@ -35,7 +35,6 @@ extern "C" {
 #include <initguid.h>
 #include "fxIFR.h"       // shared struct between IFR and debug ext.
 #include "fxIFRKm.h"     // kernel mode only IFR definitions
-#include "wudfx.h"
 
 
 

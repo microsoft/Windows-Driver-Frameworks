@@ -51,25 +51,25 @@ public:
     //
     // See FxPoolAllocator in WdfPool.cpp for example of such usage
     //
-    FORCEINLINE
+    __inline
     static
     BOOLEAN
     IsUM(
         );
 
-    FORCEINLINE
+    __inline
     static
     BOOLEAN
     IsKM(
         );
 
-    FORCEINLINE
+    __inline
     static
     MxThread
     MxGetCurrentThread(
         );
 
-    FORCEINLINE
+    __inline
     static
     MdEThread
     GetCurrentEThread(
@@ -81,7 +81,7 @@ public:
         __in NTSTATUS Status
         );
 
-    FORCEINLINE
+    __inline
     static
     KIRQL
     MxGetCurrentIrql(
@@ -89,7 +89,7 @@ public:
 
     __drv_maxIRQL(HIGH_LEVEL)
     __drv_raisesIRQL(NewIrql)
-    FORCEINLINE
+    __inline
     static
     VOID
     MxRaiseIrql(
@@ -98,21 +98,21 @@ public:
         );
 
     __drv_maxIRQL(HIGH_LEVEL)
-    FORCEINLINE
+    __inline
     static
     VOID
     MxLowerIrql(
         __in __drv_restoresIRQL __drv_nonConstant  KIRQL  NewIrql
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxQueryTickCount(
         __out PLARGE_INTEGER  TickCount
         );
 
-    FORCEINLINE
+    __inline
     static
     ULONG 
     MxQueryTimeIncrement(
@@ -135,7 +135,7 @@ public:
         __in ULONG_PTR  BugCheckParameter4
     );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDbgBreakPoint(
@@ -149,14 +149,14 @@ public:
         ...
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxAssert(
         __in BOOLEAN Condition
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxAssertMsg(
@@ -165,20 +165,20 @@ public:
         );
 
     _Acquires_lock_(_Global_critical_region_)
-    FORCEINLINE
+    __inline
     static
     VOID
     MxEnterCriticalRegion(
         );
 
     _Releases_lock_(_Global_critical_region_) //implies _Requires_lock_held_(_Global_critical_region_)
-    FORCEINLINE
+    __inline
     static
     VOID
     MxLeaveCriticalRegion(
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDelayExecutionThread(
@@ -199,28 +199,28 @@ public:
     // which is what MmGetSystemRoutineAddress and GetProcAddress
     // expect respectively
     //
-    FORCEINLINE
+    __inline
     static
     PVOID
     MxGetSystemRoutineAddress(
         __in MxFuncName FuncName
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxReferenceObject(
         __in PVOID Object
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDereferenceObject(
         __in PVOID Object
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxInitializeRemoveLock(
@@ -230,7 +230,7 @@ public:
         __in ULONG  HighWatermark
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxAcquireRemoveLock(
@@ -238,7 +238,7 @@ public:
         __in_opt PVOID  Tag 
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxReleaseRemoveLock(
@@ -246,7 +246,7 @@ public:
         __in PVOID  Tag 
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxReleaseRemoveLockAndWait(
@@ -254,7 +254,7 @@ public:
         __in PVOID  Tag 
         );
 
-    FORCEINLINE
+    __inline
     static
     BOOLEAN
     MxHasEnoughRemainingThreadStack(
@@ -264,14 +264,14 @@ public:
     
     _Releases_lock_(_Global_cancel_spin_lock_) //implies _Requires_lock_held_(_Global_cancel_spin_lock_)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     static
     VOID
     ReleaseCancelSpinLock(
         __in __drv_restoresIRQL __drv_useCancelIRQL KIRQL  Irql
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     CreateCallback(
@@ -281,7 +281,7 @@ public:
         __in BOOLEAN  AllowMultipleCallbacks
         );
 
-    FORCEINLINE
+    __inline
     static
     PVOID
     RegisterCallback(
@@ -290,7 +290,7 @@ public:
         __in PVOID  CallbackContext
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     UnregisterCallback(
@@ -303,14 +303,14 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxUnlockPages(
         __in PMDL Mdl
         );
 
-    FORCEINLINE
+    __inline
     static
     PVOID
     MxGetSystemAddressForMdlSafe(
@@ -318,14 +318,14 @@ public:
         __in    ULONG Priority
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxBuildMdlForNonPagedPool(
         __inout PMDL Mdl
         );
 
-    FORCEINLINE
+    __inline
     static
     PVOID
     MxGetDriverObjectExtension(
@@ -333,7 +333,7 @@ public:
         __in PVOID ClientIdentificationAddress
         );
     
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxAllocateDriverObjectExtension(
@@ -347,35 +347,35 @@ public:
         PVOID *DriverObjectExtension
         );
 
-    FORCEINLINE
+    __inline
     static
     MdDeviceObject
     MxGetAttachedDeviceReference(
         __in MdDeviceObject DriverObject
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDeleteSymbolicLink(
         __in PUNICODE_STRING Link
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDeleteNPagedLookasideList(
         _In_ PNPAGED_LOOKASIDE_LIST LookasideList
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDeletePagedLookasideList(
         _In_ PPAGED_LOOKASIDE_LIST LookasideList
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxInitializeNPagedLookasideList(
@@ -388,7 +388,7 @@ public:
         _In_      USHORT Depth
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxInitializePagedLookasideList(
@@ -401,7 +401,7 @@ public:
         _In_      USHORT Depth
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxDeleteDevice(
@@ -414,7 +414,7 @@ public:
         _Inout_ MdDeviceObject Device
         );
 
-    FORCEINLINE
+    __inline
     static
     MdDeviceObject
     MxAttachDeviceToDeviceStack(
@@ -422,7 +422,7 @@ public:
         _In_ MdDeviceObject TargetDevice
         );
 
-    FORCEINLINE 
+    __inline 
     static
     NTSTATUS
     MxCreateDeviceSecure(
@@ -437,7 +437,7 @@ public:
         _Out_     MdDeviceObject *DeviceObject
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS 
     MxCreateDevice(
@@ -450,7 +450,7 @@ public:
         _Out_     MdDeviceObject *DeviceObject
     );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxCreateSymbolicLink(
@@ -458,13 +458,13 @@ public:
         _In_ PUNICODE_STRING DeviceName
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxFlushQueuedDpcs(
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxOpenKey(
@@ -473,7 +473,7 @@ public:
         _In_ POBJECT_ATTRIBUTES ObjectAttributes
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxSetDeviceInterfaceState(
@@ -481,7 +481,7 @@ public:
         _In_ BOOLEAN Enable
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxRegisterDeviceInterface(
@@ -491,14 +491,14 @@ public:
         _Out_     PUNICODE_STRING SymbolicLinkName
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxDeleteKey(
         _In_ HANDLE KeyHandle
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID 
     MxInitializeMdl(
@@ -507,14 +507,14 @@ public:
         _In_  SIZE_T Length
         );
 
-    FORCEINLINE
+    __inline
     static
     PVOID
     MxGetMdlVirtualAddress(
         _In_ PMDL Mdl
         );
 
-    FORCEINLINE
+    __inline
     static    
     VOID 
     MxBuildPartialMdl(
@@ -524,14 +524,14 @@ public:
         _In_     ULONG Length
     );
 
-    FORCEINLINE
+    __inline
     static    
     VOID 
     MxQuerySystemTime(
         _Out_ PLARGE_INTEGER CurrentTime
         );
 
-    FORCEINLINE
+    __inline
     static    
     NTSTATUS 
     MxSetValueKey(
@@ -543,7 +543,7 @@ public:
         _In_      ULONG DataSize
         );
 
-    FORCEINLINE
+    __inline
     static    
     NTSTATUS 
     MxQueryValueKey(
@@ -554,7 +554,7 @@ public:
         _In_       ULONG Length,
         _Out_      PULONG ResultLength
     );
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxReferenceObjectByHandle(
@@ -566,28 +566,28 @@ public:
         __out_opt POBJECT_HANDLE_INFORMATION HandleInformation
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxUnRegisterPlugPlayNotification(
         __in __drv_freesMem(Pool) PVOID NotificationEntry
         );
 
-    FORCEINLINE
+    __inline
     static
     NTSTATUS
     MxClose (
         __in HANDLE Handle
         );
     
-    FORCEINLINE
+    __inline
     static
     KIRQL
     MxAcquireInterruptSpinLock(
         _Inout_ PKINTERRUPT Interrupt
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxReleaseInterruptSpinLock(
@@ -595,7 +595,7 @@ public:
         _In_ KIRQL OldIrql
         );
     
-    FORCEINLINE
+    __inline
     static
     BOOLEAN 
     MxInsertQueueDpc(

@@ -340,7 +340,7 @@ private:
     }
 
     _Must_inspect_result_
-    FORCEINLINE        
+    __inline        
     NTSTATUS
     Initialize(
         )
@@ -406,7 +406,7 @@ private:
 public:
 
     _Must_inspect_result_
-    FORCEINLINE        
+    __inline        
     static
     NTSTATUS        
     CreateAndInitialize(
@@ -443,7 +443,7 @@ public:
     }
 
     _Must_inspect_result_
-    FORCEINLINE        
+    __inline        
     static
     NTSTATUS        
     CreateAndInitialize(

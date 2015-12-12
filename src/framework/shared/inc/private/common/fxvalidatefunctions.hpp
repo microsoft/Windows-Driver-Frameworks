@@ -66,7 +66,7 @@ FxValidateObjectAttributes(
 
 _Must_inspect_result_
 NTSTATUS
-FORCEINLINE
+__inline
 FxValidateObjectAttributesForParentHandle(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PWDF_OBJECT_ATTRIBUTES Attributes,
@@ -110,7 +110,7 @@ FxValidateObjectAttributesForParentHandle(
 
 _Must_inspect_result_
 NTSTATUS
-FORCEINLINE
+__inline
 FxValidateUnicodeString(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PCUNICODE_STRING String

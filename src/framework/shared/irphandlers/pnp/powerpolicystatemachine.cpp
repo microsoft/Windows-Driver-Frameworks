@@ -8107,7 +8107,7 @@ Return Value:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxPkgPnp::PowerPolicyDisarmWakeFromSx(
     VOID
     )

@@ -115,7 +115,7 @@ enum FxDeviceInfoFlags : USHORT {
 #define WDF_VERSION_STRING_SIZE_INCLUDING_SEPARATOR_CCH   10
 
 BOOLEAN
-FORCEINLINE
+__inline
 IsDeviceInfoFlagSet(
     _In_ USHORT DeviceInfo,
     _In_ FxDeviceInfoFlags Flag
@@ -129,7 +129,7 @@ AllocAndInitializeTelemetryContext(
     _In_ PFX_TELEMETRY_CONTEXT* TelemetryContext
     );
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsDriverTelemetryContextInitialized(
 _In_ PFX_DRIVER_GLOBALS FxDrvGlobals
@@ -169,7 +169,7 @@ GetImageName(
     );
 
 VOID
-FORCEINLINE
+__inline
 BuildStringFromPartialInfo(
     _In_ PKEY_VALUE_PARTIAL_INFORMATION Info,
     _Out_ PUNICODE_STRING String

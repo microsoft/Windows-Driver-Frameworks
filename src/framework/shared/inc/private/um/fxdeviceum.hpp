@@ -181,7 +181,7 @@ Revision History:
 
 #endif // _X86_
 
-FORCEINLINE
+__inline
 SIZE_T
 FxDevice::ReadRegister(
     __in WDF_DEVICE_HWACCESS_TARGET_SIZE Size,
@@ -228,7 +228,7 @@ FxDevice::ReadRegister(
     return value;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::ReadRegisterBuffer(
     __in WDF_DEVICE_HWACCESS_TARGET_SIZE Size,
@@ -274,7 +274,7 @@ FxDevice::ReadRegisterBuffer(
         WdfDeviceHwAccessTargetTypeRegisterBuffer, Size, Count);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::WriteRegister(
     __in WDF_DEVICE_HWACCESS_TARGET_SIZE Size,
@@ -318,7 +318,7 @@ FxDevice::WriteRegister(
         WdfDeviceHwAccessTargetTypeRegister, Size, 0);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::WriteRegisterBuffer(
     __in WDF_DEVICE_HWACCESS_TARGET_SIZE Size,
@@ -364,7 +364,7 @@ FxDevice::WriteRegisterBuffer(
         WdfDeviceHwAccessTargetTypeRegisterBuffer, Size, Count);
 }
 
-FORCEINLINE
+__inline
 FxWdmDeviceExtension*
 FxDevice::_GetFxWdmExtension(
     __in MdDeviceObject DeviceObject
@@ -374,7 +374,7 @@ FxDevice::_GetFxWdmExtension(
         ((static_cast<IWudfDevice2*> (DeviceObject))->GetDeviceExtension());
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxDevice::IsRemoveLockEnabledForIo(
     VOID
@@ -383,7 +383,7 @@ FxDevice::IsRemoveLockEnabledForIo(
    return FALSE;
 }
 
-FORCEINLINE
+__inline
 MdRemoveLock
 FxDevice::GetRemoveLock(
     VOID
@@ -393,7 +393,7 @@ FxDevice::GetRemoveLock(
         GetDeviceObject())->IoRemoveLock;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxDevice::WmiPkgRegister(
     VOID
@@ -406,7 +406,7 @@ FxDevice::WmiPkgRegister(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::WmiPkgDeregister(
     VOID
@@ -418,7 +418,7 @@ FxDevice::WmiPkgDeregister(
     DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::WmiPkgCleanup(
     VOID
@@ -430,7 +430,7 @@ FxDevice::WmiPkgCleanup(
     DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 IWudfDeviceStack*
 FxDevice::GetDeviceStack(
     VOID
@@ -439,7 +439,7 @@ FxDevice::GetDeviceStack(
     return m_DevStack;
 }
 
-FORCEINLINE
+__inline
 IWudfDeviceStack2 *
 FxDevice::GetDeviceStack2(
     )

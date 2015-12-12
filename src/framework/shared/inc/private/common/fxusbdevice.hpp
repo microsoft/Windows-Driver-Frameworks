@@ -213,7 +213,7 @@ public:
         __in_opt PWDF_REQUEST_SEND_OPTIONS Options = NULL
         );
 
-    __forceinline
+    __inline
     CopyDeviceDescriptor(
         __out PUSB_DEVICE_DESCRIPTOR UsbDeviceDescriptor
         )
@@ -228,7 +228,7 @@ public:
         __out PWDF_USB_DEVICE_INFORMATION Information
         );
 
-    __forceinline
+    __inline
     USBD_CONFIGURATION_HANDLE
     GetConfigHandle(
         VOID
@@ -238,7 +238,7 @@ public:
     }
 
     _Must_inspect_result_
-    __forceinline
+    __inline
     NTSTATUS
     GetCurrentFrameNumber(
         __in PULONG Current

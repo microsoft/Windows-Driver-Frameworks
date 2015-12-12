@@ -50,7 +50,7 @@ extern "C" {
 #endif  
 
 NTSTATUS
-FORCEINLINE
+__inline
 FxValidateRequestOptions(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ PWDF_REQUEST_SEND_OPTIONS Options,

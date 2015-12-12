@@ -20,7 +20,7 @@ typedef IWudfFile * MdFileObject;
 
 #include "MxFileObject.h"
 
-FORCEINLINE
+__inline
 PLARGE_INTEGER
 MxFileObject::GetCurrentByteOffset(
    VOID
@@ -30,7 +30,7 @@ MxFileObject::GetCurrentByteOffset(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 ULONG
 MxFileObject::GetFlags(
    VOID
@@ -47,7 +47,7 @@ MxFileObject::GetFlags(
     return 0;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxFileObject::SetFsContext(
     _In_ PVOID Value
@@ -57,7 +57,7 @@ MxFileObject::SetFsContext(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxFileObject::SetFsContext2(
     _In_ PVOID Value
@@ -67,7 +67,7 @@ MxFileObject::SetFsContext2(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 PVOID
 MxFileObject::GetFsContext(
     VOID
@@ -77,7 +77,7 @@ MxFileObject::GetFsContext(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 PVOID
 MxFileObject::GetFsContext2(
     VOID

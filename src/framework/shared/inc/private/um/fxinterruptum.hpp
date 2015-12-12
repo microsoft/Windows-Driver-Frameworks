@@ -28,7 +28,7 @@ Revision History:
 
 #include "FxInterrupt.hpp"
 
-FORCEINLINE
+__inline
 struct _KINTERRUPT*
 FxInterrupt::GetInterruptPtr(
     VOID

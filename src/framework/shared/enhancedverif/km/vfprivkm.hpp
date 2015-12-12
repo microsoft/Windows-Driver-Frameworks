@@ -31,7 +31,7 @@ extern "C" {
 
 extern "C" {
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyIrqlEntry(
     __out KIRQL *Irql
@@ -40,7 +40,7 @@ VerifyIrqlEntry(
     *Irql = KeGetCurrentIrql();   
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyIrqlExit(
     __in PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -60,7 +60,7 @@ VerifyIrqlExit(
     }
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyCriticalRegionEntry(
     __out BOOLEAN *CritRegion
@@ -71,7 +71,7 @@ VerifyCriticalRegionEntry(
     }
 }
 
-FORCEINLINE 
+__inline 
 VOID
 VerifyCriticalRegionExit(
     __in PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -179,7 +179,7 @@ PerformanceGetDriverDeviceAdd(
     return pFxDriverGlobals->Driver->GetDriverDeviceAddMethod();
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDeviceD0EntryStart(
     __in WDFDEVICE Handle,
@@ -200,7 +200,7 @@ PerfEvtDeviceD0EntryStart(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDeviceD0EntryStop(
     __in WDFDEVICE Handle,
@@ -210,7 +210,7 @@ PerfEvtDeviceD0EntryStop(
     EventWriteFX_POWER_D0_ENTRY_STOP(pActivityId, PerformanceGetDriverDeviceAdd(Handle), Handle);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDeviceD0ExitStart(
     __in WDFDEVICE Handle,
@@ -230,7 +230,7 @@ PerfEvtDeviceD0ExitStart(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDeviceD0ExitStop(
     __in WDFDEVICE Handle,
@@ -240,7 +240,7 @@ PerfEvtDeviceD0ExitStop(
     EventWriteFX_POWER_D0_EXIT_STOP(pActivityId, PerformanceGetDriverDeviceAdd(Handle), Handle);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDevicePrepareHardwareStart(
     __in WDFDEVICE Handle,
@@ -261,7 +261,7 @@ PerfEvtDevicePrepareHardwareStart(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDevicePrepareHardwareStop(
     __in WDFDEVICE Handle,
@@ -271,7 +271,7 @@ PerfEvtDevicePrepareHardwareStop(
     EventWriteFX_POWER_HW_PREPARE_STOP(pActivityId, PerformanceGetDriverDeviceAdd(Handle), Handle);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtDeviceReleaseHardwareStart(
     __in WDFDEVICE Handle,
@@ -291,7 +291,7 @@ PerfEvtDeviceReleaseHardwareStart(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 PerfEvtDeviceReleaseHardwareStop(
     __in WDFDEVICE Handle,
@@ -302,7 +302,7 @@ PerfEvtDeviceReleaseHardwareStop(
 }
 
 // EvtIoStop callback started.
-FORCEINLINE
+__inline
 BOOLEAN
 PerfEvtIoStopStart(
     __in WDFQUEUE Queue,
@@ -332,7 +332,7 @@ PerfEvtIoStopStart(
 }
 
 // EvtIoStop callback returned.
-FORCEINLINE
+__inline
 VOID
 PerfEvtIoStopStop(
     __in WDFQUEUE Queue,

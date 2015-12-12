@@ -136,7 +136,7 @@ public:
         return STATUS_SUCCESS;
     }
 
-    FORCEINLINE
+    __inline
     MdWorkItem
     GetWorkItemPtr(
         VOID
@@ -145,7 +145,7 @@ public:
         return m_WorkItem.GetWorkItem();
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     Enqueue(
         __in PFN_WDF_SYSTEMWORKITEM CallbackFunc,
@@ -155,7 +155,7 @@ public:
         return EnqueueWorker(CallbackFunc, Parameter, TRUE);
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     TryToEnqueue(
         __in PFN_WDF_SYSTEMWORKITEM CallbackFunc,
@@ -170,7 +170,7 @@ public:
         VOID
         );
    
-    FORCEINLINE
+    __inline
     VOID
     IncrementWorkItemQueued(
         )
@@ -180,7 +180,7 @@ public:
         InterlockedIncrement(&m_OutStandingWorkItem);    
     }
 
-    FORCEINLINE
+    __inline
     VOID
     DecrementWorkItemQueued(
         )
@@ -196,7 +196,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     VOID
     ReleaseWorkItemQueuedCountAndWait(
         )

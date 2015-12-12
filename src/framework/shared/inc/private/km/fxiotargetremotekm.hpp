@@ -24,7 +24,7 @@ Revision History:
 #ifndef _FXIOTARGETREMOTEKM_H_
 #define _FXIOTARGETREMOTEKM_H_
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxIoTargetRemote::InitRemoteModeSpecific(
     __in FxDeviceBase* Device
@@ -40,7 +40,7 @@ FxIoTargetRemote::InitRemoteModeSpecific(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoTargetRemote::RemoveModeSpecific(
     VOID
@@ -52,7 +52,7 @@ FxIoTargetRemote::RemoveModeSpecific(
     DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 FxIoTargetRemote::OpenLocalTargetByFile(
@@ -69,7 +69,7 @@ FxIoTargetRemote::OpenLocalTargetByFile(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 HANDLE
 FxIoTargetRemote::GetTargetHandle(
     VOID

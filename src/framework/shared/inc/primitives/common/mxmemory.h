@@ -30,7 +30,7 @@ class MxMemory
 {
 public:
     
-    FORCEINLINE
+    __inline
     static
     PVOID
     MxAllocatePoolWithTag(
@@ -39,7 +39,7 @@ public:
         __in ULONG  Tag
         );
 
-    FORCEINLINE
+    __inline
     static
     VOID
     MxFreePool(

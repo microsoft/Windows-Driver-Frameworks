@@ -20,7 +20,7 @@ typedef DRIVER_DISPATCH MdDriverDispatchType, *MdDriverDispatch;
 
 #include "MxDriverObject.h"
 
-FORCEINLINE
+__inline
 PVOID
 MxDriverObject::GetDriverExtensionAddDevice(
     VOID
@@ -29,7 +29,7 @@ MxDriverObject::GetDriverExtensionAddDevice(
     return m_DriverObject->DriverExtension->AddDevice;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDriverObject::SetDriverExtensionAddDevice(
     _In_ MdDriverAddDevice Value
@@ -38,7 +38,7 @@ MxDriverObject::SetDriverExtensionAddDevice(
     m_DriverObject->DriverExtension->AddDevice = Value;
 }
 
-FORCEINLINE
+__inline
 MdDriverUnload
 MxDriverObject::GetDriverUnload(
     VOID
@@ -47,7 +47,7 @@ MxDriverObject::GetDriverUnload(
     return m_DriverObject->DriverUnload;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxDriverObject::SetDriverUnload(
     _In_ MdDriverUnload Value
@@ -57,7 +57,7 @@ MxDriverObject::SetDriverUnload(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 MxDriverObject::SetMajorFunction(
     _In_ UCHAR i,

@@ -37,4 +37,10 @@ typedef struct _STACK_DEVICE_CAPABILITIES {
     DEVICE_WAKE_DEPTH DeepestWakeableDstate[PowerSystemHibernate+1];
 } STACK_DEVICE_CAPABILITIES, *PSTACK_DEVICE_CAPABILITIES;
 
+#define ERROR_STRING_HW_ACCESS_NOT_ALLOWED                          \
+        "Hardware access not allowed. Set the INF directive "       \
+        "UmdfDirectHardwareAccess to AllowDirectHardwareAccess "    \
+        "in driver's INF file to enable direct hardware access"
+
+#define WUDF_POWER_POLICY_SETTINGS L"WudfPowerPolicySettings"
 

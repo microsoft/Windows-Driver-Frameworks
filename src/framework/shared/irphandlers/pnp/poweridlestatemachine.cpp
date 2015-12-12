@@ -317,7 +317,7 @@ const FxIdleStateTable FxPowerIdleMachine::m_StateTable[] =
     },
 };
 
-FORCEINLINE
+__inline
 FxPkgPnp*
 GetPnpPkg(
     __inout FxPowerIdleMachine* This

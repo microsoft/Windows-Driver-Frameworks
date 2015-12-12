@@ -3241,7 +3241,8 @@ public:
     
     VOID
     PowerProcessEvent(
-        __in FxPowerEvent Event
+        __in FxPowerEvent Event,
+        __in BOOLEAN ProcessEventOnDifferentThread = FALSE
         );
 
     VOID
@@ -3368,6 +3369,18 @@ private:
         __in ULONG Value
         );
 
+    NTSTATUS
+    ReadStateFromRegistry(
+        _In_ PCUNICODE_STRING ValueName,
+        _Out_ PULONG Value
+        );
+
+    NTSTATUS
+    UpdateWmiInstance(
+        _In_ FxWmiInstanceAction Action,
+        _In_ BOOLEAN ForS0Idle
+        );
+
 public:
     BOOLEAN
     PowerIndicateWaitWakeStatus(
@@ -3385,7 +3398,7 @@ public:
         );
 
     BOOLEAN
-    FORCEINLINE
+    __inline
     PowerPolicyShouldPropagateWakeStatusToChildren(
         VOID
         )
@@ -3464,7 +3477,7 @@ public:
 
     _Must_inspect_result_
     NTSTATUS
-    FORCEINLINE
+    __inline
     PowerReference(
         __in BOOLEAN WaitForD0,
         __in_opt PVOID Tag = NULL,
@@ -3476,7 +3489,7 @@ public:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     PowerDereference(
         __in_opt PVOID Tag = NULL,
         __in_opt LONG Line = 0,
@@ -3800,7 +3813,7 @@ public:
 
     VOID
     AckPendingWakeInterruptOperation(
-        VOID
+        __in BOOLEAN ProcessPowerEventOnDifferentThread
         );
     
     VOID
@@ -3966,7 +3979,7 @@ private:
         );
 
     VOID
-    FORCEINLINE
+    __inline
     PowerPolicyDisarmWakeFromSx(
         VOID
         );
@@ -4541,7 +4554,7 @@ public:
     FxPnpDeviceSurpriseRemoval          m_DeviceSurpriseRemoval;
 };
 
-FORCEINLINE
+__inline
 VOID
 FxPostProcessInfo::Evaluate(
     __inout FxPkgPnp* PkgPnp

@@ -751,7 +751,7 @@ public:
 
 protected:
     BOOLEAN
-    FORCEINLINE
+    __inline
     IsPresent(
         VOID
         )

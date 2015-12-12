@@ -23,7 +23,6 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "wudfx.h"
 
 extern "C" {
 #include "FxDeviceUm.tmh"
@@ -274,7 +273,7 @@ FxDevice::FdoInitialize(
     //
     // Set buffer retrieval and I/O type values
     //
-    m_RetrievalMode = WdfDeviceIoBufferRetrievalDeferred;
+    m_RetrievalMode = UMINT::WdfDeviceIoBufferRetrievalDeferred;
     m_ReadWriteIoType = DeviceInit->ReadWriteIoType;
     m_IoctlIoType = DeviceInit->DeviceControlIoType;;
     m_DirectTransferThreshold = DeviceInit->DirectTransferThreshold;
@@ -593,7 +592,7 @@ FxDevice::DestructorInternal(
 VOID
 FxDevice::GetPreferredTransferMode(
     _In_ MdDeviceObject DeviceObject,
-    _Out_ WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
+    _Out_ UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL *RetrievalMode,
     _Out_ WDF_DEVICE_IO_TYPE *RWPreference,
     _Out_ WDF_DEVICE_IO_TYPE *IoctlPreference
     )
@@ -1022,8 +1021,8 @@ FxDevice::_OpenDeviceRegistryKey(
     NTSTATUS status;
     HRESULT hr;
     
-    WDF_PROPERTY_STORE_ROOT root;
-    WDF_PROPERTY_STORE_RETRIEVE_FLAGS flags = WdfPropertyStoreNormal;
+    UMINT::WDF_PROPERTY_STORE_ROOT root;
+    UMINT::WDF_PROPERTY_STORE_RETRIEVE_FLAGS flags = UMINT::WdfPropertyStoreNormal;
     PWSTR subpath = NULL;
 
 
@@ -1032,7 +1031,7 @@ FxDevice::_OpenDeviceRegistryKey(
     #define WDF_REGKEY_DEVICE_SUBKEY 256
     #define WDF_REGKEY_DRIVER_SUBKEY 256
     
-    root.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
+    root.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
 
     if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
     {
@@ -1040,12 +1039,12 @@ FxDevice::_OpenDeviceRegistryKey(
     }
     else if (DevInstKeyType & PLUGPLAY_REGKEY_DEVICE)
     {
-        root.RootClass = WdfPropertyStoreRootClassHardwareKey;
+        root.RootClass = UMINT::WdfPropertyStoreRootClassHardwareKey;
 
         if (DevInstKeyType & WDF_REGKEY_DEVICE_SUBKEY)
         {
             root.Qualifier.HardwareKey.ServiceName = DriverName;
-            flags = WdfPropertyStoreCreateIfMissing;
+            flags = UMINT::WdfPropertyStoreCreateIfMissing;
         }
         else
         {
@@ -1054,12 +1053,12 @@ FxDevice::_OpenDeviceRegistryKey(
     }
     else if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
     {
-        root.RootClass = WdfPropertyStoreRootClassSoftwareKey;
+        root.RootClass = UMINT::WdfPropertyStoreRootClassSoftwareKey;
 
         if (DevInstKeyType & WDF_REGKEY_DRIVER_SUBKEY)
         {
             subpath = DriverName;
-            flags = WdfPropertyStoreCreateIfMissing;
+            flags = UMINT::WdfPropertyStoreCreateIfMissing;
         }
         else
         {
@@ -1068,12 +1067,12 @@ FxDevice::_OpenDeviceRegistryKey(
     }
     else if (DevInstKeyType & FX_PLUGPLAY_REGKEY_DEVICEMAP)
     {
-        root.RootClass = WdfPropertyStoreRootClassLegacyHardwareKey;
+        root.RootClass = UMINT::WdfPropertyStoreRootClassLegacyHardwareKey;
 
         //
         // Legacy keys must always be opened volatile for UMDF
         //
-        flags = WdfPropertyStoreCreateVolatile;
+        flags = UMINT::WdfPropertyStoreCreateVolatile;
         
         subpath = NULL;
         root.Qualifier.LegacyHardwareKey.LegacyMapName = DriverName;
@@ -1118,9 +1117,9 @@ FxDevice::_GetDeviceProperty(
     ULONG bufferLen = BufferLength;
     ULONG resultLen = 0;
     
-    WDF_PROPERTY_STORE_ROOT rootSpecifier;
-    rootSpecifier.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-    rootSpecifier.RootClass = WdfPropertyStoreRootClassHardwareKey;
+    UMINT::WDF_PROPERTY_STORE_ROOT rootSpecifier;
+    rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+    rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootClassHardwareKey;
     rootSpecifier.Qualifier.HardwareKey.ServiceName = NULL;   
 
     //
@@ -1373,14 +1372,14 @@ FxDevice::AssignProperty (
     //
     // call into host to assign the property
     //
-    WDF_PROPERTY_STORE_ROOT rootSpecifier = {0};
+    UMINT::WDF_PROPERTY_STORE_ROOT rootSpecifier = {0};
 
     if (FxPropertyType == FxInterfaceProperty) {
         PWDF_DEVICE_INTERFACE_PROPERTY_DATA interfaceData =
             (PWDF_DEVICE_INTERFACE_PROPERTY_DATA) PropertyData;
 
-        rootSpecifier.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-        rootSpecifier.RootClass = WdfPropertyStoreRootClassDeviceInterfaceKey;
+        rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+        rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootClassDeviceInterfaceKey;
         rootSpecifier.Qualifier.DeviceInterfaceKey.InterfaceGUID =
             interfaceData->InterfaceClassGUID;
         if (interfaceData->ReferenceString != NULL) {
@@ -1397,8 +1396,8 @@ FxDevice::AssignProperty (
 
         ASSERT(FxPropertyType == FxDeviceProperty);
 
-        rootSpecifier.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-        rootSpecifier.RootClass = WdfPropertyStoreRootClassHardwareKey;
+        rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+        rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootClassHardwareKey;
         propertyKey = deviceData->PropertyKey;
         lcid = deviceData->Lcid;
         flags = deviceData->Flags;
@@ -1586,14 +1585,14 @@ FxDevice::_QueryPropertyEx (
         devStack = Device->m_DevStack;
     }
 
-    WDF_PROPERTY_STORE_ROOT rootSpecifier = {0};
+    UMINT::WDF_PROPERTY_STORE_ROOT rootSpecifier = {0};
 
     if (FxPropertyType == FxInterfaceProperty) {
         PWDF_DEVICE_INTERFACE_PROPERTY_DATA interfaceData =
             (PWDF_DEVICE_INTERFACE_PROPERTY_DATA) PropertyData;
 
-        rootSpecifier.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-        rootSpecifier.RootClass = WdfPropertyStoreRootClassDeviceInterfaceKey;
+        rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+        rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootClassDeviceInterfaceKey;
         rootSpecifier.Qualifier.DeviceInterfaceKey.InterfaceGUID =
             interfaceData->InterfaceClassGUID;
         if (interfaceData->ReferenceString != NULL) {
@@ -1610,8 +1609,8 @@ FxDevice::_QueryPropertyEx (
 
         ASSERT(FxPropertyType == FxDeviceProperty);
 
-        rootSpecifier.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-        rootSpecifier.RootClass = WdfPropertyStoreRootClassHardwareKey;
+        rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+        rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootClassHardwareKey;
         propertyKey = deviceData->PropertyKey;
         lcid = deviceData->Lcid;
         flags = deviceData->Flags;
@@ -1747,12 +1746,12 @@ FxDevice::GetDeviceStackIoType (
     _Out_ WDF_DEVICE_IO_TYPE* IoControlIoType
     )
 {
-    WDF_DEVICE_IO_BUFFER_RETRIEVAL retrievalMode;
+    UMINT::WDF_DEVICE_IO_BUFFER_RETRIEVAL retrievalMode;
 
     GetDeviceStack()->GetDeviceStackPreferredTransferMode(
                     &retrievalMode,
-                    ReadWriteIoType,
-                    IoControlIoType
+                    (UMINT::WDF_DEVICE_IO_TYPE*)ReadWriteIoType,
+                    (UMINT::WDF_DEVICE_IO_TYPE*)IoControlIoType
                     );
 }
 

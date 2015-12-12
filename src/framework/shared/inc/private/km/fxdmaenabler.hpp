@@ -135,7 +135,7 @@ public:
         __in  WDF_DMA_DIRECTION Direction
         );
     
-    __forceinline
+    __inline
     size_t
     GetMaximumLength(
         VOID
@@ -148,7 +148,7 @@ public:
         return GetReadDmaDescription()->DeviceDescription.MaximumLength;
     }
 
-    __forceinline
+    __inline
     size_t
     GetAlignment(
         VOID
@@ -157,7 +157,7 @@ public:
         return m_CommonBufferAlignment;
     }
 
-    __forceinline
+    __inline
     WDFDMAENABLER
     GetHandle(
         VOID
@@ -166,7 +166,7 @@ public:
         return (WDFDMAENABLER) GetObjectHandle();
     }
 
-    __forceinline
+    __inline
     WDFDEVICE
     GetDeviceHandle(
         VOID
@@ -176,7 +176,7 @@ public:
         return m_DeviceBase->GetHandle();
     }
 
-    __forceinline
+    __inline
     size_t
     GetMaxSGElements(
         VOID
@@ -185,7 +185,7 @@ public:
         return m_MaxSGElements;
     }
 
-    __forceinline
+    __inline
     VOID
     SetMaxSGElements(
         __in size_t MaximumSGElements
@@ -194,7 +194,7 @@ public:
         m_MaxSGElements = (ULONG) MaximumSGElements;
     }
 
-    FORCEINLINE
+    __inline
     WDF_DMA_PROFILE
     GetProfile(
         VOID
@@ -203,7 +203,7 @@ public:
         return m_Profile;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     SupportsChainedMdls(
         VOID
@@ -223,7 +223,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsBusMaster(
         VOID
@@ -232,7 +232,7 @@ public:
         return m_IsBusMaster;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPacketBased(
         )
@@ -240,7 +240,7 @@ public:
         return m_IsScatterGather ? FALSE : TRUE ;
     }
 
-    FORCEINLINE
+    __inline
     FxDmaDescription*
     GetDmaDescription(
         __in WDF_DMA_DIRECTION Direction
@@ -255,7 +255,7 @@ public:
     }
 
 
-    FORCEINLINE
+    __inline
     FxDmaDescription*
     GetWriteDmaDescription(
         VOID
@@ -268,7 +268,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     FxDmaDescription*
     GetReadDmaDescription(
         VOID

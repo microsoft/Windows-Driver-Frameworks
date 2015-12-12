@@ -129,12 +129,30 @@ FxUsbIdleInfo::Initialize(
     VOID
     )
 {
-    MdDeviceObject deviceObject;
+    HRESULT hr;
+    NTSTATUS status;
+    FxDevice* device;
+    IWudfDeviceStack *devStack;
 
-    deviceObject = ((FxPkgPnp*) m_CallbackInfo.IdleContext)->GetDevice()->
-                    GetDeviceObject();
+    device = ((FxPkgPnp*)m_CallbackInfo.IdleContext)->GetDevice();
+    devStack = device->GetDeviceStack();
 
-    return UmToMx::InitializeUsbSS(deviceObject);
+    hr = devStack->InitializeUsbSS();
+    if (S_OK == hr) {
+        status = STATUS_SUCCESS;
+    }
+    else { 
+        PUMDF_VERSION_DATA driverVersion = devStack->GetMinDriverVersion();
+        BOOL preserveCompat = 
+             devStack->ShouldPreserveIrpCompletionStatusCompatibility();
+    
+        status = CHostFxUtil::NtStatusFromHr(hr,
+                                             driverVersion->MajorNumber,
+                                             driverVersion->MinorNumber,
+                                             preserveCompat);
+    }
+
+    return status;
 }
 
 VOID
@@ -146,13 +164,11 @@ FxPkgPnp::PowerPolicySubmitUsbIdleNotification(
     // This will be set to TRUE if USBSS completion event gets dropped.
     //
     m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_EventDropped = FALSE;
-
-    UmToMx::SubmitUsbIdleNotification(
-        m_Device->GetDeviceObject(),
+    
+    m_Device->GetDeviceStack()->SubmitUsbIdleNotification(
         &(m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_CallbackInfo),
         _PowerPolicyUsbSelectiveSuspendCompletionRoutine,
-        this
-        );
+        this);
 }
 
 VOID
@@ -160,9 +176,7 @@ FxPkgPnp::PowerPolicyCancelUsbSS(
     VOID
     )
 {
-    UmToMx::CancelUsbSS(
-        m_Device->GetDeviceObject()
-        );
+    m_Device->GetDeviceStack()->CancelUsbSS();
 }
 
 __drv_maxIRQL(PASSIVE_LEVEL) 
@@ -188,13 +202,12 @@ FxPowerPolicyMachine::UsbSSCallbackProcessingComplete(
     VOID
     )
 {
+    FxDevice* device = m_PkgPnp->GetDevice();
+    
     DoTraceLevelMessage(
         m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
         "USB Selective Suspend Idle callback processing is complete");
 
-    UmToMx::SignalUsbSSCallbackProcessingComplete(
-        m_PkgPnp->GetDevice()->GetDeviceObject()
-        );
+    device->GetDeviceStack()->SignalUsbSSCallbackProcessingComplete();    
 }
-
 

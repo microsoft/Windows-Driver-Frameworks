@@ -203,7 +203,7 @@ SetD3ColdSupport(
 }
 
 LONG
-FORCEINLINE
+__inline
 FxGetValueBits(
     __in WDF_TRI_STATE State,
     __in LONG TrueValue,
@@ -233,7 +233,7 @@ FxGetValueBits(
                    FxPowerCap##FieldName##True,     \
                    FxPowerCap##FieldName##UseDefault)
 
-FORCEINLINE
+__inline
 VOID
 FxSetPnpDeviceStateBit(
     __in PNP_DEVICE_STATE* PnpDeviceState,

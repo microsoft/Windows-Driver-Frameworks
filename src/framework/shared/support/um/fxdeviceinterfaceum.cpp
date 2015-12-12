@@ -24,8 +24,6 @@ Revision History:
 
 #include "FxSupportPch.hpp"
 
-#include "wudfx.h"
-
 extern "C" {
 #include "FxDeviceInterfaceUM.tmh"
 }

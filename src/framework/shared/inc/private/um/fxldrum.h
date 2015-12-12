@@ -117,7 +117,6 @@ typedef enum _WDF_DEVICE_IO_BUFFER_RETRIEVAL *PWDF_DEVICE_IO_BUFFER_RETRIEVAL;
 typedef enum RdWmiPowerAction;
 typedef const GUID *LPCGUID;
 typedef UINT64 WUDF_INTERFACE_CONTEXT;
-typedef enum _WDF_DEVICE_IO_TYPE WDF_DEVICE_IO_TYPE;
 class FxDriver;
 
 //

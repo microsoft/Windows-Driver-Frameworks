@@ -43,7 +43,7 @@ public:
     ~FxString();
 
     VOID
-    FORCEINLINE
+    __inline
     ReleaseString(
         __out PUNICODE_STRING ReleaseTo
         )
@@ -52,7 +52,7 @@ public:
         RtlZeroMemory(&m_UnicodeString, sizeof(m_UnicodeString));
     }
 
-    FORCEINLINE
+    __inline
     operator PUNICODE_STRING(
         )
     {
@@ -60,7 +60,7 @@ public:
     }
 
     PUNICODE_STRING
-    FORCEINLINE
+    __inline
     GetUnicodeString(
         VOID
         )
@@ -80,7 +80,7 @@ public:
         __in const UNICODE_STRING* UnicodeString
         );
 
-    FORCEINLINE
+    __inline
     USHORT
     Length(
         VOID
@@ -89,7 +89,7 @@ public:
         return m_UnicodeString.Length;
     }
 
-    FORCEINLINE
+    __inline
     USHORT
     ByteLength(
         __in BOOLEAN IncludeNull
@@ -103,7 +103,7 @@ public:
         }
     }
 
-    FORCEINLINE
+    __inline
     USHORT
     CharacterLength(
         VOID
@@ -112,7 +112,7 @@ public:
         return m_UnicodeString.Length / sizeof(WCHAR);
     }
 
-    FORCEINLINE
+    __inline
     USHORT
     MaximumLength(
         VOID
@@ -121,7 +121,7 @@ public:
         return m_UnicodeString.MaximumLength;
     }
 
-    FORCEINLINE
+    __inline
     USHORT
     MaximumByteLength(
         VOID
@@ -130,7 +130,7 @@ public:
         return m_UnicodeString.MaximumLength;
     }
 
-    FORCEINLINE
+    __inline
     USHORT
     MaximumCharacterLength(
         VOID
@@ -139,7 +139,7 @@ public:
         return m_UnicodeString.MaximumLength / sizeof(WCHAR);
     }
 
-    FORCEINLINE
+    __inline
     PWCHAR
     Buffer(
         VOID

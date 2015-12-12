@@ -56,7 +56,7 @@ FxMdlAllocate(
 }
 
 VOID
-FORCEINLINE
+__inline
 FxMdlFree(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PMDL Mdl
@@ -71,7 +71,7 @@ FxMdlFree(
 }
 
 VOID
-FORCEINLINE
+__inline
 FxIrpMdlFree(
     __in PMDL Mdl
     )

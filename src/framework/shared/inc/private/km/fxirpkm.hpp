@@ -23,8 +23,8 @@ Revision History:
 --*/
 
 //
-// All the functions in this file should use FORCEINLINE so that KMDF gets
-// inlining. FxIrp.hpp does not use FORCEINLINE on the functions because it
+// All the functions in this file should use __inline so that KMDF gets
+// inlining. FxIrp.hpp does not use __inline on the functions because it
 // doesn't work for UMDF (see comments in FxIrp.hpp).
 //
 
@@ -57,7 +57,7 @@ VOID
 
 
 
-FORCEINLINE
+__inline
 MdIrp
 FxIrp::GetIrp(
     VOID
@@ -66,7 +66,7 @@ FxIrp::GetIrp(
     return m_Irp;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::CompleteRequest(
     __in CCHAR PriorityBoost
@@ -76,7 +76,7 @@ FxIrp::CompleteRequest(
     m_Irp = NULL;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxIrp::CallDriver(
     __in MdDeviceObject DeviceObject
@@ -85,7 +85,7 @@ FxIrp::CallDriver(
     return IoCallDriver(DeviceObject, m_Irp);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxIrp::PoCallDriver(
     __in MdDeviceObject DeviceObject
@@ -94,7 +94,7 @@ FxIrp::PoCallDriver(
     return ::PoCallDriver(DeviceObject, m_Irp);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::StartNextPowerIrp(
     )
@@ -102,7 +102,7 @@ FxIrp::StartNextPowerIrp(
     PoStartNextPowerIrp(m_Irp);
 }
 
-FORCEINLINE
+__inline
 MdCompletionRoutine
 FxIrp::GetNextCompletionRoutine(
     VOID
@@ -112,7 +112,7 @@ FxIrp::GetNextCompletionRoutine(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetCompletionRoutine(
     __in MdCompletionRoutine CompletionRoutine,
@@ -132,7 +132,7 @@ FxIrp::SetCompletionRoutine(
         );
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetCompletionRoutineEx(
     __in MdDeviceObject DeviceObject,
@@ -163,7 +163,7 @@ FxIrp::SetCompletionRoutineEx(
     }
 }
 
-FORCEINLINE
+__inline
 MdCancelRoutine 
 FxIrp::SetCancelRoutine(
     __in_opt MdCancelRoutine  CancelRoutine
@@ -172,7 +172,7 @@ FxIrp::SetCancelRoutine(
     return IoSetCancelRoutine(m_Irp, CancelRoutine);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxIrp::_IrpSynchronousCompletion(
     __in MdDeviceObject DeviceObject,
@@ -195,7 +195,7 @@ FxIrp::_IrpSynchronousCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxIrp::SendIrpSynchronously(
     __in MdDeviceObject DeviceObject
@@ -220,7 +220,7 @@ FxIrp::SendIrpSynchronously(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::CopyToNextIrpStackLocation(
     __in PIO_STACK_LOCATION Stack
@@ -236,7 +236,7 @@ FxIrp::CopyToNextIrpStackLocation(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::CopyCurrentIrpStackLocationToNext(
     VOID
@@ -245,7 +245,7 @@ FxIrp::CopyCurrentIrpStackLocationToNext(
     IoCopyCurrentIrpStackLocationToNext(m_Irp);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetNextIrpStackLocation(
     VOID
@@ -254,7 +254,7 @@ FxIrp::SetNextIrpStackLocation(
     IoSetNextIrpStackLocation(m_Irp);    
 }
 
-FORCEINLINE
+__inline
 UCHAR
 FxIrp::GetMajorFunction(
     VOID
@@ -263,7 +263,7 @@ FxIrp::GetMajorFunction(
     return IoGetCurrentIrpStackLocation(m_Irp)->MajorFunction;
 }
 
-FORCEINLINE
+__inline
 UCHAR
 FxIrp::GetMinorFunction(
     VOID
@@ -272,7 +272,7 @@ FxIrp::GetMinorFunction(
     return IoGetCurrentIrpStackLocation(m_Irp)->MinorFunction;
 }
 
-FORCEINLINE
+__inline
 UCHAR
 FxIrp::GetCurrentStackFlags(
     VOID
@@ -281,7 +281,7 @@ FxIrp::GetCurrentStackFlags(
     return IoGetCurrentIrpStackLocation(m_Irp)->Flags;
 }
 
-FORCEINLINE
+__inline
 MdFileObject
 FxIrp::GetCurrentStackFileObject(
     VOID
@@ -290,7 +290,7 @@ FxIrp::GetCurrentStackFileObject(
     return IoGetCurrentIrpStackLocation(m_Irp)->FileObject;
 }
 
-FORCEINLINE
+__inline
 KPROCESSOR_MODE
 FxIrp::GetRequestorMode(
     VOID
@@ -299,7 +299,7 @@ FxIrp::GetRequestorMode(
     return m_Irp->RequestorMode;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetContext(
     __in ULONG Index,
@@ -309,7 +309,7 @@ FxIrp::SetContext(
     m_Irp->Tail.Overlay.DriverContext[Index] = Value;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetContext(
     __in ULONG Index
@@ -318,7 +318,7 @@ FxIrp::GetContext(
     return m_Irp->Tail.Overlay.DriverContext[Index];
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetFlags(
     __in ULONG Flags
@@ -327,7 +327,7 @@ FxIrp::SetFlags(
     m_Irp->Flags = Flags;
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetFlags(
     VOID
@@ -336,7 +336,7 @@ FxIrp::GetFlags(
     return m_Irp->Flags;
 }
 
-FORCEINLINE
+__inline
 PIO_STACK_LOCATION
 FxIrp::GetCurrentIrpStackLocation(
     VOID
@@ -345,7 +345,7 @@ FxIrp::GetCurrentIrpStackLocation(
     return IoGetCurrentIrpStackLocation(m_Irp);
 }
 
-FORCEINLINE
+__inline
 PIO_STACK_LOCATION
 FxIrp::GetNextIrpStackLocation(
     VOID
@@ -355,7 +355,7 @@ FxIrp::GetNextIrpStackLocation(
 }
 
 PIO_STACK_LOCATION
-FORCEINLINE
+__inline
 FxIrp::_GetAndClearNextStackLocation(
     __in MdIrp Irp
     )
@@ -365,7 +365,7 @@ FxIrp::_GetAndClearNextStackLocation(
     return IoGetNextIrpStackLocation(Irp);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SkipCurrentIrpStackLocation(
     VOID
@@ -380,7 +380,7 @@ FxIrp::SkipCurrentIrpStackLocation(
     IoSkipCurrentIrpStackLocation(m_Irp);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::MarkIrpPending(
     )
@@ -388,7 +388,7 @@ FxIrp::MarkIrpPending(
     IoMarkIrpPending(m_Irp);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::PendingReturned(
     )
@@ -396,7 +396,7 @@ FxIrp::PendingReturned(
     return m_Irp->PendingReturned;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::PropagatePendingReturned(
     VOID
@@ -407,7 +407,7 @@ FxIrp::PropagatePendingReturned(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetStatus(
     __in NTSTATUS Status
@@ -416,7 +416,7 @@ FxIrp::SetStatus(
     m_Irp->IoStatus.Status = Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxIrp::GetStatus(
     )
@@ -424,7 +424,7 @@ FxIrp::GetStatus(
     return m_Irp->IoStatus.Status;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::Cancel(
     VOID
@@ -433,7 +433,7 @@ FxIrp::Cancel(
     return IoCancelIrp(m_Irp);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetCancel(
     __in BOOLEAN Cancel
@@ -442,7 +442,7 @@ FxIrp::SetCancel(
     m_Irp->Cancel = Cancel;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::IsCanceled(
     )
@@ -450,7 +450,7 @@ FxIrp::IsCanceled(
     return m_Irp->Cancel ? TRUE : FALSE;
 }
 
-FORCEINLINE
+__inline
 KIRQL
 FxIrp::GetCancelIrql(
     )
@@ -458,7 +458,7 @@ FxIrp::GetCancelIrql(
     return m_Irp->CancelIrql;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetInformation(
     ULONG_PTR Information
@@ -467,7 +467,7 @@ FxIrp::SetInformation(
     m_Irp->IoStatus.Information = Information;
 }
 
-FORCEINLINE
+__inline
 ULONG_PTR
 FxIrp::GetInformation(
     )
@@ -475,7 +475,7 @@ FxIrp::GetInformation(
     return m_Irp->IoStatus.Information;
 }
 
-FORCEINLINE
+__inline
 CCHAR
 FxIrp::GetCurrentIrpStackLocationIndex(
     )
@@ -483,7 +483,7 @@ FxIrp::GetCurrentIrpStackLocationIndex(
     return m_Irp->CurrentLocation;
 }
 
-FORCEINLINE
+__inline
 CCHAR
 FxIrp::GetStackCount(
     )
@@ -491,7 +491,7 @@ FxIrp::GetStackCount(
     return m_Irp->StackCount;
 }
 
-FORCEINLINE
+__inline
 PLIST_ENTRY
 FxIrp::ListEntry(
     )
@@ -499,7 +499,7 @@ FxIrp::ListEntry(
     return &m_Irp->Tail.Overlay.ListEntry;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetSystemBuffer(
     )
@@ -507,7 +507,7 @@ FxIrp::GetSystemBuffer(
     return m_Irp->AssociatedIrp.SystemBuffer;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetOutputBuffer(
     )
@@ -519,7 +519,7 @@ FxIrp::GetOutputBuffer(
     return GetSystemBuffer();
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetSystemBuffer(
     __in PVOID Value
@@ -529,7 +529,7 @@ FxIrp::SetSystemBuffer(
 }
 
 
-FORCEINLINE
+__inline
 PMDL
 FxIrp::GetMdl(
     )
@@ -537,7 +537,7 @@ FxIrp::GetMdl(
     return m_Irp->MdlAddress;
 }
 
-FORCEINLINE
+__inline
 PMDL*
 FxIrp::GetMdlAddressPointer(
     )
@@ -545,7 +545,7 @@ FxIrp::GetMdlAddressPointer(
     return &m_Irp->MdlAddress;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetMdlAddress(
     __in PMDL Value
@@ -555,7 +555,7 @@ FxIrp::SetMdlAddress(
 }
 
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetUserBuffer(
     )
@@ -564,7 +564,7 @@ FxIrp::GetUserBuffer(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetUserBuffer(
     __in PVOID Value
@@ -573,7 +573,7 @@ FxIrp::SetUserBuffer(
     m_Irp->UserBuffer = Value;
 }
  
-FORCEINLINE
+__inline
 VOID
 FxIrp::Reuse(
     __in NTSTATUS Status
@@ -582,7 +582,7 @@ FxIrp::Reuse(
     IoReuseIrp(m_Irp, Status);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetMajorFunction(
     __in UCHAR MajorFunction
@@ -591,7 +591,7 @@ FxIrp::SetMajorFunction(
     this->GetNextIrpStackLocation()->MajorFunction = MajorFunction;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetMinorFunction(
     __in UCHAR MinorFunction
@@ -600,7 +600,7 @@ FxIrp::SetMinorFunction(
     this->GetNextIrpStackLocation()->MinorFunction = MinorFunction;
 }
 
-FORCEINLINE
+__inline
 SYSTEM_POWER_STATE_CONTEXT
 FxIrp::GetParameterPowerSystemPowerStateContext(
     )
@@ -609,7 +609,7 @@ FxIrp::GetParameterPowerSystemPowerStateContext(
         Parameters.Power.SystemPowerStateContext;
 }
 
-FORCEINLINE
+__inline
 POWER_STATE_TYPE
 FxIrp::GetParameterPowerType(
     )
@@ -617,7 +617,7 @@ FxIrp::GetParameterPowerType(
     return (this->GetCurrentIrpStackLocation())->Parameters.Power.Type;
 }
 
-FORCEINLINE
+__inline
 POWER_STATE
 FxIrp::GetParameterPowerState(
     )
@@ -625,7 +625,7 @@ FxIrp::GetParameterPowerState(
     return (this->GetCurrentIrpStackLocation())->Parameters.Power.State;
 }
 
-FORCEINLINE
+__inline
 DEVICE_POWER_STATE
 FxIrp::GetParameterPowerStateDeviceState(
     )
@@ -634,7 +634,7 @@ FxIrp::GetParameterPowerStateDeviceState(
         Parameters.Power.State.DeviceState;
 }
 
-FORCEINLINE
+__inline
 SYSTEM_POWER_STATE
 FxIrp::GetParameterPowerStateSystemState(
     )
@@ -643,7 +643,7 @@ FxIrp::GetParameterPowerStateSystemState(
         Parameters.Power.State.SystemState;
 }
 
-FORCEINLINE
+__inline
 POWER_ACTION
 FxIrp::GetParameterPowerShutdownType(
     )
@@ -652,7 +652,7 @@ FxIrp::GetParameterPowerShutdownType(
         Parameters.Power.ShutdownType;
 }
 
-FORCEINLINE
+__inline
 DEVICE_RELATION_TYPE
 FxIrp::GetParameterQDRType(
     )
@@ -661,7 +661,7 @@ FxIrp::GetParameterQDRType(
         Parameters.QueryDeviceRelations.Type;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterQDRType(
     DEVICE_RELATION_TYPE DeviceRelation
@@ -671,7 +671,7 @@ FxIrp::SetParameterQDRType(
         Parameters.QueryDeviceRelations.Type = DeviceRelation;
 }
 
-FORCEINLINE
+__inline
 PDEVICE_CAPABILITIES
 FxIrp::GetParameterDeviceCapabilities(
     )
@@ -680,7 +680,7 @@ FxIrp::GetParameterDeviceCapabilities(
         Parameters.DeviceCapabilities.Capabilities;
 }
 
-FORCEINLINE
+__inline
 MdDeviceObject
 FxIrp::GetDeviceObject(
     VOID
@@ -689,7 +689,7 @@ FxIrp::GetDeviceObject(
   return this->GetCurrentIrpStackLocation()->DeviceObject;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetCurrentDeviceObject(
     __in MdDeviceObject DeviceObject
@@ -698,7 +698,7 @@ FxIrp::SetCurrentDeviceObject(
   this->GetCurrentIrpStackLocation()->DeviceObject = DeviceObject;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterDeviceCapabilities(
     __in PDEVICE_CAPABILITIES DeviceCapabilities
@@ -708,7 +708,7 @@ FxIrp::SetParameterDeviceCapabilities(
         Parameters.DeviceCapabilities.Capabilities = DeviceCapabilities;
 }
 
-FORCEINLINE
+__inline
 LONGLONG
 FxIrp::GetParameterWriteByteOffsetQuadPart(
     )
@@ -717,7 +717,7 @@ FxIrp::GetParameterWriteByteOffsetQuadPart(
         Parameters.Write.ByteOffset.QuadPart;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetNextParameterWriteByteOffsetQuadPart(
     __in LONGLONG DeviceOffset
@@ -727,7 +727,7 @@ FxIrp::SetNextParameterWriteByteOffsetQuadPart(
         Parameters.Write.ByteOffset.QuadPart = DeviceOffset;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetNextParameterWriteLength(
     __in ULONG IoLength
@@ -737,7 +737,7 @@ FxIrp::SetNextParameterWriteLength(
         Parameters.Write.Length = IoLength;
 }
 
-FORCEINLINE
+__inline
 PVOID*
 FxIrp::GetNextStackParameterOthersArgument1Pointer(
     )
@@ -749,7 +749,7 @@ FxIrp::GetNextStackParameterOthersArgument1Pointer(
     return &nextStack->Parameters.Others.Argument1;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetNextStackParameterOthersArgument1(
     __in PVOID Argument1
@@ -759,7 +759,7 @@ FxIrp::SetNextStackParameterOthersArgument1(
         Parameters.Others.Argument1 = Argument1;
 }
 
-FORCEINLINE
+__inline
 PVOID*
 FxIrp::GetNextStackParameterOthersArgument2Pointer(
     )
@@ -771,7 +771,7 @@ FxIrp::GetNextStackParameterOthersArgument2Pointer(
     return &nextStack->Parameters.Others.Argument2;
 }
 
-FORCEINLINE
+__inline
 PVOID*
 FxIrp::GetNextStackParameterOthersArgument4Pointer(
     )
@@ -783,7 +783,7 @@ FxIrp::GetNextStackParameterOthersArgument4Pointer(
     return &nextStack->Parameters.Others.Argument4;
 }
 
-FORCEINLINE
+__inline
 PCM_RESOURCE_LIST
 FxIrp::GetParameterAllocatedResources(
     )
@@ -792,7 +792,7 @@ FxIrp::GetParameterAllocatedResources(
         Parameters.StartDevice.AllocatedResources;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterAllocatedResources(
     __in PCM_RESOURCE_LIST AllocatedResources
@@ -802,7 +802,7 @@ FxIrp::SetParameterAllocatedResources(
         Parameters.StartDevice.AllocatedResources = AllocatedResources;
 }
 
-FORCEINLINE
+__inline
 PCM_RESOURCE_LIST
 FxIrp::GetParameterAllocatedResourcesTranslated(
     )
@@ -811,7 +811,7 @@ FxIrp::GetParameterAllocatedResourcesTranslated(
         Parameters.StartDevice.AllocatedResourcesTranslated;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterAllocatedResourcesTranslated(
     __in PCM_RESOURCE_LIST AllocatedResourcesTranslated
@@ -822,7 +822,7 @@ FxIrp::SetParameterAllocatedResourcesTranslated(
             AllocatedResourcesTranslated;
 }
 
-FORCEINLINE
+__inline
 LCID
 FxIrp::GetParameterQueryDeviceTextLocaleId(
     )
@@ -831,7 +831,7 @@ FxIrp::GetParameterQueryDeviceTextLocaleId(
         Parameters.QueryDeviceText.LocaleId;
 }
 
-FORCEINLINE
+__inline
 DEVICE_TEXT_TYPE
 FxIrp::GetParameterQueryDeviceTextType(
     )
@@ -840,7 +840,7 @@ FxIrp::GetParameterQueryDeviceTextType(
         Parameters.QueryDeviceText.DeviceTextType;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::GetParameterSetLockLock(
     )
@@ -848,7 +848,7 @@ FxIrp::GetParameterSetLockLock(
     return this->GetCurrentIrpStackLocation()->Parameters.SetLock.Lock;
 }
 
-FORCEINLINE
+__inline
 BUS_QUERY_ID_TYPE
 FxIrp::GetParameterQueryIdType(
     )
@@ -856,7 +856,7 @@ FxIrp::GetParameterQueryIdType(
     return this->GetCurrentIrpStackLocation()->Parameters.QueryId.IdType;
 }
 
-FORCEINLINE
+__inline
 PINTERFACE
 FxIrp::GetParameterQueryInterfaceInterface(
     )
@@ -865,7 +865,7 @@ FxIrp::GetParameterQueryInterfaceInterface(
         Parameters.QueryInterface.Interface;
 }
 
-FORCEINLINE
+__inline
 const GUID*
 FxIrp::GetParameterQueryInterfaceType(
     )
@@ -874,7 +874,7 @@ FxIrp::GetParameterQueryInterfaceType(
         Parameters.QueryInterface.InterfaceType;
 }
 
-FORCEINLINE
+__inline
 MdFileObject
 FxIrp::GetFileObject(
     VOID
@@ -883,7 +883,7 @@ FxIrp::GetFileObject(
     return this->GetCurrentIrpStackLocation()->FileObject;
 }
 
-FORCEINLINE
+__inline
 USHORT
 FxIrp::GetParameterQueryInterfaceVersion(
     )
@@ -891,7 +891,7 @@ FxIrp::GetParameterQueryInterfaceVersion(
     return this->GetCurrentIrpStackLocation()->Parameters.QueryInterface.Version;
 }
 
-FORCEINLINE
+__inline
 USHORT
 FxIrp::GetParameterQueryInterfaceSize(
     )
@@ -899,7 +899,7 @@ FxIrp::GetParameterQueryInterfaceSize(
     return this->GetCurrentIrpStackLocation()->Parameters.QueryInterface.Size;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetParameterQueryInterfaceInterfaceSpecificData(
     )
@@ -908,7 +908,7 @@ FxIrp::GetParameterQueryInterfaceInterfaceSpecificData(
         Parameters.QueryInterface.InterfaceSpecificData;
 }
 
-FORCEINLINE
+__inline
 DEVICE_USAGE_NOTIFICATION_TYPE
 FxIrp::GetParameterUsageNotificationType(
     )
@@ -917,7 +917,7 @@ FxIrp::GetParameterUsageNotificationType(
         Parameters.UsageNotification.Type;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::GetParameterUsageNotificationInPath(
     )
@@ -926,7 +926,7 @@ FxIrp::GetParameterUsageNotificationInPath(
         Parameters.UsageNotification.InPath;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterUsageNotificationInPath(
     __in BOOLEAN InPath
@@ -936,7 +936,7 @@ FxIrp::SetParameterUsageNotificationInPath(
         Parameters.UsageNotification.InPath = InPath;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN 
 FxIrp::GetNextStackParameterUsageNotificationInPath(
     )
@@ -947,7 +947,7 @@ FxIrp::GetNextStackParameterUsageNotificationInPath(
 
 
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetParameterIoctlCode(
     VOID
@@ -957,7 +957,7 @@ FxIrp::GetParameterIoctlCode(
         Parameters.DeviceIoControl.IoControlCode;
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetParameterIoctlCodeBufferMethod(
     VOID
@@ -966,7 +966,7 @@ FxIrp::GetParameterIoctlCodeBufferMethod(
     return METHOD_FROM_CTL_CODE(GetParameterIoctlCode());
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetParameterIoctlOutputBufferLength(
     VOID
@@ -976,7 +976,7 @@ FxIrp::GetParameterIoctlOutputBufferLength(
         Parameters.DeviceIoControl.OutputBufferLength;
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetParameterIoctlInputBufferLength(
     VOID
@@ -986,7 +986,7 @@ FxIrp::GetParameterIoctlInputBufferLength(
         Parameters.DeviceIoControl.InputBufferLength;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterIoctlCode(
     __in ULONG DeviceIoControlCode
@@ -996,7 +996,7 @@ FxIrp::SetParameterIoctlCode(
         Parameters.DeviceIoControl.IoControlCode = DeviceIoControlCode;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterIoctlInputBufferLength(
     __in ULONG InputBufferLength
@@ -1006,7 +1006,7 @@ FxIrp::SetParameterIoctlInputBufferLength(
         Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterIoctlOutputBufferLength(
     __in ULONG OutputBufferLength
@@ -1016,7 +1016,7 @@ FxIrp::SetParameterIoctlOutputBufferLength(
         Parameters.DeviceIoControl.OutputBufferLength = OutputBufferLength;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterIoctlType3InputBuffer(
     __in PVOID Type3InputBuffer
@@ -1026,7 +1026,7 @@ FxIrp::SetParameterIoctlType3InputBuffer(
         Parameters.DeviceIoControl.Type3InputBuffer = Type3InputBuffer;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetParameterIoctlType3InputBuffer(
     VOID
@@ -1036,7 +1036,7 @@ FxIrp::GetParameterIoctlType3InputBuffer(
                Parameters.DeviceIoControl.Type3InputBuffer;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterQueryInterfaceInterface(
     __in PINTERFACE Interface
@@ -1046,7 +1046,7 @@ FxIrp::SetParameterQueryInterfaceInterface(
         Parameters.QueryInterface.Interface = Interface;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterQueryInterfaceType(
     __in const GUID* InterfaceType
@@ -1056,7 +1056,7 @@ FxIrp::SetParameterQueryInterfaceType(
         Parameters.QueryInterface.InterfaceType = InterfaceType;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterQueryInterfaceVersion(
     __in USHORT Version
@@ -1065,7 +1065,7 @@ FxIrp::SetParameterQueryInterfaceVersion(
     this->GetNextIrpStackLocation()->Parameters.QueryInterface.Version = Version;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterQueryInterfaceSize(
     __in USHORT Size
@@ -1074,7 +1074,7 @@ FxIrp::SetParameterQueryInterfaceSize(
     this->GetNextIrpStackLocation()->Parameters.QueryInterface.Size = Size;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetParameterQueryInterfaceInterfaceSpecificData(
     __in PVOID InterfaceSpecificData
@@ -1084,7 +1084,7 @@ FxIrp::SetParameterQueryInterfaceInterfaceSpecificData(
         Parameters.QueryInterface.InterfaceSpecificData = InterfaceSpecificData;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetNextStackFlags(
     __in UCHAR Flags
@@ -1093,7 +1093,7 @@ FxIrp::SetNextStackFlags(
     this->GetNextIrpStackLocation()->Flags = Flags;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::SetNextStackFileObject(
     _In_ MdFileObject FileObject
@@ -1103,7 +1103,7 @@ FxIrp::SetNextStackFileObject(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::ClearNextStack(
     VOID
@@ -1118,7 +1118,7 @@ FxIrp::ClearNextStack(
 
 
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::ClearNextStackLocation(
     VOID
@@ -1128,7 +1128,7 @@ FxIrp::ClearNextStackLocation(
                   FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine));
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::InitNextStackUsingStack(
     __in FxIrp* Irp
@@ -1143,7 +1143,7 @@ FxIrp::InitNextStackUsingStack(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 MdIrp
 FxIrp::AllocateIrp(
     _In_ CCHAR StackSize,
@@ -1155,7 +1155,7 @@ FxIrp::AllocateIrp(
     return IoAllocateIrp(StackSize, FALSE);
 }
 
-FORCEINLINE
+__inline
 MdIrp
 FxIrp::GetIrpFromListEntry(
     __in PLIST_ENTRY Ple
@@ -1164,7 +1164,7 @@ FxIrp::GetIrpFromListEntry(
     return CONTAINING_RECORD(Ple, IRP, Tail.Overlay.ListEntry);
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetParameterReadLength(
     VOID
@@ -1173,7 +1173,7 @@ FxIrp::GetParameterReadLength(
   return this->GetCurrentIrpStackLocation()->Parameters.Read.Length;
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetParameterWriteLength(
     VOID
@@ -1183,7 +1183,7 @@ FxIrp::GetParameterWriteLength(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 NTSTATUS
 FxIrp::RequestPowerIrp(
     __in MdDeviceObject  DeviceObject,
@@ -1206,7 +1206,7 @@ FxIrp::RequestPowerIrp(
         NULL); 
 }
   
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetCurrentFlags(
     VOID
@@ -1215,7 +1215,7 @@ FxIrp::GetCurrentFlags(
     return (this->GetCurrentIrpStackLocation())->Flags;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetCurrentParametersPointer(
     VOID
@@ -1224,7 +1224,7 @@ FxIrp::GetCurrentParametersPointer(
     return &(this->GetCurrentIrpStackLocation())->Parameters;
 }
 
-FORCEINLINE
+__inline
 MdEThread
 FxIrp::GetThread(
     VOID
@@ -1233,7 +1233,7 @@ FxIrp::GetThread(
     return  m_Irp->Tail.Overlay.Thread;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::Is32bitProcess(
     VOID
@@ -1260,7 +1260,7 @@ FxIrp::Is32bitProcess(
 
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::FreeIrp(
     VOID
@@ -1269,7 +1269,7 @@ FxIrp::FreeIrp(
     IoFreeIrp(m_Irp);
 }
 
-FORCEINLINE
+__inline
 PIO_STATUS_BLOCK
 FxIrp::GetStatusBlock(
     VOID
@@ -1278,7 +1278,7 @@ FxIrp::GetStatusBlock(
     return &m_Irp->IoStatus;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxIrp::GetDriverContext(
     VOID
@@ -1287,7 +1287,7 @@ FxIrp::GetDriverContext(
     return m_Irp->Tail.Overlay.DriverContext;
 }
 
-FORCEINLINE
+__inline
 ULONG
 FxIrp::GetDriverContextSize(
     VOID
@@ -1296,7 +1296,7 @@ FxIrp::GetDriverContextSize(
     return sizeof(m_Irp->Tail.Overlay.DriverContext);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::CopyParameters(
     _Out_ PWDF_REQUEST_PARAMETERS Parameters
@@ -1307,7 +1307,7 @@ FxIrp::CopyParameters(
                   sizeof(Parameters->Parameters));
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIrp::CopyStatus(
     _Out_ PIO_STATUS_BLOCK StatusBlock
@@ -1318,7 +1318,7 @@ FxIrp::CopyStatus(
                   sizeof(*StatusBlock));
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::HasStack(
     _In_ UCHAR StackCount
@@ -1327,7 +1327,7 @@ FxIrp::HasStack(
     return (GetCurrentIrpStackLocationIndex() >= StackCount);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIrp::IsCurrentIrpStackLocationValid(
     VOID
@@ -1336,7 +1336,7 @@ FxIrp::IsCurrentIrpStackLocationValid(
     return (GetCurrentIrpStackLocationIndex() <= GetStackCount());
 }
 
-FORCEINLINE
+__inline
 FxAutoIrp::~FxAutoIrp()
 {
     if (m_Irp != NULL) {

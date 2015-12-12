@@ -201,7 +201,7 @@ public:
         __out PBOOLEAN CompleteRequest
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsForwardRequestToParentEnabled(
         VOID

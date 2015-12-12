@@ -159,12 +159,14 @@ FxInterrupt::ConnectInternal(
     VOID
     )
 {
-    NTSTATUS status;
-    IWudfDeviceStack *deviceStack;
     HRESULT hr;
-    InterruptControlType controlType;
+    NTSTATUS status;
+    IWudfDeviceStack2 *deviceStack;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    BOOLEAN isRdConnectingOrConnected = FALSE;
 
-    deviceStack = m_Device->GetDeviceStack();
+    pFxDriverGlobals = GetDriverGlobals();
+    deviceStack = m_Device->GetDeviceStack2();
 
     //
     // reset the interrupt event to non-signaled state to start with a 
@@ -183,21 +185,44 @@ FxInterrupt::ConnectInternal(
 
     //
     // Tell the PnP Manager to connect the interrupt. Send a message to 
-    // redirector to do so.
+    // redirector to do so. When ConnectInterrupt returns a failure code,
+    // we use isRdConnectingOrConnected to check if the failure was due
+    // to an already connected or currently connecting interrupt.
     //
-    controlType = InterruptControlTypeConnect;
-    hr = deviceStack->ControlInterrupt(m_RdInterruptContext, controlType);
+    hr = deviceStack->ConnectInterrupt(m_RdInterruptContext,
+                                       &isRdConnectingOrConnected);
     if (FAILED(hr))
     {
-        //
-        // Connecting the interrupt in the reflector failed, which means
-        // that IoConnectInterruptEx either failed or was not called at all.
-        // All we need to do in this case is revert the actions done by
-        // StartThreadpoolWaitQueue above, which are closing the queue
-        // and removing the enqueued interrupt event wait.
-        //
-        StopAndFlushThreadpoolWaitQueue();
-        
+        if (isRdConnectingOrConnected) {
+            //
+            // The connect call failed because we asked the Reflector to connect
+            // an already connected or currently connecting interrupt. Perhaps the
+            // client made a redundant call to WdfInterruptEnable. In this case,
+            // we want to keep the threadpool active so that we continue to receive
+            // and acknowledge interrupts - otherwise RdIsrPassiveLevel may time out.
+            //
+            DoTraceLevelMessage(pFxDriverGlobals, 
+                TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Multiple connection attempts for !WDFINTERRUPT 0x%p",
+                GetHandle());
+
+            if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(2, 19)) {
+                FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+                    CHECK("Multiple interrupt connection attempts", FALSE),
+                    pFxDriverGlobals->Public.DriverName);
+            }
+        }
+        else {
+            //
+            // Connecting the interrupt in the reflector failed, which means
+            // that IoConnectInterruptEx either failed or was not called at all.
+            // All we need to do in this case is revert the actions done by
+            // StartThreadpoolWaitQueue above, which are closing the queue
+            // and removing the enqueued interrupt event wait.
+            //
+            StopAndFlushThreadpoolWaitQueue();
+        }
+
         PUMDF_VERSION_DATA driverVersion = deviceStack->GetMinDriverVersion();
         BOOL preserveCompat = 
              deviceStack->ShouldPreserveIrpCompletionStatusCompatibility();
@@ -209,7 +234,7 @@ FxInterrupt::ConnectInternal(
                                         preserveCompat
                                         );
 
-        DoTraceLevelMessage(GetDriverGlobals(), 
+        DoTraceLevelMessage(pFxDriverGlobals,
             TRACE_LEVEL_ERROR, TRACINGPNP,
             "Connect message to reflector returned failure "
             "%!hresult!", hr);

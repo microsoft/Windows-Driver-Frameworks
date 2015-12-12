@@ -1006,6 +1006,7 @@ FxUsbDevice::CreateInterfaces(
 
     while (pInterfaceDescriptor != NULL &&
            iInterface < m_ConfigDescriptor->bNumInterfaces) {
+           
         //
         // This function will retun false if the bit wasn't already set
         //
@@ -1044,7 +1045,7 @@ FxUsbDevice::CreateInterfaces(
             }
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-            status = pInterface->SetWinUsbHandle();
+            status = pInterface->SetWinUsbHandle(iInterface);
             if (!NT_SUCCESS(status)) {
                 goto Done;
             }

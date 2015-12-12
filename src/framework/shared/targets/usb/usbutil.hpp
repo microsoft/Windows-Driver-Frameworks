@@ -5,7 +5,7 @@
 #define __FX_USB_UTIL_H__
 
 BOOLEAN
-FORCEINLINE
+__inline
 FxBitArraySet(
     __inout_xcount((BitNumber / sizeof(UCHAR)) + 1) PUCHAR BitArray,
     __in UCHAR  BitNumber
@@ -45,7 +45,7 @@ Return Value:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxBitArrayClear(
     __inout_xcount((BitNumber / sizeof(UCHAR)) + 1) PUCHAR BitArray,
     __in UCHAR  BitNumber

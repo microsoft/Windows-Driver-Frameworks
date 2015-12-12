@@ -76,7 +76,7 @@ typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
 
 #include "MxGeneral.h"
 
-FORCEINLINE
+__inline
 BOOLEAN
 Mx::IsUM(
     )
@@ -84,7 +84,7 @@ Mx::IsUM(
     return TRUE;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 Mx::IsKM(
     )
@@ -92,7 +92,7 @@ Mx::IsKM(
     return FALSE;
 }
 
-FORCEINLINE
+__inline
 MxThread
 Mx::MxGetCurrentThread(
     )
@@ -117,7 +117,7 @@ Mx::MxGetCurrentThread(
     return (PVOID) ::GetCurrentThreadId();
 }
 
-FORCEINLINE
+__inline
 MdEThread
 Mx::GetCurrentEThread(
     )
@@ -128,7 +128,7 @@ Mx::GetCurrentEThread(
     return (PVOID) MxGetCurrentThread();
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxTerminateCurrentThread(
     __in NTSTATUS Status
@@ -142,7 +142,7 @@ Mx::MxTerminateCurrentThread(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 KIRQL
 Mx::MxGetCurrentIrql(
     )
@@ -150,7 +150,7 @@ Mx::MxGetCurrentIrql(
     return PASSIVE_LEVEL;
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
 Mx::MxRaiseIrql(
@@ -164,7 +164,7 @@ Mx::MxRaiseIrql(
     DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
 Mx::MxLowerIrql(
@@ -176,7 +176,7 @@ Mx::MxLowerIrql(
     DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxQueryTickCount(
     __out PLARGE_INTEGER  TickCount
@@ -185,7 +185,7 @@ Mx::MxQueryTickCount(
     TickCount->QuadPart = GetTickCount();
 }
 
-FORCEINLINE
+__inline
 ULONG
 Mx::MxQueryTimeIncrement(
     )
@@ -199,7 +199,7 @@ Mx::MxQueryTimeIncrement(
     return 1000 * 10;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDbgBreakPoint(
     )
@@ -207,7 +207,7 @@ Mx::MxDbgBreakPoint(
     DebugBreak();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxAssert(
     __in BOOLEAN Condition
@@ -222,7 +222,7 @@ Mx::MxAssert(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxAssertMsg(
     __in LPSTR Message,
@@ -240,7 +240,7 @@ Mx::MxAssertMsg(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 Mx::MxEnterCriticalRegion(
@@ -254,7 +254,7 @@ Mx::MxEnterCriticalRegion(
     // DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
 Mx::MxLeaveCriticalRegion(
@@ -268,7 +268,7 @@ Mx::MxLeaveCriticalRegion(
     // DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDelayExecutionThread(
     __in KPROCESSOR_MODE  WaitMode,
@@ -292,7 +292,7 @@ Mx::MxDelayExecutionThread(
     SleepEx((DWORD)intervalMillisecond.QuadPart, Alertable);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetSystemRoutineAddress(
     __in MxFuncName FuncName
@@ -323,7 +323,7 @@ Return Value:
     return GetProcAddress(hMod, FuncName);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReferenceObject(
     __in PVOID Object
@@ -339,7 +339,7 @@ Mx::MxReferenceObject(
     // DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDereferenceObject(
     __in PVOID Object
@@ -355,7 +355,7 @@ Mx::MxDereferenceObject(
     // DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxInitializeRemoveLock(
     __in MdRemoveLock  Lock,
@@ -375,7 +375,7 @@ Mx::MxInitializeRemoveLock(
     Lock->ReleaseRemLockAndWaitStatus = (DWORD)-1;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxAcquireRemoveLock(
     __in MdRemoveLock  RemoveLock,
@@ -406,7 +406,7 @@ Mx::MxAcquireRemoveLock(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReleaseRemoveLock(
     __in MdRemoveLock  RemoveLock,
@@ -434,7 +434,7 @@ Mx::MxReleaseRemoveLock(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReleaseRemoveLockAndWait(
     __in MdRemoveLock  RemoveLock,
@@ -460,7 +460,7 @@ Mx::MxReleaseRemoveLockAndWait(
     RemoveLock->ReleaseRemLockAndWaitStatus = retVal;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 Mx::MxHasEnoughRemainingThreadStack(
     VOID
@@ -476,7 +476,7 @@ Mx::MxHasEnoughRemainingThreadStack(
     return TRUE;
 }
 
-FORCEINLINE
+__inline
 VOID
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
 Mx::ReleaseCancelSpinLock(
@@ -491,7 +491,7 @@ Mx::ReleaseCancelSpinLock(
     DO_NOTHING();
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::CreateCallback(
     __out PCALLBACK_OBJECT  *CallbackObject,
@@ -508,7 +508,7 @@ Mx::CreateCallback(
     return STATUS_UNSUCCESSFUL;
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::RegisterCallback(
     __in PCALLBACK_OBJECT  CallbackObject,
@@ -525,7 +525,7 @@ Mx::RegisterCallback(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::UnregisterCallback(
     __in PVOID  CbRegistration
@@ -536,7 +536,7 @@ Mx::UnregisterCallback(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxUnlockPages(
     __in PMDL Mdl
@@ -547,7 +547,7 @@ Mx::MxUnlockPages(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetSystemAddressForMdlSafe(
     __inout PMDL Mdl,
@@ -562,7 +562,7 @@ Mx::MxGetSystemAddressForMdlSafe(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxBuildMdlForNonPagedPool(
     __inout PMDL Mdl
@@ -573,7 +573,7 @@ Mx::MxBuildMdlForNonPagedPool(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetDriverObjectExtension(
     __in MdDriverObject DriverObject,
@@ -588,7 +588,7 @@ Mx::MxGetDriverObjectExtension(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxAllocateDriverObjectExtension(
     _In_  MdDriverObject DriverObject,
@@ -611,7 +611,7 @@ Mx::MxAllocateDriverObjectExtension(
     return STATUS_UNSUCCESSFUL;
 }
 
-FORCEINLINE
+__inline
 MdDeviceObject
 Mx::MxGetAttachedDeviceReference(
     __in MdDeviceObject DriverObject
@@ -624,7 +624,7 @@ Mx::MxGetAttachedDeviceReference(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeleteSymbolicLink(
     __in PUNICODE_STRING Value
@@ -635,7 +635,7 @@ Mx::MxDeleteSymbolicLink(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeleteNPagedLookasideList(
     _In_ PNPAGED_LOOKASIDE_LIST LookasideList
@@ -644,7 +644,7 @@ Mx::MxDeleteNPagedLookasideList(
     UNREFERENCED_PARAMETER(LookasideList);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeletePagedLookasideList(
     _In_ PPAGED_LOOKASIDE_LIST LookasideList
@@ -655,7 +655,7 @@ Mx::MxDeletePagedLookasideList(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxInitializeNPagedLookasideList(
     _Out_     PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -680,7 +680,7 @@ Mx::MxInitializeNPagedLookasideList(
 
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxInitializePagedLookasideList(
     _Out_     PPAGED_LOOKASIDE_LIST Lookaside,
@@ -705,7 +705,7 @@ Mx::MxInitializePagedLookasideList(
 
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxDeleteDevice(
     _In_ MdDeviceObject Device
@@ -723,7 +723,7 @@ Mx::MxDeleteDevice(
     DO_NOTHING();
 }
 
-FORCEINLINE 
+__inline 
 NTSTATUS
 Mx::MxCreateDeviceSecure(
       _In_      MdDriverObject DriverObject,
@@ -752,7 +752,7 @@ Mx::MxCreateDeviceSecure(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 MdDeviceObject
 Mx::MxAttachDeviceToDeviceStack(
     _In_ MdDeviceObject SourceDevice,
@@ -768,7 +768,7 @@ Mx::MxAttachDeviceToDeviceStack(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS 
 Mx::MxCreateDevice(
     _In_      MdDriverObject DriverObject,
@@ -794,7 +794,7 @@ Mx::MxCreateDevice(
 
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxCreateSymbolicLink(
     _In_ PUNICODE_STRING SymbolicLinkName,
@@ -809,7 +809,7 @@ Mx::MxCreateSymbolicLink(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxFlushQueuedDpcs(
     )
@@ -819,7 +819,7 @@ Mx::MxFlushQueuedDpcs(
     //
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxOpenKey(
     _In_ PHANDLE KeyHandle,
@@ -836,7 +836,7 @@ Mx::MxOpenKey(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxSetDeviceInterfaceState(
     _In_ PUNICODE_STRING SymbolicLinkName,
@@ -852,7 +852,7 @@ Mx::MxSetDeviceInterfaceState(
 }
 
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxRegisterDeviceInterface(
     _In_      PDEVICE_OBJECT PhysicalDeviceObject,
@@ -871,7 +871,7 @@ Mx::MxRegisterDeviceInterface(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxDeleteKey(
     _In_ HANDLE KeyHandle
@@ -885,7 +885,7 @@ Mx::MxDeleteKey(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 VOID 
 Mx::MxInitializeMdl(
     _In_  PMDL MemoryDescriptorList,
@@ -901,7 +901,7 @@ Mx::MxInitializeMdl(
 
 }
 
-FORCEINLINE
+__inline
 PVOID
 Mx::MxGetMdlVirtualAddress(
     _In_ PMDL Mdl
@@ -914,7 +914,7 @@ Mx::MxGetMdlVirtualAddress(
     return NULL;
 }
 
-FORCEINLINE
+__inline
 VOID 
 Mx::MxBuildPartialMdl(
     _In_     PMDL SourceMdl,
@@ -931,7 +931,7 @@ Mx::MxBuildPartialMdl(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID 
 Mx::MxQuerySystemTime(
     _Out_ PLARGE_INTEGER CurrentTime
@@ -942,7 +942,7 @@ Mx::MxQuerySystemTime(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS 
 Mx::MxSetValueKey(
     _In_      HANDLE KeyHandle,
@@ -965,7 +965,7 @@ Mx::MxSetValueKey(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS 
 Mx::MxQueryValueKey(
     _In_       HANDLE KeyHandle,
@@ -988,7 +988,7 @@ Mx::MxQueryValueKey(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxUnRegisterPlugPlayNotification(
     __in __drv_freesMem(Pool) PVOID NotificationEntry
@@ -1001,7 +1001,7 @@ Mx::MxUnRegisterPlugPlayNotification(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxReferenceObjectByHandle(
     __in HANDLE Handle,
@@ -1024,7 +1024,7 @@ Mx::MxReferenceObjectByHandle(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 Mx::MxClose(
     __in HANDLE Handle
@@ -1035,7 +1035,7 @@ Mx::MxClose(
     return STATUS_SUCCESS;
 }
 
-FORCEINLINE
+__inline
 KIRQL
 Mx::MxAcquireInterruptSpinLock(
     _Inout_ PKINTERRUPT Interrupt
@@ -1047,7 +1047,7 @@ Mx::MxAcquireInterruptSpinLock(
     return PASSIVE_LEVEL;
 }
 
-FORCEINLINE
+__inline
 VOID
 Mx::MxReleaseInterruptSpinLock(
     _Inout_ PKINTERRUPT Interrupt,
@@ -1060,7 +1060,7 @@ Mx::MxReleaseInterruptSpinLock(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 BOOLEAN 
 Mx::MxInsertQueueDpc(
   __inout   PRKDPC Dpc,

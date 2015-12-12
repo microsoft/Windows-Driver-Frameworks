@@ -59,7 +59,7 @@ public:
         __in ULONG Length
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetBuffer(
         __in PVOID Buffer,
@@ -71,7 +71,7 @@ public:
         u.Buffer.Length = Length;
     }
     
-    FORCEINLINE
+    __inline
     BOOLEAN
     HasMdl(
         VOID

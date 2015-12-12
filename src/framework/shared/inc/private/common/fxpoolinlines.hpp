@@ -33,7 +33,7 @@ extern "C" {
 
 _Must_inspect_result_
 NTSTATUS
-FORCEINLINE
+__inline
 FxPoolAddHeaderSize(
     __in    PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in    size_t AllocationSize,
@@ -76,7 +76,7 @@ FxPoolAddHeaderSize(
 }
 
 VOID
-FORCEINLINE
+__inline
 FxPoolInsertNonPagedAllocateTracker(
     __in PFX_POOL           Pool,
     __in PFX_POOL_TRACKER   Tracker,
@@ -135,7 +135,7 @@ Returns:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxPoolRemoveNonPagedAllocateTracker(
     __in PFX_POOL_TRACKER  Tracker
     )
@@ -168,7 +168,7 @@ Returns:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxPoolInsertPagedAllocateTracker(
     __in PFX_POOL           Pool,
     __in PFX_POOL_TRACKER    Tracker,
@@ -225,7 +225,7 @@ Returns:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxPoolRemovePagedAllocateTracker(
     __in PFX_POOL_TRACKER  Tracker
     )

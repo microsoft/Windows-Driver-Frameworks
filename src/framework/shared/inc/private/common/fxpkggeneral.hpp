@@ -218,7 +218,7 @@ public:
         __deref_out_opt FxObject** LockObject
         );
 
-    FORCEINLINE
+    __inline
     FxIoQueue*
     GetDeafultInternalCreateQueue(
         )

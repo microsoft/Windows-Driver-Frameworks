@@ -84,7 +84,7 @@ struct FxRequestContext : public FxStump {
         __in FxRequestBase* Request
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsType(
         __in FX_REQUEST_CONTEXT_TYPE Type
@@ -129,7 +129,7 @@ protected:
         );
 
     VOID
-    FORCEINLINE
+    __inline
     InitCompletionParams(
         VOID
         )

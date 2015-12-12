@@ -16,7 +16,7 @@ Abstract:
 
 #include "MxFileObject.h"
 
-FORCEINLINE
+__inline
 PUNICODE_STRING
 MxFileObject::GetFileName(
     _Inout_opt_ PUNICODE_STRING Filename
@@ -27,7 +27,7 @@ MxFileObject::GetFileName(
     return  &m_FileObject->FileName;
 }
 
-FORCEINLINE
+__inline
 PLARGE_INTEGER
 MxFileObject::GetCurrentByteOffset(
    VOID
@@ -36,7 +36,7 @@ MxFileObject::GetCurrentByteOffset(
    return &m_FileObject->CurrentByteOffset;
 }
 
-FORCEINLINE
+__inline
 ULONG
 MxFileObject::GetFlags(
    VOID
@@ -45,7 +45,7 @@ MxFileObject::GetFlags(
    return m_FileObject->Flags;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxFileObject::SetFsContext(
     _In_ PVOID Value
@@ -54,7 +54,7 @@ MxFileObject::SetFsContext(
     m_FileObject->FsContext = Value;
 }
 
-FORCEINLINE
+__inline
 VOID
 MxFileObject::SetFsContext2(
     _In_ PVOID Value
@@ -63,7 +63,7 @@ MxFileObject::SetFsContext2(
     m_FileObject->FsContext2 = Value;
 }
 
-FORCEINLINE
+__inline
 PVOID
 MxFileObject::GetFsContext(
     VOID
@@ -72,7 +72,7 @@ MxFileObject::GetFsContext(
     return m_FileObject->FsContext;
 }
 
-FORCEINLINE
+__inline
 PVOID
 MxFileObject::GetFsContext2(
     VOID

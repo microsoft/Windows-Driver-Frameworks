@@ -25,7 +25,7 @@
 #ifndef _FXIOQUEUEUM_HPP_
 #define _FXIOQUEUEUM_HPP_
 
-FORCEINLINE
+__inline
 BOOLEAN
 IsPagingIo(
     __in PIRP Irp
@@ -40,7 +40,7 @@ Routine Description:
     return TRUE;    
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 FxIoQueue::QueueForwardProgressIrpLocked(
@@ -54,7 +54,7 @@ FxIoQueue::QueueForwardProgressIrpLocked(
 }
 
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 MdIrp
 FxIoQueue::GetForwardProgressIrpLocked(
@@ -76,7 +76,7 @@ FxIoQueue::GetForwardProgressIrpLocked(
 
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoQueue::FreeAllReservedRequests(
     __in BOOLEAN Verify
@@ -101,7 +101,7 @@ Routine Description:
 
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoQueue::ReturnReservedRequest(
     __in FxRequest *ReservedRequest
@@ -122,7 +122,7 @@ Routine Description:
    
 }
 
-FORCEINLINE
+__inline
 VOID 
 FxIoQueue::GetForwardProgressIrps(
     __in     PLIST_ENTRY    IrpListHead,
@@ -145,7 +145,7 @@ Routine Description:
 
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoQueue::FlushQueuedDpcs(
     VOID
@@ -166,7 +166,7 @@ Return Value:
 }
 
 
-FORCEINLINE
+__inline
 VOID
 FxIoQueue::InsertQueueDpc(
     VOID
@@ -186,7 +186,7 @@ Return Value:
     UfxVerifierTrapNotImpl();
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 FxIoQueue::GetReservedRequest(
@@ -208,7 +208,7 @@ Routine Description:
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 _Must_inspect_result_
 NTSTATUS
 FxIoQueue::AssignForwardProgressPolicy(

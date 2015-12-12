@@ -6204,7 +6204,7 @@ Return Value:
 
 VOID
 FxPkgPnp::AckPendingWakeInterruptOperation(
-    VOID
+    __in BOOLEAN ProcessPowerEventOnDifferentThread
     )
 /*++
 
@@ -6215,13 +6215,21 @@ Routine Description:
 
 Arguments:
 
+    ProcessPowerEventOnDifferentThread - Once all wake interrupts for the device
+        have acknowledged the operation, if this is TRUE, the power state 
+        machine will process the PowerWakeInterruptCompleteTransition event on a 
+        seperate thread.
+
 Return Value:
     None
 
 --*/
 {
     if (InterlockedDecrement((LONG *)&m_WakeInterruptPendingAckCount) == 0) {
-        PowerProcessEvent(PowerWakeInterruptCompleteTransition);
+        PowerProcessEvent(
+            PowerWakeInterruptCompleteTransition, 
+            ProcessPowerEventOnDifferentThread
+            );
     }
 }
 

@@ -22,7 +22,7 @@ Revision History:
 #ifndef _FXIOTARGETUM_H_
 #define _FXIOTARGETUM_H_
 
-FORCEINLINE
+__inline
 FxIoContext::FxIoContext(
     VOID
     ) :
@@ -33,14 +33,14 @@ FxIoContext::FxIoContext(
     ZeroMemory(&m_OriginalBufferInfo, sizeof(m_OriginalBufferInfo));
 }
 
-FORCEINLINE 
+__inline 
 FxIoContext::~FxIoContext(
     VOID
     )
 {
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::ReleaseAndRestore(
     __in FxRequestBase* Request
@@ -69,7 +69,7 @@ FxIoContext::ReleaseAndRestore(
     __super::ReleaseAndRestore(Request);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::CopyParameters(
     __in FxRequestBase* Request
@@ -87,7 +87,7 @@ FxIoContext::CopyParameters(
         break;
 
     case IRP_MJ_DEVICE_CONTROL:
-    case UMDF_HOST::WdfRequestInternalIoctl:
+    case UMINT::WdfRequestInternalIoctl:
         m_CompletionParams.Parameters.Ioctl.Output.Length =
             m_CompletionParams.IoStatus.Information;
         break;
@@ -110,7 +110,7 @@ FxIoContext::CopyParameters(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoContext::SwapIrpBuffer(
     _In_ FxRequestBase* Request,
@@ -135,7 +135,7 @@ FxIoContext::SwapIrpBuffer(
                                        );
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxIoTarget::HasValidStackSize(
     VOID
@@ -150,7 +150,7 @@ FxIoTarget::HasValidStackSize(
     return TRUE;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxIoTarget::Send(
     _In_ MdIrp Irp

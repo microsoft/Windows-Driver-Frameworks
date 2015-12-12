@@ -481,7 +481,7 @@ public:
     //
     // Lock functions used internally
     //
-    FORCEINLINE
+    __inline
     void
 #pragma prefast(suppress:__WARNING_UNEXPECTED_IRQL_CHANGE, "UM has no IRQL")
     LockResourceTable(
@@ -494,7 +494,7 @@ public:
         UNREFERENCED_PARAMETER(oldIrql);
     }
     
-    FORCEINLINE
+    __inline
     void
 #pragma prefast(suppress:__WARNING_UNEXPECTED_IRQL_CHANGE, "UM has no IRQL")
     UnlockResourceTable(

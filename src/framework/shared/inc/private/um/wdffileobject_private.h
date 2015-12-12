@@ -67,7 +67,7 @@ typedef struct _WDFP_FILEOBJECT_INTERFACE {
 // Used by a driver to initialize this structure
 //
 VOID
-FORCEINLINE
+__inline
 WDFP_FILEOBJECT_INTERFACE_INIT(
     _Out_ PWDFP_FILEOBJECT_INTERFACE FileObjectInterface
     )

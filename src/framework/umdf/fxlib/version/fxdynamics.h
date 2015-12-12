@@ -1,7 +1,6 @@
-//
-// Copyright (c) Microsoft. All rights reserved.
-//
 /*++
+
+Copyright (c) Microsoft. All rights reserved.
 
 Module Name: FxDynamics.h
 
@@ -277,6 +276,9 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFIOTARGETSELFASSIGNDEFAULTIOQUEUE                   pfnWdfIoTargetSelfAssignDefaultIoQueue;
     PFN_WDFDEVICEOPENDEVICEMAPKEY                             pfnWdfDeviceOpenDevicemapKey;
     PFN_WDFIOTARGETWDMGETTARGETFILEHANDLE                     pfnWdfIoTargetWdmGetTargetFileHandle;
+    PFN_WDFDEVICEWDMDISPATCHIRP                               pfnWdfDeviceWdmDispatchIrp;
+    PFN_WDFDEVICEWDMDISPATCHIRPTOIOQUEUE                      pfnWdfDeviceWdmDispatchIrpToIoQueue;
+    PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK              pfnWdfDeviceConfigureWdmIrpDispatchCallback;
 
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
 
@@ -460,6 +462,38 @@ WDFEXPORT(WdfDeviceSetDeviceState)(
     WDFDEVICE Device,
     _In_
     PWDF_DEVICE_STATE DeviceState
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfDeviceWdmDispatchIrp)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP Irp,
+    _In_
+    WDFCONTEXT DispatchContext
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP Irp,
+    _In_
+    WDFQUEUE Queue,
+    _In_
+    ULONG Flags
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -879,6 +913,25 @@ WDFEXPORT(WdfDeviceConfigureRequestDispatching)(
     _In_
     _Strict_type_match_
     WDF_REQUEST_TYPE RequestType
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_opt_
+    WDFDRIVER Driver,
+    _In_
+    UCHAR MajorFunction,
+    _In_
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    _In_opt_
+    WDFCONTEXT DriverContext
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -4123,6 +4176,9 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue),
         WDFEXPORT(WdfDeviceOpenDevicemapKey),
         WDFEXPORT(WdfIoTargetWdmGetTargetFileHandle),
+        WDFEXPORT(WdfDeviceWdmDispatchIrp),
+        WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue),
+        WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback),
     }
 };
 

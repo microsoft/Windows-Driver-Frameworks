@@ -36,7 +36,7 @@ extern "C" {
 //
 extern "C" {
 
-FORCEINLINE
+__inline
 static
 NTSTATUS
 FxValiateCx(

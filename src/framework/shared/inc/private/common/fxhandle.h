@@ -172,7 +172,7 @@ FxObjectAndHandleHeaderInit(
     );
 
 VOID
-FORCEINLINE
+__inline
 FxObjectHandleCreate(
     __in  FxObject* Object,
     __out PWDFOBJECT Handle
@@ -235,7 +235,7 @@ FxObjectAllocateContext(
     __deref_opt_out PVOID*              Context
     );
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxObjectCheckType(
     __in FxObject* Object,
@@ -278,7 +278,7 @@ Returns:
 
 }
 
-FORCEINLINE
+__inline
 VOID
 FxObjectHandleGetPtr(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -340,7 +340,7 @@ Arguments:
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxObjectHandleGetPtrOffset(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -356,7 +356,7 @@ Routine Description:
     moved into the signature for  FxObjectHandleGetPtr(). The distinction
     between these 2 functions was important when both of them were *not*
     FORCEINLINE functions (since there was an additional parameter to push onto
-    the stack).  Now that they are both FORCEINLINEd, there is no longer a
+    the stack).  Now that they are both __inlined, there is no longer a
     parameter to push, eliminating this optimization.
 
 Arguments:
@@ -410,7 +410,7 @@ Arguments:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxObjectHandleGetPtrAndGlobals(
     __in  PFX_DRIVER_GLOBALS CallersGlobals,
     __in  WDFOBJECT Handle,
@@ -449,7 +449,7 @@ Arguments:
 }
 
 VOID
-FORCEINLINE
+__inline
 FxObjectHandleGetGlobals(
     __in  PFX_DRIVER_GLOBALS CallersGlobals,
     __in  WDFOBJECT Handle,

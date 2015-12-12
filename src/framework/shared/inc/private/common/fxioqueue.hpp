@@ -112,7 +112,7 @@ public:
                 (NodeType < FxIoQueueNodeTypeLast)) ? TRUE : FALSE;
     }
     
-    FORCEINLINE
+    __inline
     BOOLEAN 
     IsNodeType(
         __in FxIoQueueNodeType NodeType
@@ -649,7 +649,7 @@ public:
         _In_ FxRequest*
         );
     
-    FORCEINLINE
+    __inline
     VOID
     RequestCompletedCallback(
         __in FxRequest* Request
@@ -687,7 +687,7 @@ public:
         DispatchInternalEvents(irql);
     }
     
-    FORCEINLINE
+    __inline
     VOID
     PreRequestCompletedCallback(
         __in FxRequest* Request
@@ -720,7 +720,7 @@ public:
         Unlock(irql);
     }
 
-    FORCEINLINE
+    __inline
     VOID
     PostRequestCompletedCallback(
         __in FxRequest* Request
@@ -762,27 +762,27 @@ public:
         DispatchInternalEvents(irql);
     }
 
-    FORCEINLINE
+    __inline
     FxDriver*
     GetDriver(VOID) {
         return m_PkgIo->GetDriver();
     }
 
-    FORCEINLINE
+    __inline
     CfxDevice*
     GetDevice(VOID)
     {
         return m_Device;
     }
 
-    FORCEINLINE
+    __inline
     FxPkgIo*
     GetPackage(VOID) {
         return m_PkgIo;
     }
 
     WDFQUEUE
-    FORCEINLINE
+    __inline
     GetHandle(
         VOID
         )
@@ -790,7 +790,7 @@ public:
         return (WDFQUEUE) GetObjectHandle();
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPowerManaged() {
         return m_PowerManaged;
@@ -838,7 +838,7 @@ public:
        );
 
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsState(
         __in WDF_IO_QUEUE_STATE State
@@ -848,7 +848,7 @@ public:
         return (((int)m_QueueState & (int) (State)) != 0);
     }
     
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsState(
         __in FX_IO_QUEUE_STATE State
@@ -1002,7 +1002,7 @@ public:
 
     _Releases_lock_(this->m_SpinLock.m_Lock)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     VOID
     DispatchInternalEvents(
         __in __drv_restoresIRQL KIRQL PreviousIrql
@@ -1210,7 +1210,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     static
     FxIoQueue*
     _FromIoPkgListEntry(
@@ -1220,7 +1220,7 @@ public:
         return CONTAINING_RECORD(Entry, FxIoQueue, m_IoPkgListNode.m_ListEntry);
     }
 
-    FORCEINLINE
+    __inline
     static
     FxIoQueue*
     _FromPowerSListEntry(
@@ -1241,7 +1241,7 @@ public:
         __in WDF_REQUEST_TYPE RequestType
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetPowerState(
         __in FXIOQUEUE_POWER_STATE PowerState
@@ -1259,7 +1259,7 @@ public:
         __deref_out_opt FxRequest **ReservedRequest       
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsForwardProgressQueue(
         VOID
@@ -1268,7 +1268,7 @@ public:
         return m_SupportForwardProgress;
     }
 
-    FORCEINLINE
+    __inline
     NTSTATUS
     InvokeAllocateResourcesCallback(
     __in FxRequest *Request
@@ -1346,7 +1346,7 @@ public:
         __in PWDF_REQUEST_FORWARD_OPTIONS ForwardOptions
         );
 
-    FORCEINLINE
+    __inline
     VOID
     SetCxDeviceInfo(
         __in FxCxDeviceInfo* CxDeviceInfo 
@@ -1355,7 +1355,7 @@ public:
         m_CxDeviceInfo = CxDeviceInfo;
     }
     
-    FORCEINLINE
+    __inline
     FxCxDeviceInfo*
     GetCxDeviceInfo(
         VOID
@@ -1364,7 +1364,7 @@ public:
         return m_CxDeviceInfo;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetInterruptQueue(
         VOID
@@ -1424,7 +1424,7 @@ private:
         __out PKIRQL PreviousIrql
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPowerStateNotifyingDriver(
         VOID
@@ -1446,7 +1446,7 @@ private:
     //
     // Must be called with the FxIoQueue lock held.
     //
-    FORCEINLINE
+    __inline
     VOID
     InsertInDriverOwnedList(
         __in FxRequest* Request
@@ -1467,7 +1467,7 @@ private:
     // Note: ForwardRequest and two phase completions (queued-by-driver) cases breaks 
     //          this up and manipulates the list entry and m_DriverIoCount separately.
     //
-    FORCEINLINE
+    __inline
     VOID
     RemoveFromDriverOwnedList(
         __in FxRequest* Request
@@ -1492,7 +1492,7 @@ private:
     //
     // Must be called with the FxIoQueue lock held.
     //
-    FORCEINLINE
+    __inline
     VOID
     PreRemoveFromDriverOwnedList(
         __in FxRequest* Request
@@ -1517,7 +1517,7 @@ private:
     //
     // Must be called with the FxIoQueue lock held.
     //
-    FORCEINLINE
+    __inline
     VOID
     PostRemoveFromDriverOwnedList(
         VOID
@@ -1536,7 +1536,7 @@ private:
     //
     // Must be called with the FxIoQueue lock held.
     //
-    FORCEINLINE
+    __inline
     VOID
     CheckTransitionFromEmpty(
         VOID
@@ -1554,7 +1554,7 @@ private:
     //
     // Must be called with the FxIoQueue lock held.
     //
-    FORCEINLINE
+    __inline
     VOID
     SetTransitionFromEmpty(
         VOID
@@ -1579,7 +1579,7 @@ private:
         __in KIRQL PreviousIrql
         );
 
-    FORCEINLINE
+    __inline
     NTSTATUS
     InsertNewRequest(
         __in FxRequest** Request,

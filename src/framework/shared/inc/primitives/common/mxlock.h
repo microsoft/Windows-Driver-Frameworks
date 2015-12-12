@@ -46,7 +46,7 @@ public:
         return m_Lock;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     Initialize(
         );
@@ -54,7 +54,7 @@ public:
     _Acquires_lock_(this->m_Lock)
     __drv_maxIRQL(DISPATCH_LEVEL)
     __drv_setsIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     VOID
     Acquire(
         __out __drv_deref(__drv_savesIRQL) KIRQL * OldIrql
@@ -63,7 +63,7 @@ public:
 #if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
 
     CHECK_RETURN_IF_USER_MODE
-    FORCEINLINE
+    __inline
     BOOLEAN
     TryToAcquire(
         VOID
@@ -72,14 +72,14 @@ public:
 
     _Acquires_lock_(this->m_Lock)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     VOID
     AcquireAtDpcLevel(
         );
 
     _Releases_lock_(this->m_Lock)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     VOID
     Release(
         __drv_restoresIRQL KIRQL NewIrql
@@ -87,12 +87,12 @@ public:
 
     _Releases_lock_(this->m_Lock)
     __drv_requiresIRQL(DISPATCH_LEVEL)
-    FORCEINLINE
+    __inline
     VOID
     ReleaseFromDpcLevel(
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Uninitialize(
         );
@@ -101,9 +101,9 @@ public:
 class MxLock : public MxLockNoDynam
 {
 public:    
-    FORCEINLINE
+    __inline
     MxLock();
     
-    FORCEINLINE
+    __inline
     ~MxLock();
 };

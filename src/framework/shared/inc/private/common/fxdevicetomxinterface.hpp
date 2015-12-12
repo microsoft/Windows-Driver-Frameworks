@@ -47,13 +47,13 @@ Revision History:
 
 
 WDF_FILEOBJECT_CLASS
-FORCEINLINE
+__inline
 FxFileObjectClassNormalize(
     __in WDF_FILEOBJECT_CLASS FileObjectClass
     );
 
 BOOLEAN
-FORCEINLINE
+__inline
 FxIsFileObjectOptional(
     __in WDF_FILEOBJECT_CLASS FileObjectClass
     );

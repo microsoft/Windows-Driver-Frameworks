@@ -23,7 +23,7 @@ private:
     MdFileObject m_FileObject;
 
 public:
-    FORCEINLINE
+    __inline
     MxFileObject(
         _In_ MdFileObject FileObject
         ) :
@@ -31,7 +31,7 @@ public:
     {
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetFileObject(
         _In_ MdFileObject FileObject
@@ -40,7 +40,7 @@ public:
         m_FileObject = FileObject;
     }
 
-    FORCEINLINE
+    __inline
     MdFileObject
     GetFileObject(
         VOID
@@ -49,7 +49,7 @@ public:
         return m_FileObject;
     }
     
-    FORCEINLINE
+    __inline
     MxFileObject(
         VOID
         ) :

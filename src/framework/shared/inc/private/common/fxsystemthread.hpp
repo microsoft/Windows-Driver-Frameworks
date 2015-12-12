@@ -191,7 +191,7 @@ public:
     // Determine if current thread is this
     // worker thread
     //
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsCurrentThread()
     {

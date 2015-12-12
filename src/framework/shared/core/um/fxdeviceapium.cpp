@@ -34,6 +34,19 @@ extern "C" {
 //
 extern "C" {
 
+//
+// Verifier Functions
+//
+// Do not specify argument names
+FX_DECLARE_VF_FUNCTION_P4(
+NTSTATUS, 
+VerifyWdfDeviceWdmDispatchIrpToIoQueue,
+    _In_ FxDevice*,
+    _In_ MdIrp,
+    _In_ FxIoQueue*,
+    _In_ ULONG
+    );
+
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
@@ -632,8 +645,8 @@ Return Value:
         resources->UnlockResourceTable();
 
         deviceStack = pDevice->GetDeviceStack();
-        deviceStack->ReadFromHardware(Type, 
-                                      Size, 
+        deviceStack->ReadFromHardware((UMINT::WDF_DEVICE_HWACCESS_TARGET_TYPE)Type, 
+                                      (UMINT::WDF_DEVICE_HWACCESS_TARGET_SIZE)Size, 
                                       TargetAddress, 
                                       &value, 
                                       Buffer, 
@@ -863,8 +876,8 @@ Return Value:
         resources->UnlockResourceTable();
 
         deviceStack = pDevice->GetDeviceStack();
-        deviceStack->WriteToHardware(Type, 
-                                     Size, 
+        deviceStack->WriteToHardware((UMINT::WDF_DEVICE_HWACCESS_TARGET_TYPE)Type, 
+                                     (UMINT::WDF_DEVICE_HWACCESS_TARGET_SIZE)Size, 
                                      TargetAddress, 
                                      Value, 
                                      Buffer, 
@@ -1307,4 +1320,143 @@ Return Value:
     return NULL;
 }
 
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDEVICE Device,
+    __in
+    MdIrp Irp,
+    __in
+    WDFQUEUE Queue,
+    __in
+    ULONG Flags
+    )
+{    
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+    FxDevice* pDevice;
+    FxIoQueue* pQueue;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Device,
+                                   FX_TYPE_DEVICE,
+                                   (PVOID *) &pDevice,
+                                   &pFxDriverGlobals);
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         Queue,
+                         FX_TYPE_QUEUE,
+                         (PVOID*)&pQueue);
+
+    FxPointerNotNull(pFxDriverGlobals, Irp);
+
+    FxIrp fxIrp(Irp); 
+
+    //
+    // Unlike in KMDF, It's not possible for UMDF to forward to a parent queue.
+    //
+    ASSERT(pDevice->m_ParentDevice != pQueue->GetDevice());
+ 
+    status = VerifyWdfDeviceWdmDispatchIrpToIoQueue(pFxDriverGlobals,
+                                                    pDevice,
+                                                    Irp,
+                                                    pQueue,
+                                                    Flags);                                                  
+    if (!NT_SUCCESS(status)) {
+        
+        fxIrp.SetStatus(status);
+        fxIrp.SetInformation(0x0);
+        fxIrp.CompleteRequest(IO_NO_INCREMENT);
+        
+        return status;
+    }
+
+    //
+    // DispatchStep2 will convert the IRP to a WDFRequest and queue it, dispatching
+    // the request to the driver if possible.
+    //
+    return pDevice->m_PkgIo->DispatchStep2(reinterpret_cast<MdIrp>(Irp),
+                                                                   NULL, 
+                                                                   pQueue); 
+}
+
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDeviceWdmDispatchIrp)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP pIrp,
+    _In_
+    WDFCONTEXT DispatchContext
+    )
+    
+/*++
+
+Routine Description:
+
+    This DDI returns control of the IRP to the framework. 
+    This must only be called from the dispatch callback passed to 
+    WdfDeviceConfigureWdmIrpDispatchCallback
+
+
+Arguments:
+
+    Device - Handle to the I/O device.
+
+    pIrp - Opaque handle to a _WUDF_IRP_WITH_VALIDATION structure.
+
+    DispatchContext - Framework dispatch context passed as a parameter to the
+                      dispatch callback.
+
+Returns:
+
+    IRP's status.
+
+--*/  
+{
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDevice* pDevice;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Device,
+                                   FX_TYPE_DEVICE,
+                                   (PVOID *) &pDevice,
+                                   &pFxDriverGlobals);
+
+    //
+    // Validate parameters and dispatch state. DispatchContext has already been
+    // validated in DispatchStep1. 
+    //
+    FxPointerNotNull(pFxDriverGlobals, pIrp);
+    FxPointerNotNull(pFxDriverGlobals, DispatchContext);
+
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+                        CHECK("This function must be called from within a "
+                        "EVT_WDFDEVICE_WDM_IRP_DISPATCH callback", 
+                        ((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK)), 
+                        DriverGlobals->DriverName);
+
+    //
+    // Adjust this context
+    //
+    DispatchContext = (WDFCONTEXT)((ULONG_PTR)DispatchContext & ~FX_IN_DISPATCH_CALLBACK);
+
+    //
+    // Cast this pIrp back to its composite parts and dispatch it again
+    //
+    return pDevice->m_PkgIo->DispatchStep1(reinterpret_cast<MdIrp>(pIrp), 
+                                           DispatchContext);
+}
+  
 } // extern "C"

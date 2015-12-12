@@ -310,7 +310,7 @@ FxUsbParseConfigurationDescriptor(
     __in UCHAR AlternateSetting
     )
 {
-    PUSB_INTERFACE_DESCRIPTOR found, interface;
+    PUSB_INTERFACE_DESCRIPTOR found, usbInterface;
     PVOID pStart;
 
     found = NULL,
@@ -327,7 +327,7 @@ FxUsbParseConfigurationDescriptor(
         //
         // Search for descriptor type 'interface'
         //
-        interface = (PUSB_INTERFACE_DESCRIPTOR)
+        usbInterface = (PUSB_INTERFACE_DESCRIPTOR)
             FxUsbFindDescriptorType(ConfigDesc,
                                     ConfigDesc->wTotalLength,
                                     pStart,
@@ -336,26 +336,26 @@ FxUsbParseConfigurationDescriptor(
         //
         // Check to see if have a matching descriptor by eliminating mismatches
         //
-        if (interface != NULL) {
-            found = interface;
+        if (usbInterface != NULL) {
+            found = usbInterface;
 
             if (InterfaceNumber != -1 &&
-                interface->bInterfaceNumber != InterfaceNumber) {
+                usbInterface->bInterfaceNumber != InterfaceNumber) {
                 found = NULL;
             }
 
             if (AlternateSetting != -1 &&
-                interface->bAlternateSetting != AlternateSetting) {
+                usbInterface->bAlternateSetting != AlternateSetting) {
                 found = NULL;
             }
 
-            pStart = ((PUCHAR)interface) + interface->bLength;
+            pStart = ((PUCHAR)usbInterface) + usbInterface->bLength;
         }
 
         if (found != NULL) {
             break;
         }
-    } while (interface!= NULL);
+    } while (usbInterface!= NULL);
 
     return found;
 }
@@ -529,7 +529,7 @@ Return Value:
     HRESULT hrQI = pIrp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
     FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pIoIrp));
 
-    pIoIrp->SetTypeForNextStackLocation((WDF_REQUEST_TYPE)WdfRequestInternalIoctl_PRE20);
+    pIoIrp->SetTypeForNextStackLocation(UMINT::WdfRequestInternalIoctl);
 
 
 

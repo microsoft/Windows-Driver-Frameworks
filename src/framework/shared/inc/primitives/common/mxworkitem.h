@@ -33,7 +33,7 @@ protected:
 
 public:
     
-    FORCEINLINE
+    __inline
     MxWorkItem(
         );
 
@@ -60,38 +60,38 @@ public:
 #endif
 
     _Must_inspect_result_
-    FORCEINLINE
+    __inline
     NTSTATUS
     Allocate(
         __in MdDeviceObject DeviceObject,
         __in_opt PVOID ThreadPoolEnv = NULL
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Enqueue(
         __in PMX_WORKITEM_ROUTINE Callback,
         __in PVOID Context
         );
 
-    FORCEINLINE
+    __inline
     MdWorkItem
     GetWorkItem(
         );
 
     static
-    FORCEINLINE
+    __inline
     VOID
     _Free(
         __in MdWorkItem Item
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Free(
         );
 
-    FORCEINLINE
+    __inline
     ~MxWorkItem(
         )
     {
@@ -111,7 +111,7 @@ public:
     {
     }
 
-    FORCEINLINE
+    __inline
     ~MxAutoWorkItem(
         );
 };

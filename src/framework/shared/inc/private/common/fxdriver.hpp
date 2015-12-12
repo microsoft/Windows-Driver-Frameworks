@@ -197,7 +197,7 @@ public:
 
 
  
-    FORCEINLINE
+    __inline
     WDFDRIVER
     GetHandle(
         VOID
@@ -247,7 +247,7 @@ public:
         return &m_RegistryPath;
     }
 
-    FORCEINLINE
+    __inline
     MdDriverObject
     GetDriverObject(
         VOID
@@ -349,7 +349,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     FxDisposeList*
     GetDisposeList(
         )
@@ -357,7 +357,7 @@ public:
         return m_DisposeList;
     }
 
-    FORCEINLINE
+    __inline
     PFN_WDF_DRIVER_DEVICE_ADD
     GetDriverDeviceAddMethod(
         )
@@ -387,7 +387,7 @@ private:
 
 public:
 
-    FORCEINLINE
+    __inline
     HKEY
     GetDriverParametersKey(
         VOID

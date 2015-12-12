@@ -30,8 +30,11 @@ extern "C" {
 
 #include "FxGlobals.h"
 
+extern IUMDFPlatform *g_IUMDFPlatform;
+extern IWudfHost2 *g_IWudfHost2;
+
 _Must_inspect_result_
-FORCEINLINE
+__inline
 BOOLEAN
 FxIsProcessorGroupSupported(
     VOID
@@ -44,7 +47,7 @@ FxIsProcessorGroupSupported(
 }
 
 
-FORCEINLINE
+__inline
 VOID
 FX_TRACK_DRIVER(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
@@ -57,7 +60,7 @@ FX_TRACK_DRIVER(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 PVOID
 FxAllocateFromNPagedLookasideListNoTracking (
     __in PNPAGED_LOOKASIDE_LIST Lookaside
@@ -68,7 +71,7 @@ FxAllocateFromNPagedLookasideListNoTracking (
     return NULL;
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxAllocateFromNPagedLookasideList (
     _In_ PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -86,7 +89,7 @@ FxAllocateFromNPagedLookasideList (
                                           );
 }
 
-FORCEINLINE
+__inline
 PVOID
 FxAllocateFromPagedLookasideList (
     __in PPAGED_LOOKASIDE_LIST Lookaside
@@ -97,7 +100,7 @@ FxAllocateFromPagedLookasideList (
     return NULL;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxFreeToNPagedLookasideListNoTracking (
     __in PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -109,7 +112,7 @@ FxFreeToNPagedLookasideListNoTracking (
     ASSERTMSG("Not implemented for UMDF!\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxFreeToPagedLookasideList (
     __in PPAGED_LOOKASIDE_LIST Lookaside,
@@ -121,7 +124,7 @@ FxFreeToPagedLookasideList (
     ASSERTMSG("Not implemented for UMDF!\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 VOID
 FxFreeToNPagedLookasideList (
     __in PNPAGED_LOOKASIDE_LIST Lookaside,
@@ -140,7 +143,7 @@ IsCurrentThreadImpersonated( )
     return g_IWudfHost2->IsCurrentThreadImpersonated();
 }
 
-__forceinline
+__inline
 PWDF_ACTIVATION_FRAME *
 GetActivationList(
     VOID
@@ -157,6 +160,11 @@ GetActivationList(
 //       short lived scope.  It's destructor will be called when control leaves the block
 //       rather than when the function returns and that defeats the entire purpose of the 
 //       activation frame (which is to live for the life of the DDI call).
+//
+// NOTE 2: 
+// WDF_ACTIVATION constructor includes a default argument which is the _ReturnAddress()
+// instrinsic. This macro should be placed in methods such that the _ReturnAddress
+// points to calling driver code.
 //
 
 #define DDI_ENTRY_IMPERSONATION_OK()                     \

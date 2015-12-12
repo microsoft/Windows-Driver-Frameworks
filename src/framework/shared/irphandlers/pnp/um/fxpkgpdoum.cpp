@@ -14,6 +14,8 @@ Author:
 
 Environment:
 
+    User mode only
+
 Revision History:
 
 --*/

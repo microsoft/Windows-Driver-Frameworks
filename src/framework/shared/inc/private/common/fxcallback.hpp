@@ -60,7 +60,7 @@ public:
 
 protected:
     void
-    FORCEINLINE
+    __inline
     CallbackStart(
         VOID
         )
@@ -70,7 +70,7 @@ protected:
     }
 
     void
-    FORCEINLINE
+    __inline
     CallbackEnd(
         VOID
         )
@@ -110,7 +110,7 @@ public:
     }
 
 protected:
-    FORCEINLINE
+    __inline
     void
     CallbackStart(
         __out PKIRQL PreviousIrql
@@ -121,7 +121,7 @@ protected:
         }
     }
 
-    FORCEINLINE
+    __inline
     void
     CallbackEnd(
         __in KIRQL PreviousIrql

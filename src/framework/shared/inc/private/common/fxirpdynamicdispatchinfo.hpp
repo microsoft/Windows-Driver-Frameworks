@@ -48,7 +48,7 @@ struct FxIrpDynamicDispatchInfo : public FxStump {
         WDFCONTEXT                      DriverContext;
     };
 
-    FORCEINLINE
+    __inline
     static
     int 
     Mj2Index(

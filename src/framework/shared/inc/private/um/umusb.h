@@ -247,26 +247,6 @@ typedef struct _UMURB {
     };
 } UMURB, *PUMURB;
 
-//
-// Conflicts with ddk\inc\wdf\umdf\2.0\wdfrequest.h
-//
-typedef enum _WDF_REQUEST_TYPE_PRE20
-{
-    WdfRequestUndefined_PRE20        = 0,
-    WdfRequestCreate_PRE20           = 1,
-    WdfRequestCleanup_PRE20          = 2,
-    WdfRequestRead_PRE20             = 3,
-    WdfRequestWrite_PRE20            = 4,
-    WdfRequestDeviceIoControl_PRE20  = 5,
-    WdfRequestClose_PRE20            = 6,
-    WdfRequestUsb_PRE20              = 7,
-    WdfRequestOther_PRE20            = 8,
-    WdfRequestInternalIoctl_PRE20    = 9,
-    WdfRequestTypeNoFormat_PRE20     = 10,
-    WdfRequestMaximum_PRE20
-
-} WDF_REQUEST_TYPE_PRE20, *PWDF_REQUEST_TYPE_PRE20;
-
 
 #define FILE_DEVICE_UMDF      ((ULONG)(0x8002))
 

@@ -22,9 +22,7 @@ Revision History:
 
 #include <strsafe.h>
 
-#include "cobbledum.hpp"
-#include "tempTypedefinitions.h"
-#include "wudfx.h"
+#include "fxmin.hpp"
 
 PUNICODE_STRING
 MxFileObject::GetFileName(

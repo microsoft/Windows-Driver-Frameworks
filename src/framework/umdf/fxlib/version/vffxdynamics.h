@@ -187,6 +187,38 @@ VFWDFEXPORT(WdfDeviceSetDeviceState)(
     PWDF_DEVICE_STATE DeviceState
     );
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceWdmDispatchIrp)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP Irp,
+    _In_
+    WDFCONTEXT DispatchContext
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PIRP Irp,
+    _In_
+    WDFQUEUE Queue,
+    _In_
+    ULONG Flags
+    );
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDRIVER
@@ -604,6 +636,25 @@ VFWDFEXPORT(WdfDeviceConfigureRequestDispatching)(
     _In_
     _Strict_type_match_
     WDF_REQUEST_TYPE RequestType
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_opt_
+    WDFDRIVER Driver,
+    _In_
+    UCHAR MajorFunction,
+    _In_
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    _In_opt_
+    WDFCONTEXT DriverContext
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -1634,6 +1685,16 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
 VFWDFEXPORT(WdfIoTargetGetDevice)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFIOTARGET IoTarget
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+HANDLE
+VFWDFEXPORT(WdfIoTargetWdmGetTargetFileHandle)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -3837,6 +3898,10 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfDeviceInitAllowSelfIoTarget),
         VFWDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue),
         VFWDFEXPORT(WdfDeviceOpenDevicemapKey),
+        VFWDFEXPORT(WdfIoTargetWdmGetTargetFileHandle),
+        VFWDFEXPORT(WdfDeviceWdmDispatchIrp),
+        VFWDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue),
+        VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback),
     }
 };
 

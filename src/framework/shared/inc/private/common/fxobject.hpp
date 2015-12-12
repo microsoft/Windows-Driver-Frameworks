@@ -189,7 +189,7 @@ enum FxObjectDroppedEvent {
 
 #define DECLARE_INTERNAL_NEW_OPERATOR()                     \
     PVOID                                                   \
-    FORCEINLINE                                             \
+    __inline                                             \
     operator new(                                           \
         __in size_t Size,                                        \
         __in PFX_DRIVER_GLOBALS FxDriverGlobals                 \
@@ -345,7 +345,7 @@ private:
         );
 
     VOID
-    FORCEINLINE
+    __inline
     Construct(
         __in BOOLEAN Embedded
         )
@@ -365,7 +365,7 @@ private:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     SetObjectStateLocked(
         __in FxObjectState NewState
         )
@@ -442,7 +442,7 @@ protected:
     }
 
     PVOID
-    FORCEINLINE
+    __inline
     GetObjectHandleUnchecked(
         VOID
         )
@@ -460,7 +460,7 @@ protected:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     DestroyChildren(
         VOID
         )
@@ -503,7 +503,7 @@ public:
 #else
     static
     USHORT
-    FORCEINLINE
+    __inline
     GetWrapperSize(
         )
     {
@@ -534,7 +534,7 @@ public:
         );
 
     PVOID
-    FORCEINLINE
+    __inline
     operator new(
         __in size_t Size,
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -553,7 +553,7 @@ public:
     }
 
     PVOID
-    FORCEINLINE
+    __inline
     operator new(
         __in        size_t Size,
         __in        PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -599,7 +599,7 @@ public:
     }
 
     PVOID
-    FORCEINLINE
+    __inline
     GetObjectHandle(
         VOID
         )
@@ -655,7 +655,7 @@ public:
 
     static
     PVOID
-    FORCEINLINE
+    __inline
     _ToHandle(
         __in FxObject* Object
         )
@@ -669,7 +669,7 @@ public:
 
     static
     VOID
-    FORCEINLINE
+    __inline
     _ReferenceActual(
         __in        WDFOBJECT Object,
         __in_opt    PVOID Tag,
@@ -693,7 +693,7 @@ public:
 
     static
     VOID
-    FORCEINLINE
+    __inline
     _DereferenceActual(
         __in        WDFOBJECT Object,
         __in_opt    PVOID Tag,
@@ -715,7 +715,7 @@ public:
         }
     }
 
-    __forceinline
+    __inline
     FxContextHeader*
     GetContextHeader(
         VOID
@@ -729,7 +729,7 @@ public:
         }
     }
 
-    __forceinline
+    __inline
     PFX_DRIVER_GLOBALS
     GetDriverGlobals(
         VOID
@@ -810,7 +810,7 @@ public:
         return CONTAINING_RECORD(Object, FxObjectDebugExtension, AllocationStart);
     }
 
-    FORCEINLINE
+    __inline
     VOID
     CallCleanup(
         VOID
@@ -822,7 +822,7 @@ public:
     }
 
     ULONG
-    FORCEINLINE
+    __inline
     AddRef(
         __in_opt   PVOID Tag = NULL,
         __in       LONG Line = 0,
@@ -917,7 +917,7 @@ public:
     }
 
     BOOLEAN
-    FORCEINLINE
+    __inline
     IsTraceState(
         VOID
         )
@@ -926,7 +926,7 @@ public:
     }
 
     VOID
-    FORCEINLINE
+    __inline
     TraceDroppedEvent(
         __in FxObjectDroppedEvent Event
         )

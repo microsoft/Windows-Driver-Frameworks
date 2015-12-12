@@ -101,7 +101,7 @@ FxUsbDevice::InitDevice(
     NTSTATUS status = STATUS_SUCCESS;
     
     IWudfDevice* device = NULL;
-    IWudfDeviceStack* devstack = NULL;
+    IWudfDeviceStack2* devstack2 = NULL;
 
     UMURB urb;
     USB_CONFIGURATION_DESCRIPTOR config;
@@ -153,13 +153,18 @@ FxUsbDevice::InitDevice(
     RtlZeroMemory(&urb, sizeof(urb));
 
     device = m_DeviceBase->GetDeviceObject();
-    devstack = device->GetDeviceStackInterface();
+    devstack2 = m_Device->GetDeviceStack2();
 
     if (m_pHostTargetFile == NULL) {
-        hr = devstack->CreateWdfFile(device,
-                                     device->GetAttachedDevice(),
-                                     NULL,
-                                     &m_pHostTargetFile);
+
+        //
+        // Opens a handle on the reflector for USB side-band communication
+        // based on the currently selected dispatcher type.
+        //
+        hr = devstack2->OpenUSBCommunicationChannel(device,
+                                                    device->GetAttachedDevice(),
+                                                    &m_pHostTargetFile);
+
         if (SUCCEEDED(hr)) {
             m_WinUsbHandle = (WINUSB_INTERFACE_HANDLE)m_pHostTargetFile->GetCreateContext();
         }

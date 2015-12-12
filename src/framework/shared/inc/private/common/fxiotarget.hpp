@@ -258,7 +258,7 @@ public:
         __inout FxQueryInterfaceParams* Params
         );
 
-    __forceinline
+    __inline
     WDF_IO_TARGET_STATE
     GetState(
         VOID
@@ -267,7 +267,7 @@ public:
         return m_State;
     }
 
-    FORCEINLINE
+    __inline
     MdDeviceObject
     GetTargetDevice(
         VOID
@@ -276,7 +276,7 @@ public:
         return m_TargetDevice;
     }
 
-    FORCEINLINE
+    __inline
     MdDeviceObject
     GetTargetPDO(
         VOID
@@ -285,7 +285,7 @@ public:
         return m_TargetPdo;
     }
 
-    FORCEINLINE
+    __inline
     MdFileObject
     GetTargetFileObject(
         VOID
@@ -294,7 +294,7 @@ public:
         return m_TargetFileObject;
     }
 
-    __forceinline
+    __inline
     WDFDEVICE
     GetDeviceHandle(
         VOID
@@ -311,7 +311,7 @@ public:
         return (WDFIOTARGET) GetObjectHandle();
     }
 
-    __forceinline
+    __inline
     FxDriver*
     GetDriver(
         VOID
@@ -392,7 +392,7 @@ public:
         );
 
     BOOLEAN
-    FORCEINLINE
+    __inline
     HasEnoughStackLocations(
         __in FxIrp* Irp
         )
@@ -575,7 +575,7 @@ protected:
         __in FxRequestBase* Request
         );
 
-    FORCEINLINE
+    __inline
     VOID
     CompleteRequest(
         __in FxRequestBase* Request
@@ -738,7 +738,7 @@ protected:
 
 
 
-    FORCEINLINE
+    __inline
     VOID
     CopyFileObjectAndFlags(
         __in FxRequestBase* Request
@@ -762,7 +762,7 @@ protected:
 
 
 
-    FORCEINLINE
+    __inline
     VOID
     IncrementIoCount(
         VOID
@@ -780,7 +780,7 @@ protected:
     }
 
 
-    FORCEINLINE
+    __inline
     VOID
     DecrementIoCount(
         VOID

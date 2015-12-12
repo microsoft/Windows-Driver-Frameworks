@@ -44,7 +44,7 @@ C_ASSERT(FxIFRMaxLogPages >= FxIFRAvgLogPages &&
             FxIFRAvgLogPages >= FxIFRMinLogPages);
 
 
-FORCEINLINE
+__inline
 VOID
 FxVerifyLogHeader(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,

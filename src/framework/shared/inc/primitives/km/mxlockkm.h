@@ -29,7 +29,7 @@ typedef KSPIN_LOCK MdLock;
 
 #include "MxLock.h"
 
-FORCEINLINE
+__inline
 MxLock::MxLock(
     )
 {
@@ -38,7 +38,7 @@ MxLock::MxLock(
     MxLock::Initialize();
 }
 
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::Initialize(
     )
@@ -51,7 +51,7 @@ MxLockNoDynam::Initialize(
 _Acquires_lock_(this->m_Lock)
 __drv_maxIRQL(DISPATCH_LEVEL)
 __drv_setsIRQL(DISPATCH_LEVEL)
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::Acquire(
     __out __drv_deref(__drv_savesIRQL) KIRQL * OldIrql
@@ -64,7 +64,7 @@ MxLockNoDynam::Acquire(
 
 _Acquires_lock_(this->m_Lock)
 __drv_requiresIRQL(DISPATCH_LEVEL)
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::AcquireAtDpcLevel(
     )
@@ -76,7 +76,7 @@ MxLockNoDynam::AcquireAtDpcLevel(
 
 _Releases_lock_(this->m_Lock)
 __drv_requiresIRQL(DISPATCH_LEVEL)
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::Release(
     __drv_restoresIRQL KIRQL NewIrql
@@ -89,7 +89,7 @@ MxLockNoDynam::Release(
 
 _Releases_lock_(this->m_Lock)
 __drv_requiresIRQL(DISPATCH_LEVEL)
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::ReleaseFromDpcLevel(
     )
@@ -99,7 +99,7 @@ MxLockNoDynam::ReleaseFromDpcLevel(
     KeReleaseSpinLockFromDpcLevel(&m_Lock);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxLockNoDynam::Uninitialize(
     )
@@ -107,7 +107,7 @@ MxLockNoDynam::Uninitialize(
     CLEAR_DBGFLAG_INITIALIZED;
 }
 
-FORCEINLINE
+__inline
 MxLock::~MxLock(
     )
 {

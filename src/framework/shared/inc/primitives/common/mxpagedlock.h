@@ -40,7 +40,7 @@ protected:
     MdPagedLock m_Lock;    
 public:
     _Must_inspect_result_
-    FORCEINLINE
+    __inline
     NTSTATUS
     Initialize(
         );
@@ -49,13 +49,13 @@ public:
     __drv_setsIRQL(APC_LEVEL)
     __drv_savesIRQLGlobal(FastMutexObject, this->m_Lock) 
     _Acquires_lock_(this->m_Lock)
-    FORCEINLINE
+    __inline
     VOID
     Acquire(
         );
 
 
-    FORCEINLINE
+    __inline
     VOID
     AcquireUnsafe(
         );
@@ -66,7 +66,7 @@ public:
     __drv_valueIs(==1;==0) 
     __drv_when(return==1, __drv_setsIRQL(APC_LEVEL))
     _When_(return==1, _Acquires_lock_(this->m_Lock))
-    FORCEINLINE
+    __inline
     BOOLEAN
     TryToAcquire(
         );
@@ -74,18 +74,18 @@ public:
     __drv_requiresIRQL(APC_LEVEL) 
     __drv_restoresIRQLGlobal(FastMutexObject,this->m_Lock)
     _Releases_lock_(this->m_Lock)
-    FORCEINLINE
+    __inline
     VOID
     Release(
         );
 
 
-    FORCEINLINE
+    __inline
     VOID
     ReleaseUnsafe(
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Uninitialize(
         );
@@ -94,10 +94,10 @@ public:
 class MxPagedLock : public MxPagedLockNoDynam
 {
 public:    
-    FORCEINLINE
+    __inline
     MxPagedLock();
     
-    FORCEINLINE
+    __inline
     ~MxPagedLock();
 };
 

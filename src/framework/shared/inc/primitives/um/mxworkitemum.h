@@ -83,7 +83,7 @@ typedef UmWorkItem*     MdWorkItem;
 
 #include "MxWorkItem.h"
 
-FORCEINLINE
+__inline
 MxWorkItem::MxWorkItem(
     )
 {
@@ -91,7 +91,7 @@ MxWorkItem::MxWorkItem(
 }
 
 _Must_inspect_result_
-FORCEINLINE
+__inline
 NTSTATUS
 MxWorkItem::Allocate(
     __in MdDeviceObject DeviceObject,
@@ -155,7 +155,7 @@ exit:
     return NTSTATUS_FROM_WIN32(err);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxWorkItem::Enqueue(
     __in PMX_WORKITEM_ROUTINE Callback,
@@ -195,7 +195,7 @@ MxWorkItem::Enqueue(
     SetEvent(m_WorkItem->WorkItemEvent);
 }
 
-FORCEINLINE
+__inline
 MdWorkItem
 MxWorkItem::GetWorkItem(
     )
@@ -203,7 +203,7 @@ MxWorkItem::GetWorkItem(
     return m_WorkItem;
 }
 
-FORCEINLINE
+__inline
 VOID    
 MxWorkItem::_Free(
     __in MdWorkItem Item
@@ -261,7 +261,7 @@ MxWorkItem::_Free(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 MxWorkItem::Free(
     )
@@ -284,7 +284,7 @@ MxWorkItem::Free(
 //
 // FxAutoWorkitem
 //
-FORCEINLINE
+__inline
 MxAutoWorkItem::~MxAutoWorkItem(
     )
 {

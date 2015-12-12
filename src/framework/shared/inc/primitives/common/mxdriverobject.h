@@ -32,7 +32,7 @@ private:
     MdDriverObject m_DriverObject;
 
 public:
-    FORCEINLINE
+    __inline
     MxDriverObject(
         __in MdDriverObject DriverObject
         ) :
@@ -40,7 +40,7 @@ public:
     {
     }
     
-    FORCEINLINE
+    __inline
     MxDriverObject(
         VOID
         ) :
@@ -48,7 +48,7 @@ public:
     {
     }
 
-    FORCEINLINE
+    __inline
     MdDriverObject
     GetObject(
         VOID
@@ -57,7 +57,7 @@ public:
         return m_DriverObject;
     }
 
-    FORCEINLINE
+    __inline
     VOID
     SetObject(
         __in_opt MdDriverObject DriverObject

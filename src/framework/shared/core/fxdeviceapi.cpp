@@ -1274,7 +1274,7 @@ WDFEXPORT(WdfDeviceSetFailed)(
     pDevice->m_PkgPnp->SetDeviceFailed(FailedAction);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 StopIdleWorker(
     __in
@@ -1329,7 +1329,7 @@ StopIdleWorker(
     return status;
 }
 
-FORCEINLINE
+__inline
 VOID
 ResumeIdleWorker(
     __in
@@ -2401,6 +2401,301 @@ Return Value:
                                      BufferLength,
                                      PropertyBuffer
                                      );
+    return status;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_opt_
+    WDFDRIVER Driver,
+    _In_
+    UCHAR MajorFunction,
+    _In_
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDispatch,
+    _In_opt_
+    WDFCONTEXT DriverContext
+    )
+    
+/*++
+    
+    Routine Description:
+
+        Configure callbacks for IRP_MJ_READ, IRP_MJ_WRITE, IRP_MJ_DEVICE_CONTROL, and
+        IRP_MJ_INTERNAL_DEVICE_CONTROL (KMDF only). By default the I/O package sends all requests to
+        a device's default queue, or to the queues configured with 
+        WdfDeviceConfigureRequestDisaptching. This DDI allows a driver specified
+        callback to select a different queue dynamically during runtime. 
+ 
+    Arguments:
+    
+        Device - The device which is handling the I/O.
+
+        Driver - An optional driver handle. Used to associate the 
+                 callback with a specific class extension. 
+    
+        MajorFunction - IRP major function type to be forwarded to the callback
+
+        EvtDeviceWdmIrpDispatch - Callback invoked when encountering the given major function.
+
+        DriverContext - An optional untyped driver specified context.
+    
+    Returns:
+    
+        STATUS_SUCCESS on success
+        STATUS_INVALID_PARAMETER if an incorrect MajorFunction was provided
+        STATUS_INSUFFICIENT_RESOURCES if insufficient memory was available
+        STATUS_INVALID_DEVICE_STATE if this DDI was called at an improper time
+    
+ --*/
+{
+    PFX_DRIVER_GLOBALS  pFxDriverGlobals;
+    NTSTATUS            status;
+    FxDevice*           pDevice;
+    FxCxDeviceInfo*     pCxDeviceInfo;
+    ULONG               deviceFlags;
+
+    pDevice = NULL;
+    pCxDeviceInfo = NULL;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Device,
+                                   FX_TYPE_DEVICE,
+                                   (PVOID *) &pDevice,
+                                   &pFxDriverGlobals);
+    
+    //
+    // Validate the MajorFunction provided. Note that 
+    // IRP_MJ_INTERNAL_DEVICE_CONTROL is KMDF only. 
+    //
+    switch (MajorFunction) {
+        case IRP_MJ_WRITE:
+        case IRP_MJ_READ:
+        case IRP_MJ_DEVICE_CONTROL:
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+#endif
+            break;
+        default:
+            status = STATUS_INVALID_PARAMETER;
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Invalid MajorFunction provided %!IRPMJ!, %!STATUS!",
+                MajorFunction, status);
+            goto exit;
+    }
+    
+    //
+    // Validate the driver handle and get (if present) the associated cx info.
+    //
+    if (Driver != NULL) {
+        FxDriver*   pDriver;
+        
+        FxObjectHandleGetPtr(pFxDriverGlobals,
+                             Driver,
+                             FX_TYPE_DRIVER,
+                             (PVOID*)&pDriver);
+
+        //
+        // Find the driver's cx info if it's not the main driver for this device.
+        // cx struct info can be NULL if cx acts as client driver.
+        //
+        pCxDeviceInfo = pDevice->GetCxDeviceInfo(pDriver);
+    }
+
+    //
+    // Make sure callback is not null.
+    //
+    FxPointerNotNull(pFxDriverGlobals, EvtDeviceWdmIrpDispatch);
+
+    //
+    // This callback can only be called during initialization.
+    //
+    if (pDevice->IsLegacy()) {
+
+        //
+        // Extract the device flags from the device object
+        //
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        deviceFlags = pDevice->GetDeviceObject()->Flags;
+#else
+        deviceFlags = pDevice->GetDeviceObject()->GetDeviceObjectWdmFlags();
+#endif
+    
+        //
+        // This is a controldevice. Make sure the create is called after the device
+        // is initialized and ready to accept I/O.
+        //
+        if ((deviceFlags & DO_DEVICE_INITIALIZING) == 0x0) {
+            status = STATUS_INVALID_DEVICE_STATE;
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Driver cannot set IRP dispatch callback "
+                "after WdfControlDeviceFinishInitializing "
+                "is called on the WDFDEVICE %p, %!STATUS!",
+                pDevice, status);
+            goto exit;
+        }
+    } else {
+        //
+        // This is either FDO or PDO. Make sure it's not started yet.
+        //
+        if (pDevice->GetDevicePnpState() != WdfDevStatePnpInit) {
+            status = STATUS_INVALID_DEVICE_STATE;
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Driver cannot set IRP dispatch callback "
+                "after the WDFDEVICE %p is started, %!STATUS!",
+                pDevice, status);
+            goto exit;
+        }
+    }
+
+    //
+    // Let I/O package do the rest.
+    //
+    status = pDevice->m_PkgIo->ConfigureDynamicDispatching(MajorFunction,
+                                                           pCxDeviceInfo,
+                                                           EvtDeviceWdmIrpDispatch,
+                                                           DriverContext);
+exit:
+    return status;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FX_VF_FUNCTION(VerifyWdfDeviceWdmDispatchIrpToIoQueue) (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ FxDevice* device,
+    _In_ MdIrp Irp,
+    _In_ FxIoQueue* queue,
+    _In_ ULONG Flags
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    UCHAR majorFunction, minorFunction;
+    FxIrp fxIrp(Irp);
+
+    PAGED_CODE_LOCKED();
+
+    majorFunction = fxIrp.GetMajorFunction();
+    minorFunction = fxIrp.GetMinorFunction();
+
+    DoTraceLevelMessage(
+        FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
+        "WDFDEVICE 0x%p !devobj 0x%p %!IRPMJ!, IRP_MN %x, IRP 0x%p",
+        device->GetHandle(), device->GetDeviceObject(),
+        majorFunction, minorFunction, Irp);
+
+    //
+    // Validate Flags. For UMDF, this field is reserved and must be zero.
+    //
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    if (Flags & ~FX_DISPATCH_IRP_TO_IO_QUEUE_FLAGS_MASK) {
+#else
+    if (Flags != WDF_DISPATCH_IRP_TO_IO_QUEUE_NO_FLAGS) {
+#endif
+        status = STATUS_INVALID_PARAMETER;
+        DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                "Flags 0x%x are invalid, %!STATUS!",
+                Flags, status);
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        goto Done;
+    }
+      
+    //
+    // Only read/writes/ctrls/internal_ctrls IRPs are allowed, i.e., the I/O request set.
+    //
+    if (device->GetDispatchPackage(majorFunction) != device->m_PkgIo) {
+        status = STATUS_INVALID_PARAMETER;
+        DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                "Only Read/Write/Control/Internal-Control IRPs can be "
+                "forwarded to I/O Queue 0x%p, Irp 0x%p, %!IRPMJ!, "
+                "IRP_MN %x, Device 0x%p, %!STATUS!",
+                 queue->GetHandle(), Irp, majorFunction, minorFunction, 
+                 device->GetObjectHandle(), status);
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        goto Done;
+    }
+
+    //
+    // Make sure queue can handle the request. 
+    //
+    if (FALSE == queue->IsIoEventHandlerRegistered(
+                            (WDF_REQUEST_TYPE)majorFunction)) {
+            
+        status = STATUS_INVALID_PARAMETER;
+        DoTraceLevelMessage(
+                FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                "I/O Queue 0x%p cannot handle Irp 0x%p, %!IRPMJ!, "
+                "IRP_MN %x, Device 0x%p, %!STATUS!",
+                 queue->GetHandle(), Irp, majorFunction, minorFunction, 
+                 device->GetObjectHandle(), status);
+        FxVerifierDbgBreakPoint(FxDriverGlobals);
+        goto Done;
+    }
+                            
+    if (device->m_ParentDevice == queue->GetDevice()) {
+        //
+        // Send to parent device's queue validation.
+        //
+        if (device->m_ParentDevice == NULL) {
+            status = STATUS_INVALID_PARAMETER;
+            DoTraceLevelMessage(
+                    FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                    "No parent device for Device 0x%p, %!STATUS!",
+                     device->GetObjectHandle(), status);
+            FxVerifierDbgBreakPoint(FxDriverGlobals);
+            goto Done;
+        }
+
+        //
+        // Make sure the child device is a PDO 
+        //
+        ASSERT(device->IsPdo());            
+
+        //
+        // Check if the WdfPdoInitSetForwardRequestToParent was called to 
+        // increase the StackSize of the child Device  to include the stack
+        // size of the parent Device
+        //
+        if (device->IsPnp() && 
+            device->GetPdoPkg()->m_AllowForwardRequestToParent == FALSE) {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+            DoTraceLevelMessage(
+                    FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                    "WdfPdoInitSetForwardRequestToParent not called on "
+                    "Device 0x%p, %!STATUS!", 
+                    device->GetObjectHandle(), status);            
+            FxVerifierDbgBreakPoint(FxDriverGlobals);
+            goto Done;
+        }
+    }
+    else {
+        //
+        // Send to current device's queue validation.
+        //
+        if (device != queue->GetDevice()) {
+            status = STATUS_INVALID_PARAMETER;
+            DoTraceLevelMessage(
+                    FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                    "Cannot forward a request to "
+                    "a different Device 0x%p, %!STATUS!",
+                    queue->GetDevice()->GetObjectHandle(), status);
+            FxVerifierDbgBreakPoint(FxDriverGlobals);
+            goto Done;
+        }
+    }
+    
+Done:    
     return status;
 }
 

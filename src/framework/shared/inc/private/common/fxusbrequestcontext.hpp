@@ -66,7 +66,7 @@ struct FxUsbRequestContext : public FxRequestContext {
     }
 
     VOID
-    FORCEINLINE
+    __inline
     InitUsbParameters(
         VOID
         )

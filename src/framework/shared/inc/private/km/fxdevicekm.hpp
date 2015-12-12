@@ -25,7 +25,7 @@ Revision History:
 #ifndef _FXDEVICEKM_H_
 #define _FXDEVICEKM_H_
 
-FORCEINLINE
+__inline
 FxWdmDeviceExtension*
 FxDevice::_GetFxWdmExtension(
     __in MdDeviceObject DeviceObject
@@ -42,7 +42,7 @@ FxDevice::_GetFxWdmExtension(
                                                       sizeof(*DeviceObject));
 }
 
-FORCEINLINE
+__inline
 MdRemoveLock
 FxDevice::GetRemoveLock(
     VOID
@@ -52,7 +52,7 @@ FxDevice::GetRemoveLock(
         GetDeviceObject())->IoRemoveLock;
 }
 
-FORCEINLINE
+__inline
 BOOLEAN
 FxDevice::IsRemoveLockEnabledForIo(
     VOID
@@ -67,7 +67,7 @@ FxDevice::IsRemoveLockEnabledForIo(
     }
 }
 
-FORCEINLINE
+__inline
 FxDevice*
 FxDevice::GetFxDevice(
     __in MdDeviceObject DeviceObject
@@ -84,7 +84,7 @@ FxDevice::GetFxDevice(
                                          Context)->Object;
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::DetachDevice(
     VOID
@@ -96,7 +96,7 @@ FxDevice::DetachDevice(
     }
 }
 
-FORCEINLINE
+__inline
 VOID
 FxDevice::InvalidateDeviceState(
     VOID
@@ -118,7 +118,7 @@ FxDevice::InvalidateDeviceState(
 }
 
 VOID
-FORCEINLINE
+__inline
 FxDevice::DeleteSymbolicLink(
     VOID
     )
@@ -136,7 +136,7 @@ FxDevice::DeleteSymbolicLink(
     }
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxDevice::_OpenDeviceRegistryKey(
     _In_ MdDeviceObject DeviceObject,
@@ -151,7 +151,7 @@ FxDevice::_OpenDeviceRegistryKey(
                                    DevInstRegKey);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxDevice::_GetDeviceProperty(
     _In_      MdDeviceObject DeviceObject,

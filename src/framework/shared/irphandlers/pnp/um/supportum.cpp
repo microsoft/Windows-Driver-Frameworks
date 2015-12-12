@@ -4,7 +4,7 @@ Copyright (c) Microsoft Corporation
 
 Module Name:
 
-    support.cpp
+    supportUM.cpp
 
 Abstract:
 
@@ -15,6 +15,7 @@ Author:
 
 Environment:
 
+    User mode only
 
 Revision History:
 
@@ -43,14 +44,34 @@ GetStackCapabilities(
     __out PSTACK_DEVICE_CAPABILITIES Capabilities
     )
 {
+    HRESULT hr;
+    NTSTATUS status;
     MdDeviceObject deviceObject;
+    IWudfDeviceStack* deviceStack;
 
     UNREFERENCED_PARAMETER(DriverGlobals);
     UNREFERENCED_PARAMETER(D3ColdInterface);
 
     deviceObject = DeviceInStack->GetObject();
+    deviceStack = deviceObject->GetDeviceStackInterface();
 
-    return UmToMx::GetStackCapabilities(deviceObject, Capabilities);
+    hr = deviceStack->GetStackCapabilities(Capabilities);
+
+    if (S_OK == hr) {
+        status = STATUS_SUCCESS;
+    }
+    else {
+        PUMDF_VERSION_DATA driverVersion = deviceStack->GetMinDriverVersion();
+        BOOL preserveCompat = 
+             deviceStack->ShouldPreserveIrpCompletionStatusCompatibility();
+
+        status = CHostFxUtil::NtStatusFromHr(hr,
+                                             driverVersion->MajorNumber,
+                                             driverVersion->MinorNumber,
+                                             preserveCompat);
+    }
+
+    return status;
 }
 
 VOID
@@ -62,13 +83,15 @@ SetD3ColdSupport(
     )
 {
     MdDeviceObject deviceObject;
+    IWudfDeviceStack* deviceStack;
 
     UNREFERENCED_PARAMETER(DriverGlobals);
     UNREFERENCED_PARAMETER(D3ColdInterface);
 
     deviceObject = DeviceInStack->GetObject();
+    deviceStack = deviceObject->GetDeviceStackInterface();
 
-    return UmToMx::SetD3ColdSupport(deviceObject, UseD3Cold);
+    deviceStack->SetD3ColdSupport(UseD3Cold);
 }
 
 PVOID

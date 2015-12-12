@@ -269,7 +269,7 @@ public:
         _In_ MdTargetNotifyHandle Handle
         );
 
-    FORCEINLINE
+    __inline
     WDFIOTARGET
     GetHandle(
         VOID

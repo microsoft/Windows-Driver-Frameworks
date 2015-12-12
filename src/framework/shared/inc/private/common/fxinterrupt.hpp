@@ -336,7 +336,7 @@ public:
         VOID
         );
     
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsWakeCapable(
         VOID
@@ -450,7 +450,7 @@ public:
         VOID
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPassiveHandling(
         VOID
@@ -459,7 +459,7 @@ public:
         return m_PassiveHandling;
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsPassiveConnect(
         VOID
@@ -489,7 +489,7 @@ public:
 #endif
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     IsAutomaticSerialization(
         VOID
@@ -834,7 +834,7 @@ public:
             == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE);
     }
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     QueueDeferredRoutineForIsr(
         VOID

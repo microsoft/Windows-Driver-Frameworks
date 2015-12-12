@@ -50,7 +50,7 @@ public:
         );
 
     PVOID
-    FORCEINLINE
+    __inline
     operator new(
         __in size_t Size,
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,

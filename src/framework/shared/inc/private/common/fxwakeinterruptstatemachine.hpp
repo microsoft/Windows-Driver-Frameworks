@@ -12,12 +12,13 @@
 const UCHAR FxWakeInterruptEventQueueDepth = 8;
 
 enum FxWakeInterruptEvents {
-    WakeInterruptEventInvalid                 = 0x00,
-    WakeInterruptEventIsr                     = 0x01,
-    WakeInterruptEventEnteringD0              = 0x02,
-    WakeInterruptEventLeavingD0               = 0x04,
-    WakeInterruptEventD0EntryFailed           = 0x08,
-    WakeInterruptEventNull                    = 0xFF,
+    WakeInterruptEventInvalid                  = 0x00,
+    WakeInterruptEventIsr                      = 0x01,
+    WakeInterruptEventEnteringD0               = 0x02,
+    WakeInterruptEventLeavingD0                = 0x04,
+    WakeInterruptEventD0EntryFailed            = 0x08,
+    WakeInterruptEventLeavingD0NotArmedForWake = 0x10,
+    WakeInterruptEventNull                     = 0xFF,
 };
 
 enum FxWakeInterruptStates {
@@ -29,6 +30,8 @@ enum FxWakeInterruptStates {
     WakeInterruptInvokingEvtIsrPostWake,
     WakeInterruptCompletingD0,
     WakeInterruptInvokingEvtIsrInD0,
+    WakeInterruptDxNotArmedForWake,
+    WakeInterruptInvokingEvtIsrInDxNotArmedForWake,
     WakeInterruptMax
 };
 
@@ -125,6 +128,12 @@ private:
 
     static
     FxWakeInterruptStates
+    DxNotArmedForWake(
+        __in FxWakeInterruptMachine* This
+        );
+
+    static
+    FxWakeInterruptStates
     Failed(
         __in FxWakeInterruptMachine* This
         );
@@ -132,6 +141,12 @@ private:
     static
     FxWakeInterruptStates
     InvokingEvtIsrPostWake(
+        __in FxWakeInterruptMachine* This
+        );
+
+    static
+    FxWakeInterruptStates
+    InvokingEvtIsrInDxNotArmedForWake(
         __in FxWakeInterruptMachine* This
         );
 
@@ -171,6 +186,7 @@ protected:
     static const FxWakeInterruptTargetState m_FailedStates[];
     static const FxWakeInterruptTargetState m_D0States[];
     static const FxWakeInterruptTargetState m_DxStates[];
+    static const FxWakeInterruptTargetState m_DxNotArmedForWakeStates[];
     static const FxWakeInterruptTargetState m_WakingStates[];
     static const FxWakeInterruptTargetState m_InvokingEvtIsrPostWakeStates[];
     static const FxWakeInterruptTargetState m_CompletingD0States[];

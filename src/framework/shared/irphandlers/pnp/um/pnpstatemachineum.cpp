@@ -4,7 +4,7 @@ Copyright (c) Microsoft. All rights reserved.
 
 Module Name:
 
-    PnpStateMachine.cpp
+    PnpStateMachineUm.cpp
 
 Abstract:
 
@@ -12,6 +12,7 @@ Abstract:
     This code was split out from FxPkgPnp.cpp.
 
 Author:
+
 
 
 
@@ -56,18 +57,18 @@ Return Value:
     FxAutoRegKey restart;
     FxDevice* device;
     IWudfDeviceStack* deviceStack;
-    WDF_PROPERTY_STORE_ROOT propertyStore;
-    WDF_PROPERTY_STORE_DISPOSITION disposition;
+    UMINT::WDF_PROPERTY_STORE_ROOT propertyStore;
+    UMINT::WDF_PROPERTY_STORE_DISPOSITION disposition;
 
     device = GetDevice();
     deviceStack = device->GetDeviceStack();
 
-    propertyStore.LengthCb = sizeof(WDF_PROPERTY_STORE_ROOT);
-    propertyStore.RootClass = WdfPropertyStoreRootClassHardwareKey;
+    propertyStore.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+    propertyStore.RootClass = UMINT::WdfPropertyStoreRootClassHardwareKey;
     propertyStore.Qualifier.HardwareKey.ServiceName = L"WudfDiagnostics";
 
     hr = deviceStack->CreateRegistryEntry(&propertyStore,
-                                          WdfPropertyStoreCreateVolatile,
+                                          UMINT::WdfPropertyStoreCreateVolatile,
                                           KEY_QUERY_VALUE | KEY_SET_VALUE,
                                           L"Restart",
                                           (HKEY*)&restart.m_Key,
@@ -77,7 +78,7 @@ Return Value:
     }
 
     return PnpIncrementRestartCountLogic(restart.m_Key,
-                                         disposition == CreatedNewStore);
+                                         disposition == UMINT::CreatedNewStore);
 }
 
 BOOLEAN

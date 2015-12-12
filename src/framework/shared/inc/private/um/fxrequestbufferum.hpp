@@ -25,7 +25,7 @@
 #ifndef _FXREQUESTBUFFERUM_HPP_
 #define _FXREQUESTBUFFERUM_HPP_
 
-FORCEINLINE
+__inline
 VOID
 FxRequestBuffer::SetMdl(
     __in PMDL Mdl,
@@ -38,7 +38,7 @@ FxRequestBuffer::SetMdl(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 FxRequestBuffer::GetOrAllocateMdlWorker(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,

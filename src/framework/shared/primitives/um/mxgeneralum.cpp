@@ -24,10 +24,9 @@ Revision History:
 
 #include <strsafe.h>
 
-#include "cobbledum.hpp"
-#include "tempTypedefinitions.h"
-#include "wudfx.h" 
-#include "debug.h"
+#include "fxmin.hpp"
+
+extern "C" IUMDFPlatform *g_IUMDFPlatform;
 
 VOID
 Mx::MxDbgPrint(

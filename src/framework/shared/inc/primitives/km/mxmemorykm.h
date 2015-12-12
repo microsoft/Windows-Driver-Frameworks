@@ -25,7 +25,7 @@ Revision History:
 
 #include "MxMemory.h"
 
-FORCEINLINE
+__inline
 PVOID
 MxMemory::MxAllocatePoolWithTag(
     __in POOL_TYPE  PoolType,
@@ -36,7 +36,7 @@ MxMemory::MxAllocatePoolWithTag(
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
-FORCEINLINE
+__inline
 VOID
 MxMemory::MxFreePool(
     __in PVOID Ptr

@@ -34,18 +34,18 @@ private:
 
 public:
 
-    FORCEINLINE
+    __inline
     MxTimer(
         VOID
         );
 
-    FORCEINLINE
+    __inline
     ~MxTimer(
         VOID
         );
 
     CHECK_RETURN_IF_USER_MODE
-    FORCEINLINE
+    __inline
     NTSTATUS
     Initialize(
         __in_opt PVOID TimerContext,
@@ -54,7 +54,7 @@ public:
         );
 
     CHECK_RETURN_IF_USER_MODE
-    FORCEINLINE
+    __inline
     NTSTATUS
     InitializeEx(
         __in_opt PVOID TimerContext,
@@ -64,14 +64,14 @@ public:
         __in BOOLEAN UseHighResolutionTimer
         );
 
-    FORCEINLINE
+    __inline
     VOID
     Start(
         __in LARGE_INTEGER DueTime,
         __in ULONG TolerableDelay = 0
         );
 
-    FORCEINLINE
+    __inline
     BOOLEAN
     StartWithReturn(
         __in LARGE_INTEGER DueTime,
@@ -79,13 +79,13 @@ public:
         );
 
     _Must_inspect_result_
-    FORCEINLINE
+    __inline
     BOOLEAN
     Stop(
         VOID
         );
 
-    FORCEINLINE
+    __inline
     VOID
     FlushQueuedDpcs(
         VOID

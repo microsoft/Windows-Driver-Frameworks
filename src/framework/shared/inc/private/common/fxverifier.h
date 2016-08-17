@@ -148,6 +148,17 @@ FxVerifierBugCheckWorker(
 
 VOID
 __declspec(noreturn)
+FxVerifierDriverReportedBugcheck(
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_ ULONG  BugCheckCode,
+    _In_ ULONG_PTR  BugCheckParameter1,
+    _In_ ULONG_PTR  BugCheckParameter2,
+    _In_ ULONG_PTR  BugCheckParameter3,
+    _In_ ULONG_PTR  BugCheckParameter4
+    );
+
+VOID
+__declspec(noreturn)
 FxVerifierNullBugCheck(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PVOID ReturnAddress

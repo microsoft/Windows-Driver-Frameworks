@@ -169,23 +169,6 @@ GetImageName(
     );
 
 VOID
-__inline
-BuildStringFromPartialInfo(
-    _In_ PKEY_VALUE_PARTIAL_INFORMATION Info,
-    _Out_ PUNICODE_STRING String
-    )
-{
-    String->Buffer = (PWCHAR) &Info->Data[0];
-    String->MaximumLength = (USHORT) Info->DataLength;
-    String->Length = String->MaximumLength - sizeof(UNICODE_NULL);
-
-    //
-    // ensure string is null terminated
-    //
-    String->Buffer[String->Length/sizeof(WCHAR)] = UNICODE_NULL;
-}
-
-VOID
 GetNameFromPath(
     _In_ PCUNICODE_STRING Path,
     _Out_ PUNICODE_STRING Name

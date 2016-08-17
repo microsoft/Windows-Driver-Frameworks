@@ -111,7 +111,7 @@ typedef struct _WDF_IFR_HEADER {
 typedef struct _WDF_IFR_RECORD {
 
     USHORT      Signature;        // 'LR'  Log Record signature
-    USHORT      Length;
+    USHORT      Length;           // size of record including WDF_IFR_RECORD
     LONG        Sequence;
     USHORT      PrevOffset;       // offset to previous record
     USHORT      MessageNumber;    // message number   see <GUID>.tmf
@@ -119,5 +119,7 @@ typedef struct _WDF_IFR_RECORD {
 
 } WDF_IFR_RECORD, *PWDF_IFR_RECORD;
 
+
+#define WDF_GLOBAL_VALUE_IFR_REPLAY  L"WdfIfrCaptureServiceList" // REG_MULTI_SZ
 
 #endif // _FXIFR_H

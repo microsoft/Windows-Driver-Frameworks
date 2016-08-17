@@ -283,6 +283,28 @@ Returns:
         return STATUS_INVALID_PARAMETER;
     }
 
+#if (FX_CORE_MODE==FX_CORE_USER_MODE)
+    //
+    // UMDF does not support internal IOCTLs
+    //
+    if (pConfig->EvtIoInternalDeviceControl != NULL) {
+        if (FxDriverGlobals->IsVersionGreaterThanOrEqualTo(2, 19)) {
+            Status = STATUS_INVALID_PARAMETER;
+            DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
+                                "EvtIoInternalDeviceControl is not supported "
+                                "for UMDF, Queue 0x%p %!STATUS!",
+                                GetObjectHandle(), Status);
+            return Status;
+        }
+        else {
+            DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGIO,
+                                "EvtIoInternalDeviceControl is not supported "
+                                "for UMDF, Queue 0x%p",
+                                GetObjectHandle());
+        }
+    }
+#endif
+
     //
     // If not a manual queue, must set at least IoStart, or one of
     // read|write|devicecontrol

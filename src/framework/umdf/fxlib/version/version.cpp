@@ -47,7 +47,7 @@ extern "C" {
 
 #include "FxDynamics.h"
 
-#include "..\librarycommon\FxLibraryCommon.h"
+#include "FxLibraryCommon.h"
 
 #define  KMDF_DEFAULT_NAME   "Wdf" ## \
                              LITERAL(__WDF_MAJOR_VERSION)   ## \

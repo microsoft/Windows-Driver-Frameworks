@@ -49,6 +49,7 @@ FxDmaEnabler::FxDmaEnabler(
     m_IsDuplexTransfer   = FALSE;
     m_IsSGListAllocated = FALSE;
     m_SGListSize = 0;
+    m_RequireSingleTransfer = FALSE;
 
     m_IsAdded = FALSE;
 
@@ -130,7 +131,7 @@ FxDmaEnabler::Initialize(
     // Default to version 2 description (except on ARM platforms)
     //
 
-#ifdef _ARM_
+#if defined(_ARM_) || defined(_ARM64_)
     deviceDescription.Version = DEVICE_DESCRIPTION_VERSION3;
 #else
     deviceDescription.Version = DEVICE_DESCRIPTION_VERSION2;
@@ -406,6 +407,35 @@ FxDmaEnabler::Initialize(
 
                 deviceDescription.DmaAddressWidth = 24;
             }
+        }
+    }
+
+    //
+    // Check if the client specified that WDF should never divide transactions
+    // into multiple transfers.
+    //
+    if (Config->Flags & WDF_DMA_ENABLER_CONFIG_REQUIRE_SINGLE_TRANSFER) {
+        if (GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1, 19)) {
+            if (deviceDescription.Version != DEVICE_DESCRIPTION_VERSION3) {
+                status = STATUS_INVALID_PARAMETER;
+                DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGDMA,
+                    "Cannot set single transfer requirement for WDFDMAENABLER %p "
+                    "because it is not configured to use DMA version 3, %!STATUS!",
+                    GetHandle(), status);
+                FxVerifierDbgBreakPoint(GetDriverGlobals());
+                return status;
+            }
+
+            m_RequireSingleTransfer = TRUE;
+        }
+        else {
+            status = STATUS_INVALID_PARAMETER;
+            DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGDMA,
+                "Cannot set single transfer requirement for WDFDMAENABLER %p, "
+                "only available for KMDF 1.19 and later clients, %!STATUS!",
+                GetHandle(), status);
+            FxVerifierDbgBreakPoint(GetDriverGlobals());
+            return status;
         }
     }
 

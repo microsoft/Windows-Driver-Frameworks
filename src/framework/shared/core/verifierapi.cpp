@@ -137,12 +137,12 @@ Return Value:
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
     pFxDriverGlobals->FxForceLogsInMiniDump = TRUE;
 
-#pragma prefast(suppress:__WARNING_USE_OTHER_FUNCTION, "WDF wrapper to KeBugCheckEx.");
-    Mx::MxBugCheckEx(BugCheckCode,
-                 BugCheckParameter1,
-                 BugCheckParameter2,
-                 BugCheckParameter3,
-                 BugCheckParameter4);
+    FxVerifierDriverReportedBugcheck(pFxDriverGlobals,
+                                    BugCheckCode,
+                                    BugCheckParameter1,
+                                    BugCheckParameter2,
+                                    BugCheckParameter3,
+                                    BugCheckParameter4);
 }
 
 VOID
@@ -228,12 +228,12 @@ Return Value:
     //
     pFxDriverGlobals->FxForceLogsInMiniDump = TRUE;
 
-#pragma prefast(suppress:__WARNING_USE_OTHER_FUNCTION, "WDF wrapper to KeBugCheckEx.");
-    Mx::MxBugCheckEx(BugCheckCode,
-                 BugCheckParameter1,
-                 BugCheckParameter2,
-                 BugCheckParameter3,
-                 BugCheckParameter4);
+    FxVerifierDriverReportedBugcheck(pFxDriverGlobals,
+                            BugCheckCode,
+                            BugCheckParameter1,
+                            BugCheckParameter2,
+                            BugCheckParameter3,
+                            BugCheckParameter4);
 }
 
 

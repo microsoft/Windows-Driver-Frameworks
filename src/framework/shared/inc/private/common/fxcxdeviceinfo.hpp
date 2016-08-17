@@ -14,18 +14,28 @@ struct FxCxDeviceInfo : public FxStump {
     {
         InitializeListHead(&ListEntry);
         RtlZeroMemory(&RequestAttributes, sizeof(RequestAttributes));
+        RtlZeroMemory(&CxPnpPowerCallbackContexts, sizeof(CxPnpPowerCallbackContexts));
     }
         
     ~FxCxDeviceInfo() 
     {
         ASSERT(IsListEmpty(&ListEntry));
+
+        for (ULONG loop = 0; loop < ARRAYSIZE(CxPnpPowerCallbackContexts); loop++) {
+            if (CxPnpPowerCallbackContexts[loop] != NULL) {
+                delete CxPnpPowerCallbackContexts[loop];
+            }
+        }
     }
+
 
     LIST_ENTRY                  ListEntry;    
     FxDriver*                   Driver;
     FxIoInCallerContext         IoInCallerContextCallback;
     WDF_OBJECT_ATTRIBUTES       RequestAttributes;
-    CCHAR                       Index;   
+    CCHAR                       Index;
+
+    PFxCxPnpPowerCallbackContext CxPnpPowerCallbackContexts[FxCxCallbackMax];
 };
 
 #endif // _FXCXDEVICEINFO_H_

@@ -68,7 +68,7 @@ typedef enum FxTrackPowerOption : UCHAR {
     FxTrackPowerRefs,
     FxTrackPowerRefsAndStack,
     FxTrackPowerMaxValue
-};
+} FxTrackPowerOption;
 
 typedef enum FxVerifierDownlevelOption {
     NotOkForDownLevel = 0,
@@ -505,6 +505,11 @@ public:
     //
     KBUGCHECK_REASON_CALLBACK_RECORD BugCheckCallbackRecord;
 
+    //
+    // Used to manage the lifetime of the IFR log header. This is necessary
+    // to protect against IFR replay racing with FxIfrStop
+    //
+    volatile LONG WdfLogHeaderRefCount;
 #endif
 
     //

@@ -186,7 +186,7 @@ QueryAndAllocString(
     _In_  HANDLE Key,
     _In_  PFX_DRIVER_GLOBALS Globals,
     _In_  PCUNICODE_STRING ValueName,
-    _Out_ PKEY_VALUE_PARTIAL_INFORMATION* Info
+    _Out_ PWSTR* StringBuffer
     );
 
 

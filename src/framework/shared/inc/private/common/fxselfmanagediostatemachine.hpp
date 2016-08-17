@@ -25,10 +25,12 @@ enum FxSelfManagedIoStates {
     FxSelfManagedIoCreated,
     FxSelfManagedIoInit,
     FxSelfManagedIoInitFailed,
+    FxSelfManagedIoInitStartedFailedPost,
     FxSelfManagedIoStarted,
     FxSelfManagedIoSuspending,
     FxSelfManagedIoStopped,
     FxSelfManagedIoRestarting,
+    FxSelfManagedIoRestartedFailedPost,
     FxSelfManagedIoFailed,
     FxSelfManagedIoFlushing,
     FxSelfManagedIoFlushed,
@@ -41,8 +43,9 @@ typedef
 _Must_inspect_result_
 FxSelfManagedIoStates
 (*PFN_SELF_MANAGED_IO_STATE_ENTRY_FUNCTION)(
-    __in  FxSelfManagedIoMachine*,
-    __out PNTSTATUS Status
+    _In_  FxSelfManagedIoMachine*,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
     );
 
 struct FxSelfManagedIoTargetState {
@@ -107,14 +110,14 @@ class FxSelfManagedIoMachine : public FxStump {
 
 public:
     FxSelfManagedIoMachine(
-        __in FxPkgPnp* PkgPnp
+        _In_ FxPkgPnp* PkgPnp
         );
 
     static
     NTSTATUS
     _CreateAndInit(
-        __deref_out FxSelfManagedIoMachine** SelfManagedIoMachine,
-        __in FxPkgPnp* PkgPnp
+        _Inout_ FxSelfManagedIoMachine** SelfManagedIoMachine,
+        _In_ FxPkgPnp* PkgPnp
         );
         
 
@@ -123,16 +126,16 @@ public:
     //
     VOID
     InitializeMachine(
-        __in PWDF_PNPPOWER_EVENT_CALLBACKS Callbacks
+        _In_ PWDF_PNPPOWER_EVENT_CALLBACKS Callbacks
         );
 
     _Must_inspect_result_
     NTSTATUS
     Start(
-        VOID
+        _Out_opt_ FxCxCallbackProgress* Progress
         )
     {
-        return ProcessEvent(SelfManagedIoEventStart);
+        return ProcessEvent(SelfManagedIoEventStart, Progress);
     }
 
     _Must_inspect_result_
@@ -141,7 +144,7 @@ public:
         VOID
         )
     {
-        return ProcessEvent(SelfManagedIoEventSuspend);
+        return ProcessEvent(SelfManagedIoEventSuspend, NULL);
     }
 
     VOID
@@ -149,7 +152,7 @@ public:
         VOID
         )
     {
-        (void) ProcessEvent(SelfManagedIoEventFlush);
+        (void) ProcessEvent(SelfManagedIoEventFlush, NULL);
     }
 
     VOID
@@ -157,49 +160,71 @@ public:
         VOID
         )
     {
-        (void) ProcessEvent(SelfManagedIoEventCleanup);
+        (void) ProcessEvent(SelfManagedIoEventCleanup, NULL);
     }
 
 protected:
     _Must_inspect_result_
     NTSTATUS
     ProcessEvent(
-        __in FxSelfManagedIoEvents Event
+        _In_ FxSelfManagedIoEvents Event,
+        _Out_opt_ FxCxCallbackProgress* Progress
         );
 
     static
     FxSelfManagedIoStates
     Init(
-        __in  FxSelfManagedIoMachine* This,
-        __out PNTSTATUS Status
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
     static
     FxSelfManagedIoStates
     Suspending(
-        __in  FxSelfManagedIoMachine* This,
-        __out PNTSTATUS Status
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
     static
     FxSelfManagedIoStates
     Restarting(
-        __in  FxSelfManagedIoMachine* This,
-        __out PNTSTATUS Status
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
     static
     FxSelfManagedIoStates
     Flushing(
-        __in  FxSelfManagedIoMachine* This,
-        __out PNTSTATUS Status
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
     static
     FxSelfManagedIoStates
     Cleanup(
-        __in  FxSelfManagedIoMachine* This,
-        __out PNTSTATUS Status
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static
+    FxSelfManagedIoStates
+    InitStartedFailedPost(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
+        );
+
+    static 
+    FxSelfManagedIoStates
+    RestartedFailedPost(
+        _In_  FxSelfManagedIoMachine* This,
+        _Inout_ PNTSTATUS Status,
+        _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
     WDFDEVICE

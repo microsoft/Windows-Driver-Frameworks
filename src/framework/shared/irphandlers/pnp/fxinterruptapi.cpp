@@ -560,27 +560,6 @@ Returns:
 
             return status;
         }
-
-       
-       //
-       // For UMDF reflector decides whether to handle the interrupt
-       // at passive or DIRQL. Driver has no choice. Therefore this check
-       // is applicable only for KMDF.
-       //
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-        if (Configuration->InterruptTranslated != NULL &&
-            FxInterrupt::_IsMessageInterrupt(
-                Configuration->InterruptTranslated->Flags)) {
-            status = STATUS_INVALID_PARAMETER;
-            DoTraceLevelMessage(
-                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
-                "Driver cannot specify PassiveHandling for MSI interrupts, "
-                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
-                Configuration, status);
-
-            return status;
-        }
-#endif        
     }
 
     //

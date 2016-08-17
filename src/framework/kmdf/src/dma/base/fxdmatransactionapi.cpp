@@ -695,6 +695,61 @@ WDFEXPORT(WdfDmaTransactionSetMaximumLength)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfDmaTransactionSetSingleTransferRequirement)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDMATRANSACTION DmaTransaction,
+    _In_
+    BOOLEAN RequireSingleTransfer
+    )
+{
+    NTSTATUS status;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDmaTransactionBase* pDmaTrans;
+    FxDmaTransactionState state;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   DmaTransaction,
+                                   FX_TYPE_DMA_TRANSACTION,
+                                   (PVOID*)&pDmaTrans,
+                                   &pFxDriverGlobals);
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, DISPATCH_LEVEL);
+    if (!NT_SUCCESS(status)) {
+        return;
+    }
+
+    if (pDmaTrans->GetDmaEnabler()->UsesDmaV3() == FALSE) {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDMA,
+                            "Cannot call %!FUNC! for WDFDMATRANSACTION %p "
+                            "because WDFDMAENABLER %p is not "
+                            "configured to use DMA version 3.",
+                            DmaTransaction,
+                            pDmaTrans->GetDmaEnabler()->GetHandle());
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return;
+    }
+
+    state = pDmaTrans->GetTransactionState();
+    if (state != FxDmaTransactionStateCreated &&
+        state != FxDmaTransactionStateReleased &&
+        state != FxDmaTransactionStateReserved) {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDMA,
+                            "Cannot call %!FUNC! for WDFDMATRANSACTION %p "
+                            "because it was already initialized "
+                            "(state is %!FxDmaTransactionState!)",
+                            DmaTransaction,
+                            state);
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return;
+    }
+
+    pDmaTrans->SetRequireSingleTransfer(RequireSingleTransfer);
+}
+
+__drv_maxIRQL(DISPATCH_LEVEL)
 WDFREQUEST
 WDFEXPORT(WdfDmaTransactionGetRequest)(
     __in

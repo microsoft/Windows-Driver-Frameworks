@@ -1248,30 +1248,33 @@ WDFEXPORT(WdfDeviceSetFailed)(
 {
     DDI_ENTRY();
 
-    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    PFX_DRIVER_GLOBALS pCallerFxDriverGlobals;
+    PFX_DRIVER_GLOBALS pObjectFxDriverGlobals;
     FxDevice *pDevice;
 
-    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+    pCallerFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    FxObjectHandleGetPtrAndGlobals(pCallerFxDriverGlobals,
                                    Device,
                                    FX_TYPE_DEVICE,
                                    (PVOID *) &pDevice,
-                                   &pFxDriverGlobals);
+                                   &pObjectFxDriverGlobals);
 
     if (FailedAction < WdfDeviceFailedAttemptRestart ||
         FailedAction > WdfDeviceFailedNoRestart) {
         DoTraceLevelMessage(
-            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            pObjectFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
             "Invalid FailedAction %d", FailedAction);
         FxVerifierDbgBreakPoint(pDevice->GetDriverGlobals());
         return;
     }
 
     DoTraceLevelMessage(
-        pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDEVICE,
+        pObjectFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDEVICE,
         "WDFDEVICE %p, !devobj %p SetFailed %!WDF_DEVICE_FAILED_ACTION!",
         Device, pDevice->GetDeviceObject(), FailedAction);
 
-    pDevice->m_PkgPnp->SetDeviceFailed(FailedAction);
+    pDevice->m_PkgPnp->SetDeviceFailed(pCallerFxDriverGlobals, FailedAction);
 }
 
 __inline

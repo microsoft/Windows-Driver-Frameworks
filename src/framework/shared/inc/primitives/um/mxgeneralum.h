@@ -182,7 +182,7 @@ Mx::MxQueryTickCount(
     __out PLARGE_INTEGER  TickCount
     )
 {
-    TickCount->QuadPart = GetTickCount();
+    TickCount->QuadPart = GetTickCount64();
 }
 
 __inline
@@ -821,23 +821,6 @@ Mx::MxFlushQueuedDpcs(
 
 __inline
 NTSTATUS
-Mx::MxOpenKey(
-    _In_ PHANDLE KeyHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes
-    )
-{
-    UNREFERENCED_PARAMETER(KeyHandle);
-    UNREFERENCED_PARAMETER(DesiredAccess);
-    UNREFERENCED_PARAMETER(ObjectAttributes);
-        
-    ASSERTMSG("Not implemented for UMDF\n", FALSE);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-__inline
-NTSTATUS
 Mx::MxSetDeviceInterfaceState(
     _In_ PUNICODE_STRING SymbolicLinkName,
     _In_ BOOLEAN Enable
@@ -865,20 +848,6 @@ Mx::MxRegisterDeviceInterface(
     UNREFERENCED_PARAMETER(InterfaceClassGuid);
     UNREFERENCED_PARAMETER(ReferenceString);
     UNREFERENCED_PARAMETER(SymbolicLinkName);
-    
-    ASSERTMSG("Not implemented for UMDF\n", FALSE);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-__inline
-NTSTATUS
-Mx::MxDeleteKey(
-    _In_ HANDLE KeyHandle
-    )
-
-{
-    UNREFERENCED_PARAMETER(KeyHandle);
     
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
@@ -940,52 +909,6 @@ Mx::MxQuerySystemTime(
     UNREFERENCED_PARAMETER(CurrentTime);
     
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
-}
-
-__inline
-NTSTATUS 
-Mx::MxSetValueKey(
-    _In_      HANDLE KeyHandle,
-    _In_      PUNICODE_STRING ValueName,
-    _In_opt_  ULONG TitleIndex,
-    _In_      ULONG Type,
-    _In_opt_  PVOID Data,
-    _In_      ULONG DataSize
-    )
-{
-    UNREFERENCED_PARAMETER(KeyHandle);
-    UNREFERENCED_PARAMETER(ValueName);
-    UNREFERENCED_PARAMETER(TitleIndex);
-    UNREFERENCED_PARAMETER(Type);
-    UNREFERENCED_PARAMETER(Data);
-    UNREFERENCED_PARAMETER(DataSize);    
-    
-    ASSERTMSG("Not implemented for UMDF\n", FALSE);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-__inline
-NTSTATUS 
-Mx::MxQueryValueKey(
-    _In_       HANDLE KeyHandle,
-    _In_       PUNICODE_STRING ValueName,
-    _In_       KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Out_opt_  PVOID KeyValueInformation,
-    _In_       ULONG Length,
-    _Out_      PULONG ResultLength
-)
-{
-    UNREFERENCED_PARAMETER(KeyHandle);
-    UNREFERENCED_PARAMETER(ValueName);
-    UNREFERENCED_PARAMETER(KeyValueInformationClass);
-    UNREFERENCED_PARAMETER(KeyValueInformation);
-    UNREFERENCED_PARAMETER(Length);
-    UNREFERENCED_PARAMETER(ResultLength);    
-    
-    ASSERTMSG("Not implemented for UMDF\n", FALSE);
-
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 __inline

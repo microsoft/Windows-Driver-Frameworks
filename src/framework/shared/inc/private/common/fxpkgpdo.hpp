@@ -517,7 +517,7 @@ private:
         );
 
     virtual
-    VOID
+    NTSTATUS
     QueryForReenumerationInterface(
         VOID
         )
@@ -526,6 +526,7 @@ private:
         // As the PDO, we already have the interface built in
         //
         DO_NOTHING();
+        return STATUS_SUCCESS;
     }
 
     virtual

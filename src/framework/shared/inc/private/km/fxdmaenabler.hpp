@@ -38,6 +38,9 @@ typedef struct _FxDmaDescription {
     // 
     // The size of a preallocated lookaside list for this DMA adapter
     //
+    // Might be stale after initializing a single-transfer transaction,
+    // so use FxDmaEnabler::m_SGListSize when you use the list buffer.
+    //
     size_t                 PreallocatedSGListSize;
 
     size_t                 MaximumFragmentLength;
@@ -177,7 +180,7 @@ public:
     }
 
     __inline
-    size_t
+    ULONG
     GetMaxSGElements(
         VOID
         )
@@ -188,10 +191,19 @@ public:
     __inline
     VOID
     SetMaxSGElements(
-        __in size_t MaximumSGElements
+        __in ULONG MaximumSGElements
         )
     {
-        m_MaxSGElements = (ULONG) MaximumSGElements;
+        m_MaxSGElements = MaximumSGElements;
+    }
+
+    __inline
+    BOOLEAN
+    GetRequireSingleTransfer(
+        VOID
+        )
+    {
+        return m_RequireSingleTransfer;
     }
 
     __inline
@@ -201,6 +213,35 @@ public:
         )
     {
         return m_Profile;
+    }
+
+    BOOLEAN
+    IsScatterGatherProfile(
+        VOID
+        )
+    {
+        return m_Profile == WdfDmaProfileScatterGather ||
+               m_Profile == WdfDmaProfileScatterGatherDuplex ||
+               m_Profile == WdfDmaProfileScatterGather64 ||
+               m_Profile == WdfDmaProfileScatterGather64Duplex;
+    }
+
+    BOOLEAN
+    IsPacketProfile(
+        VOID
+        )
+    {
+        return m_Profile == WdfDmaProfilePacket ||
+               m_Profile == WdfDmaProfilePacket64;
+    }
+
+    BOOLEAN
+    IsSystemProfile(
+        VOID
+        )
+    {
+        return m_Profile == WdfDmaProfileSystem ||
+               m_Profile == WdfDmaProfileSystemDuplex;
     }
 
     __inline
@@ -230,14 +271,6 @@ public:
         )
     {
         return m_IsBusMaster;
-    }
-
-    __inline
-    BOOLEAN
-    IsPacketBased(
-        )
-    {
-        return m_IsScatterGather ? FALSE : TRUE ;
     }
 
     __inline
@@ -363,6 +396,12 @@ protected:
     // of m_SGList below.
     //
     BOOLEAN                 m_IsSGListAllocated: 1;
+
+    //
+    // Whether WDF may divide DMA transactions created with this enabler
+    // into multiple DMA transfers.
+    //
+    BOOLEAN                 m_RequireSingleTransfer : 1;
     
     //
     // This value is larger of aligment value returned by HAL(which is always 1)
@@ -381,6 +420,8 @@ protected:
     // 
     // The size of the preallocated SGList entries, in bytes.  This is for entries 
     // on the lookaside list or the single entry list.
+    // Note that this value may be stale for S/G single-transfer transactions,
+    // so use FxDmaScatterGatherTransaction::m_SgListBufferSize instead.
     //
     size_t                  m_SGListSize;
 

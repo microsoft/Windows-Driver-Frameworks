@@ -947,6 +947,67 @@ Returns:
     return STATUS_SUCCESS;
 }
 
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+BOOLEAN
+IsDriverVerifierActive(
+    _In_ MdDriverObject DriverObject
+    )
+/*++
+
+Routine Description:
+
+    Driver verifier can run in an active mode that crashes the system when
+    a check fails. It can also run in a passive mode that generates logging / 
+    telemetry when a check fails. We are checking to see if DV is running
+    in an active mode.
+
+Arguments:
+
+    DriverObject - Driver to test if DV is active.
+
+Returns:
+
+    TRUE if DV is running in manner that crashes the system when running
+    FALSE if DV is disabled or running passively.
+
+--*/
+{
+
+    BOOLEAN windowsVerifierActive;
+
+    windowsVerifierActive = MmIsDriverVerifying(DriverObject) ? TRUE: FALSE;
+
+    if (windowsVerifierActive) {
+    
+        NTSTATUS status;
+        FxAutoRegKey hVerifier;
+        DECLARE_CONST_UNICODE_STRING(verifierOptionsStr, L"XdvVerifierOptions");
+        DECLARE_CONST_UNICODE_STRING(verifierPath,
+            L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
+
+        status = FxRegKey::_OpenKey(NULL, &verifierPath, &hVerifier.m_Key, KEY_READ);
+        if (NT_SUCCESS(status)) {
+
+            ULONG verifierOptions;
+            status = FxRegKey::_QueryULong(hVerifier.m_Key, &verifierOptionsStr, &verifierOptions); 
+            if (NT_SUCCESS(status)) {
+
+
+
+
+
+
+
+
+
+
+            }
+        }
+    }
+    return windowsVerifierActive;
+}
+#endif
+
 BOOLEAN
 IsWindowsVerifierOn(
     _In_ MdDriverObject DriverObject
@@ -954,12 +1015,13 @@ IsWindowsVerifierOn(
 {
     BOOLEAN windowsVerifierOn = FALSE;
 
+
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
     //
     // Check if windows driver verifier is on for this driver
     // We need this when initializing wdf verifier
     //
-    windowsVerifierOn = MmIsDriverVerifying(DriverObject) ? TRUE: FALSE;
+    windowsVerifierOn = IsDriverVerifierActive(DriverObject);
 
 #else
     UNREFERENCED_PARAMETER(DriverObject);
@@ -1364,7 +1426,11 @@ Routine Description:
     Initialize Driver Framework settings from the driver
     specific registry settings under
 
+    (KMDF)
     \REGISTRY\MACHINE\SYSTEM\ControlSetxxx\Services\<driver>\Parameters\Wdf
+
+    (UMDF)
+    \REGISTRY\MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\WUDF\Services\<driver>
 
 Arguments:
 
@@ -1438,29 +1504,28 @@ Arguments:
     RtlZeroMemory (&paramTable[0], sizeof(paramTable));
     i = 0;
 
+    #define ADD_TABLE_ENTRY(ValueName, Value, Default) \
+        paramTable[i].Flags = \
+            RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK; \
+        paramTable[i].Name = L##ValueName; \
+        paramTable[i].EntryContext = &Value; \
+        paramTable[i].DefaultType = \
+            (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_NONE; \
+        paramTable[i].DefaultData = &Default; \
+        paramTable[i].DefaultLength = sizeof(ULONG); \
+        i++; \
+        ASSERT(i < sizeof(paramTable) / sizeof(paramTable[0]));
+    
     verboseValue = 0;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"VerboseOn";
-    paramTable[i].EntryContext  = &verboseValue;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &zero;
-    paramTable[i].DefaultLength = sizeof(ULONG);
+    ADD_TABLE_ENTRY("VerboseOn", verboseValue, zero);
 
     allocateFailValue = (ULONG) -1;
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"VerifierAllocateFailCount";
-    paramTable[i].EntryContext  = &allocateFailValue;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &max;
-    paramTable[i].DefaultLength = sizeof(ULONG);
+    ADD_TABLE_ENTRY("VerifierAllocateFailCount", allocateFailValue, max);
 
     verifierOnValue = 0;
 
     //
-    // If the client version is 1.9 or above, the defaut (i.e when
+    // If the client version is 1.9 or above, the default (i.e when
     // the key is not present) VerifierOn state is tied to the
     // driver verifier.
     //
@@ -1468,34 +1533,13 @@ Arguments:
         verifierOnValue = WindowsVerifierOn;
     }
 
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"VerifierOn";
-    paramTable[i].EntryContext  = &verifierOnValue;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &verifierOnValue;
-    paramTable[i].DefaultLength = sizeof(ULONG);
+    ADD_TABLE_ENTRY("VerifierOn", verifierOnValue, verifierOnValue);
 
     verifyDownlevelValue = 0;
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"VerifyDownLevel";
-    paramTable[i].EntryContext  = &verifyDownlevelValue;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &zero;
-    paramTable[i].DefaultLength = sizeof(ULONG);
+    ADD_TABLE_ENTRY("VerifyDownLevel", verifyDownlevelValue, zero);
 
     forceLogsInMiniDump = 0;
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"ForceLogsInMiniDump";
-    paramTable[i].EntryContext  = &forceLogsInMiniDump;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &zero;
-    paramTable[i].DefaultLength = sizeof(ULONG);
+    ADD_TABLE_ENTRY("ForceLogsInMiniDump", forceLogsInMiniDump, zero);
 
     //
     // Track driver for minidump log:
@@ -1504,53 +1548,28 @@ Arguments:
     //
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
     trackDriverForMiniDumpLog = (ULONG) TRUE;
+    ADD_TABLE_ENTRY("TrackDriverForMiniDumpLog", trackDriverForMiniDumpLog, defaultTrue);
 #else
     trackDriverForMiniDumpLog = 0;
+    ADD_TABLE_ENTRY("TrackDriverForMiniDumpLog", trackDriverForMiniDumpLog, zero);
 #endif
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"TrackDriverForMiniDumpLog";
-    paramTable[i].EntryContext  = &trackDriverForMiniDumpLog;
-    paramTable[i].DefaultType   = REG_DWORD;
-#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-    paramTable[i].DefaultData    = &defaultTrue;
-#else
-    paramTable[i].DefaultData    = &zero;
-#endif
-    paramTable[i].DefaultLength = sizeof(ULONG);
 
     requestParentOptimizationOn = (ULONG) TRUE;
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"RequestParentOptimizationOn";
-    paramTable[i].EntryContext  = &requestParentOptimizationOn;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &defaultTrue;
-    paramTable[i].DefaultLength = sizeof(ULONG);
+    ADD_TABLE_ENTRY("RequestParentOptimizationOn", requestParentOptimizationOn, defaultTrue);
 
     dsfValue = 0;
-    i++;
-
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"DsfOn";
-    paramTable[i].EntryContext  = &dsfValue;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &zero;
-    paramTable[i].DefaultLength = sizeof(ULONG);
-
+    ADD_TABLE_ENTRY("DsfOn", dsfValue, zero);
+    
     removeLockOptionFlags = 0;
-    i++;
+    ADD_TABLE_ENTRY("RemoveLockOptionFlags", removeLockOptionFlags, zero);
 
-    paramTable[i].Flags         = RTL_QUERY_REGISTRY_DIRECT;
-    paramTable[i].Name          = L"RemoveLockOptionFlags";
-    paramTable[i].EntryContext  = &removeLockOptionFlags;
-    paramTable[i].DefaultType   = REG_DWORD;
-    paramTable[i].DefaultData   = &zero;
-    paramTable[i].DefaultLength = sizeof(ULONG);
-
+    //
+    // The last entry's QueryRoutine and Name fields must be NULL,
+    // because that marks the end of the query table.
+    //
     ASSERT(i < sizeof(paramTable) / sizeof(paramTable[0]));
+    ASSERT(paramTable[i].QueryRoutine == NULL);
+    ASSERT(paramTable[i].Name == NULL);
 
 #if (FX_CORE_MODE==FX_CORE_USER_MODE)
 
@@ -1738,3 +1757,4 @@ FX_DRIVER_GLOBALS::WaitForSignal(
 }
 
 } // extern "C"
+

@@ -14,6 +14,7 @@ extern "C" {
 #include <wdfcxbase.h>
 #include "wdf20.h"
 #include "wdf215.h"
+#include "wdf217.h"
 
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
@@ -24,8 +25,8 @@ extern "C" {
 
 
 
-#include "..\version\FxDynamics.h"
-#include "..\version\vffxdynamics.h"
+#include "FxDynamics.h"
+#include "vffxdynamics.h"
 #include "FxLibraryCommon.h"
 
 #include "FxTelemetry.hpp"
@@ -157,6 +158,94 @@ GetTriageInfo(
     _WdfIrpTriageInfo.IrpPtr = FIELD_OFFSET(FxIrp, m_Irp);
 }
 
+
+BOOLEAN
+IsClientInfoValid(
+    _In_ PCLIENT_INFO ClientInfo
+    )
+{
+    if (ClientInfo == NULL ||
+        ClientInfo->Size != sizeof(CLIENT_INFO) ||
+        ClientInfo->RegistryPath == NULL ||
+        ClientInfo->RegistryPath->Length == 0 ||
+        ClientInfo->RegistryPath->Buffer == NULL) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+VOID
+ReportDdiFunctionCountMismatch(
+    _In_ PCUNICODE_STRING ServiceName,
+    _In_ ULONG ActualFunctionCount,
+    _In_ ULONG ExpectedFunctionCount,
+    _In_ BOOLEAN IssueBreak
+    )
+{
+    WCHAR serviceName[MAX_PATH] = { 0 };
+    char  serviceNameAnsi[MAX_PATH] = { 0 };
+    int nChars;
+
+    //
+    // NOTE: Any single call to DbgPrintEx will only transmit 512 bytes of 
+    // information.
+    //
+    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
+            "\n\n************************* \n"
+            "* DDI function table mismatch detected in UMDF driver. The \n"
+            "* driver will not load until it is re-compiled using a \n"
+            "* newer version of the Windows Driver Kit (WDK). \n"
+            );
+
+    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
+            "* Service name                 : %wZ\n"
+            "* Actual function table count  : %d \n"
+            "* Expected function table count: %d \n"
+            "*************************** \n\n",
+            ServiceName,
+            ActualFunctionCount,
+            ExpectedFunctionCount
+            );
+
+    //
+    // Write an ETW event to the system event log.
+    //
+    RtlCopyMemory(serviceName, 
+                ServiceName->Buffer, 
+                MIN(sizeof(serviceName), ServiceName->Length));
+    EventWriteEVENT_UMDF_DRIVER_DDI_TABLE_MISMATCH(serviceName,
+                                                ActualFunctionCount,
+                                                ExpectedFunctionCount);
+
+    //
+    // Report a telemetry event that can be used to proactively fix drivers
+    //
+    TraceLoggingWrite(g_TelemetryProvider,
+                    "UmdfClientFunctionCountMismatch",
+                    WDF_TELEMETRY_EVT_KEYWORDS,
+                    TraceLoggingUnicodeString(ServiceName, "ServiceName"),
+                    TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
+                    TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+
+    if (IssueBreak == TRUE) {
+        //
+        // Convert to an ANSI string and generate a verifier failure so a Watson 
+        // report is submitted
+        // 
+        nChars = WideCharToMultiByte(CP_ACP,
+                                    WC_NO_BEST_FIT_CHARS, //flags
+                                    serviceName,
+                                    -1,
+                                    serviceNameAnsi,
+                                    sizeof(serviceNameAnsi),
+                                    NULL, NULL);
+
+        FX_VERIFY_WITH_NAME(DRIVER(DDIFunctionTableMismatched, 0),
+            TRAPMSG("Version mismatch detected in function table count. Recompile"
+            " driver with correct headers"), nChars ? serviceNameAnsi : WDF_UNKNOWN_SERVICE_NAME);
+    }
+}
+
 NTSTATUS
 FxLibraryCommonCommission(
     VOID
@@ -244,6 +333,7 @@ FxLibraryCommonRegisterClient(
     )
 {
     NTSTATUS           status;
+    UNICODE_STRING     serviceName = { 0 };
 
     status = STATUS_INVALID_PARAMETER;
 
@@ -280,10 +370,11 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_15) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_17) {
 
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V2_17:
         case WdfFunctionTableNumEntries_V2_15:
         case WdfFunctionTableNumEntries_V2_0:
             break;
@@ -297,25 +388,35 @@ FxLibraryCommonRegisterClient(
         }
     }
     else {
+
+
+
+
+
+
+
+
+
+
         //
         // Client version is same as framework version. Make
         // sure table count is exact. 
         //
-        // Note that in order for build-to-build upgrade to work, the following
-        // check should be commented out during active development. 
-        //
-        // DO CHANGE it to a real failure towards the tail end of release to 
-        // prevent cases where a driver sneaks out into public after being built
-        // with a non-RTM version of WDF and has a function count less than the
-        // final count. An HCK test has been added to ensure such drivers are 
-        // caught early. This check is an additional prevention.
-        //
         if (Info->FuncCount != WdfFunctionTableNumEntries) {
-            __Print(("Framework function table size (%d) doesn't match "
-                   "with client (%d). Rebuild the client driver.",
-                   WdfFunctionTableNumEntries, Info->FuncCount));
+            RtlInitUnicodeString(&serviceName, WIDEN(WDF_UNKNOWN_SERVICE_NAME));
 
-            ASSERT(FALSE);
+            if (IsClientInfoValid(ClientInfo)) {
+                GetNameFromPath(ClientInfo->RegistryPath, &serviceName);
+            }
+
+            // 
+            // Report a DbgPrint message, telemetry event and an ETW event that 
+            // will serve as diagnostic aid.
+            //
+            ReportDdiFunctionCountMismatch((PCUNICODE_STRING)&serviceName,
+                                           Info->FuncCount,
+                                           WdfFunctionTableNumEntries,
+                                           TRUE); 
             goto Done;
         }
     }
@@ -402,7 +503,7 @@ Done:
              ": exit: status %X\n", status));
 
     if (!NT_SUCCESS(status)) {
-        FX_VERIFY(DRIVER(BadArgument, TODO), 
+        FX_VERIFY(DRIVER(DDIFunctionTableMismatched, TODO),
             TRAPMSG("Version mismatch detected in function table count. Recompile"
             " driver with correct headers"));
     }
@@ -469,16 +570,13 @@ GetEnhancedVerifierOptions(
     )
 {
     NTSTATUS status;
-    ULONG value;
-    FxAutoRegKey hWdf;
+    ULONG value = 0;
+    FxAutoRegKey hServiceKey, hWdfSubkey;
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
     DECLARE_CONST_UNICODE_STRING(valueName, WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME);
 
     *Options = 0;
-    if (ClientInfo == NULL                       ||
-        ClientInfo->Size != sizeof(CLIENT_INFO)  ||
-        ClientInfo->RegistryPath == NULL         ||
-        ClientInfo->RegistryPath->Length == 0    ||
-        ClientInfo->RegistryPath->Buffer == NULL ||
+    if (! IsClientInfoValid(ClientInfo) ||
         Options == NULL) {
 
         __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
@@ -488,14 +586,35 @@ GetEnhancedVerifierOptions(
 
     status = FxRegKey::_OpenKey(NULL,
                                 ClientInfo->RegistryPath,
-                                &hWdf.m_Key,
+                                &hServiceKey.m_Key,
                                 KEY_READ);
     if (!NT_SUCCESS(status)) {
         return;
     }
 
-    status = FxRegKey::_QueryULong(
-        hWdf.m_Key, &valueName, &value);
+    status = FxRegKey::_OpenKey(hServiceKey.m_Key,
+                                &parametersPath,
+                                &hWdfSubkey.m_Key,
+                                KEY_READ);
+    if (NT_SUCCESS(status)) {
+        //
+        // Try to read the EnhancedVerifierOptions value
+        // from the service key's Parameters\Wdf subkey.
+        //
+        status = FxRegKey::_QueryULong(
+            hWdfSubkey.m_Key, &valueName, &value);
+    }
+    
+    if (!NT_SUCCESS(status)) {
+        //
+        // Older versions of WdfPerfEnhancedVerifier.cmd set the
+        // EnhancedVerifierOptions value to the UMDF client's root
+        // service key instead of the Parameters\Wdf subkey, so in
+        // case of failure also check there.
+        //
+        status = FxRegKey::_QueryULong(
+            hServiceKey.m_Key, &valueName, &value);
+    }
 
     //
     // Examine key values and set Options only on success.

@@ -366,11 +366,6 @@ typedef enum _TRACE_INFORMATION_CLASS {
 #include "FxUsbInterface.hpp"
 #include "FxUsbPipe.hpp"
 
-// DMA support
-//#include "FxDmaEnabler.hpp"
-//#include "FxDmaTransaction.hpp"
-//#include "FxCommonBuffer.hpp"
-
 // Triage info.
 #include "wdftriage.h"
 

@@ -90,6 +90,21 @@ public:
         );
 
     __inline
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NTSTATUS
+    DeleteKey(
+        VOID
+        )
+	{
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+		return STATUS_NOT_IMPLEMENTED;
+#else
+		return ZwDeleteKey(m_Key);
+#endif
+	}
+
+    __inline
     VOID
     SetHandle(
         __in HANDLE Key
@@ -195,7 +210,7 @@ public:
     __drv_maxIRQL(PASSIVE_LEVEL)
     NTSTATUS
     _QueryValue(
-        __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+        __in_opt PFX_DRIVER_GLOBALS FxDriverGlobals,
         __in HANDLE Key,
         __in PCUNICODE_STRING ValueName,
         __in ULONG ValueLength,

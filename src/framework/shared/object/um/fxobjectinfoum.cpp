@@ -1,8 +1,8 @@
 //
 //    Copyright (C) Microsoft.  All rights reserved.
 //
-#include "FxMin.hpp"
 #include "fxobjectpch.hpp"
+#include "FxMin.hpp"
 
 #include "FxUserObject.hpp"
 #include "pnppriv.hpp"

@@ -175,7 +175,7 @@ _Must_inspect_result_
 NTSTATUS
 #pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
 FxRegKey::_QueryValue(
-    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in_opt PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in HANDLE Key,
     __in PCUNICODE_STRING ValueName,
     __in ULONG ValueLength,

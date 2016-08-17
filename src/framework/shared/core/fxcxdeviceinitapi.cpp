@@ -450,6 +450,125 @@ Done:
     return;
 }
 
+__drv_maxIRQL(DISPATCH_LEVEL)
+VOID
+WDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFCXDEVICE_INIT CxDeviceInit,
+    _In_
+    PWDFCX_PNPPOWER_EVENT_CALLBACKS CxPnpPowerCallbacks
+    )
+
+/*++
+
+Routine Description:
+
+    Registers PNP & Power callbacks for class extensions.
+
+
+Arguments:
+
+    CxDeviceInit - Class Extension Device initialization structure
+
+    CxPnpPowerCallbacks - Pointer to a Cx supplied structure.
+
+Returns:
+
+    VOID
+
+--*/
+
+{
+    DDI_ENTRY();
+        
+    PFX_DRIVER_GLOBALS fxDriverGlobals;
+    PFX_DRIVER_GLOBALS cxDriverGlobals;
+    NTSTATUS status;
+
+    cxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+    FxPointerNotNull(cxDriverGlobals, CxDeviceInit);
+    fxDriverGlobals = CxDeviceInit->ClientDriverGlobals;
+
+    //
+    // Caller must be a class extension driver. 
+    //
+    status = FxValiateCx(fxDriverGlobals, cxDriverGlobals);
+    if (!NT_SUCCESS(status)) {
+        goto Done;
+    }
+
+    FxPointerNotNull(fxDriverGlobals, CxPnpPowerCallbacks);
+
+    if (CxPnpPowerCallbacks->Size != sizeof(WDFCX_PNPPOWER_EVENT_CALLBACKS)) {
+        DoTraceLevelMessage(
+            fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Invalid Size in WDFCX_PNPPOWER_EVENT_CALLBACKS: %d, expected %d",
+            CxPnpPowerCallbacks->Size, sizeof(WDFCX_PNPPOWER_EVENT_CALLBACKS));
+
+        FxVerifierDbgBreakPoint(fxDriverGlobals);
+        goto Done;
+    }
+
+    if (CxPnpPowerCallbacks->EvtCxDevicePrePrepareHardware == NULL &&
+        CxPnpPowerCallbacks->EvtCxDevicePrePrepareHardwareFailedCleanup != NULL) {
+        DoTraceLevelMessage(
+            fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Invalid WDFCX_PNPPOWER_EVENT_CALLBACKS configuration. Can not specify "
+            "EvtCxDevicePrePrepareHardwareFailedCleanup if "
+            "EvtCxDevicePrePrepareHardware is set to NULL");
+
+        FxVerifierDbgBreakPoint(fxDriverGlobals);
+        goto Done;
+    }
+
+    if (CxPnpPowerCallbacks->EvtCxDevicePreD0Entry == NULL &&
+        CxPnpPowerCallbacks->EvtCxDevicePreD0EntryFailedCleanup != NULL) {
+        DoTraceLevelMessage(
+            fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Invalid WDFCX_PNPPOWER_EVENT_CALLBACKS configuration. Can not specify "
+            "EvtCxDevicePreD0EntryFailedCleanup if "
+            "EvtCxDevicePreD0Entry is set to NULL");
+
+        FxVerifierDbgBreakPoint(fxDriverGlobals);
+        goto Done;
+    }
+
+    if (CxPnpPowerCallbacks->EvtCxDevicePreSelfManagedIoInit == NULL &&
+        CxPnpPowerCallbacks->EvtCxDevicePreSelfManagedIoInitFailedCleanup != NULL) {
+        DoTraceLevelMessage(
+            fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Invalid WDFCX_PNPPOWER_EVENT_CALLBACKS configuration. Can not specify "
+            "EvtCxDevicePreSelfManagedIoInitFailedCleanup if "
+            "EvtCxDevicePreSelfManagedIoInit is set to NULL");
+
+        FxVerifierDbgBreakPoint(fxDriverGlobals);
+        goto Done;
+    }
+
+    if (CxPnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestart == NULL &&
+        CxPnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestartFailedCleanup != NULL) {
+        DoTraceLevelMessage(
+            fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "Invalid WDFCX_PNPPOWER_EVENT_CALLBACKS configuration. Can not specify "
+            "EvtCxDevicePreSelfManagedIoRestartFailedCleanup if "
+            "EvtCxDevicePreSelfManagedIoRestart is set to NULL");
+
+        FxVerifierDbgBreakPoint(fxDriverGlobals);
+        goto Done;
+    }
+
+    CxDeviceInit->PnpPowerCallbacks.Set = TRUE;
+
+    RtlCopyMemory(&CxDeviceInit->PnpPowerCallbacks.Callbacks,
+                  CxPnpPowerCallbacks,
+                  sizeof(CxDeviceInit->PnpPowerCallbacks.Callbacks));
+
+Done:
+    return;
+}
+
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 PWDFCXDEVICE_INIT

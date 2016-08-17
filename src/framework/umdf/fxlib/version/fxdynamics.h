@@ -279,6 +279,7 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFDEVICEWDMDISPATCHIRP                               pfnWdfDeviceWdmDispatchIrp;
     PFN_WDFDEVICEWDMDISPATCHIRPTOIOQUEUE                      pfnWdfDeviceWdmDispatchIrpToIoQueue;
     PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK              pfnWdfDeviceConfigureWdmIrpDispatchCallback;
+    PFN_WDFCXDEVICEINITSETPNPPOWEREVENTCALLBACKS              pfnWdfCxDeviceInitSetPnpPowerEventCallbacks;
 
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
 
@@ -419,6 +420,18 @@ WDFEXPORT(WdfCxDeviceInitSetFileObjectConfig)(
     PWDFCX_FILEOBJECT_CONFIG CxFileObjectConfig,
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES FileObjectAttributes
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFCXDEVICE_INIT CxDeviceInit,
+    _In_
+    PWDFCX_PNPPOWER_EVENT_CALLBACKS CxPnpPowerCallbacks
     );
 
 WDFAPI
@@ -2118,7 +2131,7 @@ WDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue)(
 
 _Must_inspect_result_
 _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
-_When_(PoolType == 0 || PoolType == 256, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(PoolType == 0 || PoolType == 256 || PoolType == 512, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 NTSTATUS
 WDFEXPORT(WdfMemoryCreate)(
@@ -2222,6 +2235,7 @@ WDFEXPORT(WdfMemoryCopyFromBuffer)(
     size_t NumBytesToCopyFrom
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL+1)
 WDFAPI
 PVOID
 FASTCALL
@@ -2234,6 +2248,8 @@ WDFEXPORT(WdfObjectGetTypedContextWorker)(
     PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
     );
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
 WDFEXPORT(WdfObjectAllocateContext)(
@@ -2247,6 +2263,7 @@ WDFEXPORT(WdfObjectAllocateContext)(
     PVOID* Context
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL+1)
 WDFAPI
 WDFOBJECT
 FASTCALL
@@ -2257,6 +2274,7 @@ WDFEXPORT(WdfObjectContextGetObject)(
     PVOID ContextPointer
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
 WDFEXPORT(WdfObjectReferenceActual)(
@@ -2272,6 +2290,7 @@ WDFEXPORT(WdfObjectReferenceActual)(
     PCHAR File
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
 WDFEXPORT(WdfObjectDereferenceActual)(
@@ -4179,6 +4198,7 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfDeviceWdmDispatchIrp),
         WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue),
         WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback),
+        WDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks),
     }
 };
 

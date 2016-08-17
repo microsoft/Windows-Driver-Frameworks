@@ -1381,20 +1381,24 @@ Return Value:
 {
     NTSTATUS status;
     BOOLEAN matched;
+    FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
 
     status = STATUS_SUCCESS;
     matched = FALSE;
 
-    This->QueryForReenumerationInterface();
-
-    status = This->CreatePowerThreadIfNeeded();
+    status = This->QueryForReenumerationInterface();
 
     if (NT_SUCCESS(status)) {
-        status = This->PnpPrepareHardware(&matched);
+        status = This->CreatePowerThreadIfNeeded();
+    }
+
+    if (NT_SUCCESS(status)) {
+        status = This->PnpPrepareHardware(&matched, &progress);
     }
 
     if (!NT_SUCCESS(status)) {
-        if (matched == FALSE) {
+        if ((matched == FALSE) ||
+            (progress  < FxCxCallbackProgressClientCalled)) {
             //
             // NOTE:  consider going to WdfDevStatePnpFailed instead of yet
             //        another failed state out of start device handling.
@@ -2320,12 +2324,9 @@ Return Value:
     if (!NT_SUCCESS(status)) {
         //
         // The driver failed to unmap resources.  Presumably this means that
-        // there are now some leaked PTEs.  Just log the failure.
+        // there are now some leaked PTEs.  Error is logged prior to this point.
         //
-        DoTraceLevelMessage(
-            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "EvtDeviceReleaseHardware %p failed, %!STATUS!",
-            This->m_Device->GetHandle(), status);
+        DO_NOTHING();
     }
 
     This->PnpCleanupForRemove(TRUE);
@@ -2485,14 +2486,16 @@ Return Value:
 {
     NTSTATUS status;
     BOOLEAN matched;
+    FxCxCallbackProgress progress;
 
-    status = This->PnpPrepareHardware(&matched);
+    status = This->PnpPrepareHardware(&matched, &progress);
 
     if (!NT_SUCCESS(status)) {
         //
         // We can handle remove out of the init state, revert back to that state
         //
-        if (matched == FALSE) {
+        if ((matched == FALSE) || 
+            (progress < FxCxCallbackProgressClientCalled)) {
             //
             // Wait for the remove irp to come in
             //
@@ -2544,9 +2547,6 @@ Return Value:
         state = WdfDevStatePnpNull;
     }
     else {
-        DoTraceLevelMessage(This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-                            "EvtDeviceReleaseHardware failed - %!STATUS!",
-                            status);
         COVERAGE_TRAP();
 
         This->SetInternalFailure();
@@ -3150,10 +3150,6 @@ Return Value:
 
     status = This->PnpReleaseHardware();
     if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(
-            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "EvtDeviceReleaseHardware failed with %!STATUS!", status);
-
         COVERAGE_TRAP();
 
         This->SetInternalFailure();
@@ -3197,11 +3193,13 @@ Return Value:
 {
     NTSTATUS status;
     BOOLEAN matched;
+    FxCxCallbackProgress progress;
 
-    status = This->PnpPrepareHardware(&matched);
+    status = This->PnpPrepareHardware(&matched, &progress);
 
     if (!NT_SUCCESS(status)) {
-        if (matched == FALSE) {
+        if ((matched == FALSE) ||
+            (progress  < FxCxCallbackProgressClientCalled)) {
             //
             // Wait for the remove irp to come in
             //
@@ -3474,9 +3472,11 @@ Return Value:
 }
 
 __drv_when(!NT_SUCCESS(return), __drv_arg(ResourcesMatched, _Must_inspect_result_))
+__drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
 NTSTATUS
 FxPkgPnp::PnpPrepareHardware(
-    __inout PBOOLEAN ResourcesMatched
+    _Out_ PBOOLEAN ResourcesMatched,
+    _Out_ FxCxCallbackProgress *Progress
     )
 /*++
 
@@ -3487,6 +3487,8 @@ Routine Description:
 Arguments:
     ResourcesMatched - indicates to the caller what stage failed if !NT_SUCCESS
                         is returned
+    Progress - indicates to the caller what stage the API failed if 
+                        !NT_SUCCESS is returned
 
 Return Value:
     NT_SUCCESS if all goes well, !NT_SUCCESS if failure occurrs
@@ -3495,6 +3497,7 @@ Return Value:
 {
     NTSTATUS status;
     *ResourcesMatched = FALSE;
+	*Progress = FxCxCallbackProgressInitialized;
 
     //
     // FxPnpStateRemoved:
@@ -3568,16 +3571,14 @@ Return Value:
 
     status = m_DevicePrepareHardware.Invoke(m_Device->GetHandle(),
                                             m_ResourcesRaw->GetHandle(),
-                                            m_Resources->GetHandle());
+                                            m_Resources->GetHandle(),
+                                            Progress);
 
     m_Device->ClearCallbackFlags(
                         FXDEVICE_CALLBACK_IN_PREPARE_HARDWARE
                         );
 
     if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-                            "EvtDevicePrepareHardware failed %!STATUS!", status);
-
         if (status == STATUS_NOT_SUPPORTED) {
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,

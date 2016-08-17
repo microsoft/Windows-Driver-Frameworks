@@ -170,7 +170,7 @@ FxInterrupt::FxInterrupt(
     // compat issues on existing platforms. In later versions (after 1.11) the
     // platform differenciation could be removed.
     //
-#if defined(_ARM_)
+#if defined(_ARM_) || defined(_ARM64_)
     m_UseSoftDisconnect = TRUE;
 #else
     m_UseSoftDisconnect = FALSE;
@@ -972,14 +972,6 @@ Return Value:
         m_PassiveHandlingByRedirector = TRUE;
     }
 #endif
-
-    if (IsPassiveConnect() && _IsMessageInterrupt(CmDescTrans->Flags)) {
-        DoTraceLevelMessage(
-            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "Driver cannot specify PassiveHandling for MSI interrupts.");
-        FxVerifierDbgBreakPoint(GetDriverGlobals());
-        // IoConnectInterruptEx will fail later on.
-    }
 
     m_InterruptInfo.Group                   = CmDescTrans->u.Interrupt.Group;
     m_InterruptInfo.TargetProcessorSet      = CmDescTrans->u.Interrupt.Affinity;

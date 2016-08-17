@@ -21,7 +21,7 @@ Revision History:
 --*/
 
 
-#include "..\FxTargetsShared.hpp"
+#include "FxTargetsShared.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)

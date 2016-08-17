@@ -26,7 +26,7 @@ Revision History:
 
 extern "C" {
 #include "FxDynamics.h"
-#include "..\librarycommon\FxLibraryCommon.h"
+#include "FxLibraryCommon.h"
 extern WDF_LIBRARY_INFO  WdfLibraryInfo;
 
 #if !(NO_UMDF_VERSION_EXPORT)

@@ -229,17 +229,40 @@ FxDriver::AddDevice(
                             "Driver did not create a device in "
                             "EvtDriverAddDevice, status %!STATUS!", status);
 
-        //
-        // We do not let filters affect the building of the rest of the stack.
-        // If they return error, we convert it to STATUS_SUCCESS.
-        //
-        if (init.Fdo.Filter && !NT_SUCCESS(status)) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        if (NT_SUCCESS(status))
+        {
             DoTraceLevelMessage(
-                GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
-                "Filter returned %!STATUS! without creating a WDFDEVICE, "
-                "converting to STATUS_SUCCESS", status);
-            status = STATUS_SUCCESS;
+                GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Driver returned %!STATUS! without creating a WDFDEVICE, "
+                "converting to %!STATUS!", status, STATUS_INVALID_DEVICE_STATE);
+            status = STATUS_INVALID_DEVICE_STATE;
         }
+
+
+
 
         return status;
     }

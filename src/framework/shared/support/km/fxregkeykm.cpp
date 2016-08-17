@@ -146,7 +146,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 FxRegKey::_QueryValue(
-    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
+    __in_opt PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in HANDLE Key,
     __in PCUNICODE_STRING ValueName,
     __in ULONG ValueLength,
@@ -158,6 +158,9 @@ FxRegKey::_QueryValue(
     KEY_VALUE_PARTIAL_INFORMATION *pPartial, partial;
     NTSTATUS status;
     ULONG length;
+    ULONG tag;
+
+    tag = FxDriverGlobals ? FxDriverGlobals->Tag : FX_TAG;
 
     if (Value == NULL) {
         //
@@ -170,7 +173,7 @@ FxRegKey::_QueryValue(
     else {
         length = _ComputePartialSize(ValueLength);
         pPartial = (PKEY_VALUE_PARTIAL_INFORMATION)
-            MxMemory::MxAllocatePoolWithTag(PagedPool, length, FxDriverGlobals->Tag);
+            MxMemory::MxAllocatePoolWithTag(PagedPool, length, tag);
 
         if (pPartial == NULL) {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -292,5 +295,3 @@ FxRegKey::_QueryQuadWord(
 
     return status;
 }
-
-

@@ -1,5 +1,7 @@
 /*++
 
+Copyright (c) Microsoft. All rights reserved.
+
 Module Name: VfFxDynamics.h
 
 Abstract:
@@ -445,6 +447,18 @@ VFWDFEXPORT(WdfCxDeviceInitSetFileObjectConfig)(
     PWDFCX_FILEOBJECT_CONFIG CxFileObjectConfig,
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES FileObjectAttributes
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+VFWDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFCXDEVICE_INIT CxDeviceInit,
+    _In_
+    PWDFCX_PNPPOWER_EVENT_CALLBACKS CxPnpPowerCallbacks
     );
 
 WDFAPI
@@ -1814,6 +1828,18 @@ VFWDFEXPORT(WdfDmaTransactionSetMaximumLength)(
     WDFDMATRANSACTION DmaTransaction,
     _In_
     size_t MaximumLength
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+VOID
+VFWDFEXPORT(WdfDmaTransactionSetSingleTransferRequirement)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDMATRANSACTION DmaTransaction,
+    _In_
+    BOOLEAN RequireSingleTransfer
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -3278,7 +3304,7 @@ VFWDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue)(
 
 _Must_inspect_result_
 _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
-_When_(PoolType == 0 || PoolType == 256, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(PoolType == 0 || PoolType == 256 || PoolType == 512, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 NTSTATUS
 VFWDFEXPORT(WdfMemoryCreate)(
@@ -3449,6 +3475,7 @@ VFWDFEXPORT(WdfDriverMiniportUnload)(
     WDFDRIVER Driver
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL+1)
 WDFAPI
 PVOID
 FASTCALL
@@ -3461,6 +3488,8 @@ VFWDFEXPORT(WdfObjectGetTypedContextWorker)(
     PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
     );
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
 VFWDFEXPORT(WdfObjectAllocateContext)(
@@ -3474,6 +3503,7 @@ VFWDFEXPORT(WdfObjectAllocateContext)(
     PVOID* Context
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL+1)
 WDFAPI
 WDFOBJECT
 FASTCALL
@@ -3484,6 +3514,7 @@ VFWDFEXPORT(WdfObjectContextGetObject)(
     PVOID ContextPointer
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
 VFWDFEXPORT(WdfObjectReferenceActual)(
@@ -3499,6 +3530,7 @@ VFWDFEXPORT(WdfObjectReferenceActual)(
     PCHAR File
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
 VFWDFEXPORT(WdfObjectDereferenceActual)(
@@ -6475,6 +6507,8 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfDeviceInitAllowSelfIoTarget),
         VFWDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue),
         VFWDFEXPORT(WdfDeviceOpenDevicemapKey),
+        VFWDFEXPORT(WdfDmaTransactionSetSingleTransferRequirement),
+        VFWDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks),
     }
 };
 

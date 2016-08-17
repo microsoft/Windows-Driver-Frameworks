@@ -38,6 +38,12 @@ struct CxFileObjectInit {
     BOOLEAN Set;
 };
 
+struct CxPnpPowerCallbacksInit {
+    WDFCX_PNPPOWER_EVENT_CALLBACKS Callbacks;
+
+    BOOLEAN Set;
+};
+
 //
 // The typedef for a pointer to this structure is exposed in wdfdevice.h
 //
@@ -84,6 +90,11 @@ public:
     // File object info.
     //
     CxFileObjectInit        FileObject;
+
+    //
+    // PnpPowerCallback info
+    //
+    CxPnpPowerCallbacksInit PnpPowerCallbacks;
 
     //
     // Set during the device create.

@@ -40,6 +40,7 @@ WDFCXDEVICE_INIT::WDFCXDEVICE_INIT()
     RtlZeroMemory(&RequestAttributes, sizeof(RequestAttributes));
     RtlZeroMemory(&FileObject, sizeof(FileObject));
     FileObject.AutoForwardCleanupClose = WdfUseDefault;
+    RtlZeroMemory(&PnpPowerCallbacks, sizeof(PnpPowerCallbacks));   
     CxDeviceInfo = NULL;
 }
 

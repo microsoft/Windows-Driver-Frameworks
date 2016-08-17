@@ -1593,10 +1593,66 @@ public:
         VOID
         )
     {
+        return IsACxPresent();
+    }
+
+    __inline
+    BOOLEAN
+    IsACxPresent(
+        VOID
+        )
+    {
         return IsListEmpty(&m_CxDeviceInfoListHead) ? FALSE : TRUE;
     }
 
-#if DBG
+    _Must_inspect_result_
+    BOOLEAN
+    IsCxUsingSelfManagedIo(
+        VOID)
+    {
+        FxCxCallbackType callbackType;
+        FxCxDeviceInfo *cxInfo;
+        PFxCxPnpPowerCallbackContext context;
+        BOOLEAN smIoUsed = FALSE;
+
+        FxCxCallbackType smIoCallbackList[] =
+        {
+            FxCxCallbackSmIoInit,
+            FxCxCallbackSmIoRestart,
+            FxCxCallbackSmIoSuspend,
+            FxCxCallbackSmIoFlush,
+            FxCxCallbackSmIoCleanup
+        };
+
+        cxInfo = GetFirstCxDeviceInfo();
+
+        while (cxInfo != NULL && smIoUsed == FALSE) {
+
+            for (ULONG loop = 0; loop < ARRAYSIZE(smIoCallbackList); loop++)
+            {
+                callbackType = smIoCallbackList[loop];
+                context = cxInfo->CxPnpPowerCallbackContexts[callbackType];
+
+                if (context == NULL) {
+                    continue;
+                }
+
+                if (context->IsSelfManagedIoUsed() == FALSE) {
+                    continue;
+                }
+
+                //
+                // Cx SmIo is used, so Self Managed Io State Machine is needed
+                //
+                smIoUsed = TRUE;
+                break;
+            }
+
+            cxInfo = GetNextCxDeviceInfo(cxInfo);
+        }
+        return smIoUsed;
+    }
+
     __inline
     FxCxDeviceInfo*
     GetFirstCxDeviceInfo(
@@ -1629,8 +1685,6 @@ public:
                                      ListEntry);
         }
     }
-
-#endif
 
     __inline
     static

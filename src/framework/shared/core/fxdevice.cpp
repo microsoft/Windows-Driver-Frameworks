@@ -572,6 +572,16 @@ FxDevice::DeleteDeviceFromFailedCreateNoDelete(
         GetObjectHandleUnchecked(), GetDeviceObject(), FailedStatus);
 
     //
+
+
+
+
+
+
+
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    //
     // We do not let filters affect the building of the rest of the stack.
     // If they return error, we convert it to STATUS_SUCCESS, remove the
     // attached device from the stack, and cleanup.
@@ -584,6 +594,7 @@ FxDevice::DeleteDeviceFromFailedCreateNoDelete(
             FailedStatus);
         FailedStatus = STATUS_SUCCESS;
     }
+#endif
 
     if (UseStateMachine) {
         MxEvent waitEvent;
@@ -730,7 +741,7 @@ Return Value:
     reqCtxSize = FxGetContextSize(&m_RequestAttributes);
 
     //
-    // If present, setup a I/O class extensions info chain.
+    // Setup and initialize the Class Extension chain.
     //
     for (next = DeviceInit->CxDeviceInitListHead.Flink;
          next != &DeviceInit->CxDeviceInitListHead;
@@ -764,6 +775,23 @@ Return Value:
 
         reqCtxSize = MAX(FxGetContextSize(&cxInit->RequestAttributes),
                          reqCtxSize);
+
+        //
+        // Initialize Cx Registered Pnp / Power callbacks
+        //
+        if (cxInit->PnpPowerCallbacks.Set == TRUE) {
+            ULONG callback;
+            for (callback = 0 ; callback < FxCxCallbackMax; callback++) {
+                status = FxPrePostCallback::_InitializeContext(
+                            GetDriverGlobals(), 
+                            cxInit,
+                            &cxDeviceInfo->CxPnpPowerCallbackContexts[callback],
+                            (FxCxCallbackType) callback);
+                if (!NT_SUCCESS(status)) {
+                    return status;
+                }
+            }
+        }
     }
 
     //
@@ -2174,4 +2202,3 @@ FxDevice::_ValidateOpenKeyParams(
 
     return status;
 }
-

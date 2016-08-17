@@ -139,6 +139,10 @@ Returns:
 
     m_DefaultTarget = NULL;
     m_SelfTarget = NULL;
+    
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    m_SurpriseRemoveAndReenumerateSelfWorkItem = NULL;
+#endif
 
     m_BusEnumRetries = 0;
 
@@ -1303,7 +1307,7 @@ Return Value:
     m_Device->DeleteSymbolicLink();
 }
 
-VOID
+NTSTATUS
 FxPkgFdo::QueryForReenumerationInterface(
     VOID
     )
@@ -1318,7 +1322,7 @@ FxPkgFdo::QueryForReenumerationInterface(
         // Already got it, just return.  This function can be called again during
         // stop -> start, so we must check.
         //
-        return;
+        return STATUS_SUCCESS;
     }
 
     RtlZeroMemory(pInterface, sizeof(*pInterface));
@@ -1349,7 +1353,28 @@ FxPkgFdo::QueryForReenumerationInterface(
     // Note that an implicit reference has been taken on the interface. We 
     // must release the reference when we are done with the interface.
     //
-    UNREFERENCED_PARAMETER(status); // for analyis tools.
+    status = STATUS_SUCCESS;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    if (pInterface->SurpriseRemoveAndReenumerateSelf != NULL) {
+        PFX_DRIVER_GLOBALS pGlobals = GetDriverGlobals();
+
+        status = FxSystemWorkItem::_Create(pGlobals,
+                                           m_Device->GetDeviceObject(),
+                                           &m_SurpriseRemoveAndReenumerateSelfWorkItem
+                                           );
+        if (!NT_SUCCESS(status)) {
+            ReleaseReenumerationInterface();
+            DoTraceLevelMessage(
+                pGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
+                "Could not allocate workitem for "
+                "GUID_REENUMERATE_SELF_INTERFACE_STANDARD: %!STATUS!", status);
+            return status;
+        }
+    }
+#endif
+
+    return status;
 }
 
 VOID
@@ -1371,6 +1396,14 @@ Return Value:
 
   --*/
 {
+    
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    if (m_SurpriseRemoveAndReenumerateSelfWorkItem != NULL) {
+        m_SurpriseRemoveAndReenumerateSelfWorkItem->DeleteObject();
+        m_SurpriseRemoveAndReenumerateSelfWorkItem = NULL;
+    }
+#endif
+
     PREENUMERATE_SELF_INTERFACE_STANDARD pInterface;
 
     pInterface = &m_SurpriseRemoveAndReenumerateSelfInterface;

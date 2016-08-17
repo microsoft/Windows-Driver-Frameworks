@@ -50,6 +50,7 @@ extern "C" {
 #include "wdf111.h"
 #include "wdf113.h"
 #include "wdf115.h"
+#include "wdf117.h"
 }
 
 #define KMDF_ONLY_CODE_PATH_ASSERT()
@@ -198,7 +199,10 @@ extern "C" {
 
 // DMA support
 #include "FxDmaEnabler.hpp"
-#include "FxDmaTransaction.hpp"
+#include "FxDmaTransactionBase.hpp"
+#include "FxDmaTransactionScatterGather.hpp"
+#include "FxDmaTransactionPacket.hpp"
+#include "FxDmaTransactionSystem.hpp"
 #include "FxCommonBuffer.hpp"
 
 // Triage info.

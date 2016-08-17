@@ -308,13 +308,19 @@ Returns:
 _Must_inspect_result_
 NTSTATUS
 FxWmiQueryTraceInformation(
-    __in TRACE_INFORMATION_CLASS /* TraceInformationClass */,
-    __out_bcount(TraceInformationLength) PVOID /* TraceInformation */,
-    __in ULONG /* TraceInformationLength */,
-    __out_opt PULONG /* RequiredLength */,
-    __in_opt PVOID /* Buffer */
+    __in TRACE_INFORMATION_CLASS TraceInformationClass,
+    __out_bcount(TraceInformationLength) PVOID TraceInformation,
+    __in ULONG TraceInformationLength,
+    __out_opt PULONG RequiredLength,
+    __in_opt PVOID Buffer
     )
 {
+    UNREFERENCED_PARAMETER(TraceInformationClass);
+    UNREFERENCED_PARAMETER(TraceInformation);
+    UNREFERENCED_PARAMETER(TraceInformationLength);
+    UNREFERENCED_PARAMETER(RequiredLength);
+    UNREFERENCED_PARAMETER(Buffer);
+    
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -336,7 +342,6 @@ FxWmiTraceMessage(
     // UMDF is supported only on XP and newer OS so no need to support w2k
     // tracing (which requires using a different tracing api, see kmdf impl) 
     //
-#pragma prefast(suppress:__WARNING_BUFFER_OVERFLOW, "Recommneded by EndClean");
     status = TraceMessageVa(LoggerHandle,
                             MessageFlags,
                             MessageGuid,
@@ -701,7 +706,7 @@ Returns:
         size_t    argLen;
 
         va_start(ap, MessageNumber);
-#pragma prefast(suppress: __WARNING_BUFFER_OVERFLOW, "Recommneded by EndClean");
+        
         while ((va_arg(ap, PVOID)) != NULL) {
 
             argLen = va_arg(ap, size_t);
@@ -807,7 +812,7 @@ Returns:
         argsData = (UCHAR*) &record[1];
 
         va_start(ap, MessageNumber);
-#pragma prefast(suppress: __WARNING_BUFFER_OVERFLOW, "Recommneded by EndClean");
+        
         while ((source = va_arg(ap, PVOID)) != NULL) {
 
             argLen = va_arg(ap, size_t);

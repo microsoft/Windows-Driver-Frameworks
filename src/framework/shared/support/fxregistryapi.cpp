@@ -359,8 +359,7 @@ WDFEXPORT(WdfRegistryRemoveKey)(
         return status;
     }
 
-    status = Mx::MxDeleteKey(pKey->GetHandle());
-
+    status = pKey->DeleteKey();
     if (NT_SUCCESS(status)) {
         //
         // pKey->GetHandle() is now useless, delete the Fx object
@@ -547,6 +546,17 @@ WDFEXPORT(WdfRegistryQueryMemory)(
         return status;
     }
 
+    if (dataLength == 0) {
+        status = STATUS_RESOURCE_DATA_NOT_FOUND;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGERROR,
+            "WDFKEY %p value %wZ has empty data, %!STATUS!",
+            Key, ValueName, status);
+
+        return status;
+    }
+
     dataBuffer = FxPoolAllocate(pFxDriverGlobals, PagedPool, dataLength);
     if (dataBuffer == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -671,6 +681,17 @@ WDFEXPORT(WdfRegistryQueryMultiString)(
 
     if (type != REG_MULTI_SZ) {
         return STATUS_OBJECT_TYPE_MISMATCH;
+    }
+
+    if (dataLength == 0) {
+        status = STATUS_RESOURCE_DATA_NOT_FOUND;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGERROR,
+            "WDFKEY %p value %wZ has empty data, %!STATUS!",
+            Key, ValueName, status);
+
+        return status;
     }
 
     dataBuffer = FxPoolAllocate(pFxDriverGlobals, PagedPool, dataLength);
@@ -841,8 +862,18 @@ WDFEXPORT(WdfRegistryQueryUnicodeString)(
     }
     else {
         dataLength = Value->MaximumLength;
-        dataBuffer = FxPoolAllocate(pFxDriverGlobals, PagedPool, dataLength);
+        if (dataLength == 0) {
+            status = STATUS_INVALID_PARAMETER;
 
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+                "WDFKEY %p invalid UNICODE_STRING MaximumLength 0, %!STATUS!",
+                Key, status);
+
+            return status;
+        }
+
+        dataBuffer = FxPoolAllocate(pFxDriverGlobals, PagedPool, dataLength);
         if (dataBuffer == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -962,6 +993,17 @@ WDFEXPORT(WdfRegistryQueryString)(
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                             "WDFKEY %p, QueryPartial failed, %!STATUS!",
                             Key, status);
+        return status;
+    }
+
+    if (dataLength == 0) {
+        status = STATUS_RESOURCE_DATA_NOT_FOUND;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGERROR,
+            "WDFKEY %p value %wZ has empty data, %!STATUS!",
+            Key, ValueName, status);
+
         return status;
     }
 

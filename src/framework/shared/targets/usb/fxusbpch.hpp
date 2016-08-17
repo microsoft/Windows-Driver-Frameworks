@@ -2,7 +2,7 @@
 //    Copyright (C) Microsoft.  All rights reserved.
 //
 
-#include "..\FxTargetsShared.hpp"
+#include "FxTargetsShared.hpp"
 
 #include "FxUsbDevice.hpp"
 #include "FxUsbInterface.hpp"

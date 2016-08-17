@@ -648,6 +648,14 @@ Returns:
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
+        case STATUS_WDF_TOO_MANY_TRANSFERS:
+            Status = STATUS_INVALID_DEVICE_REQUEST;
+            break;
+
+        case STATUS_WDF_NOT_ENOUGH_MAP_REGISTERS:
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+
         default:
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,

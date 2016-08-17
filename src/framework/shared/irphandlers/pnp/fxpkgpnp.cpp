@@ -2668,36 +2668,53 @@ FxPkgPnp::RegisterCallbacks(
     __in PWDF_PNPPOWER_EVENT_CALLBACKS DispatchTable
     )
 {   
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SUCCESS;
+    BOOLEAN useSmIo;
+
+    useSmIo = FALSE;
     
     //
     // Update the callback table.
     //
-    m_DeviceD0Entry.m_Method           = DispatchTable->EvtDeviceD0Entry;
+    m_DeviceD0Entry.Initialize(this, DispatchTable->EvtDeviceD0Entry);
+    m_DeviceD0Exit.Initialize(this,  DispatchTable->EvtDeviceD0Exit);
+    m_DevicePrepareHardware.Initialize(this,
+                DispatchTable->EvtDevicePrepareHardware);
+    m_DeviceReleaseHardware.Initialize(this,
+                DispatchTable->EvtDeviceReleaseHardware);
+    m_DeviceSurpriseRemoval.Initialize(this,
+                DispatchTable->EvtDeviceSurpriseRemoval);
+    
     m_DeviceD0EntryPostInterruptsEnabled.m_Method =
-                                         DispatchTable->EvtDeviceD0EntryPostInterruptsEnabled;
+        DispatchTable->EvtDeviceD0EntryPostInterruptsEnabled;
     m_DeviceD0ExitPreInterruptsDisabled.m_Method =
-                                         DispatchTable->EvtDeviceD0ExitPreInterruptsDisabled;
-    m_DeviceD0Exit.m_Method            = DispatchTable->EvtDeviceD0Exit;
-
-    m_DevicePrepareHardware.m_Method   = DispatchTable->EvtDevicePrepareHardware;
-    m_DeviceReleaseHardware.m_Method   = DispatchTable->EvtDeviceReleaseHardware;
-
+        DispatchTable->EvtDeviceD0ExitPreInterruptsDisabled;
+    
     m_DeviceQueryStop.m_Method         = DispatchTable->EvtDeviceQueryStop;
     m_DeviceQueryRemove.m_Method       = DispatchTable->EvtDeviceQueryRemove;
 
-    m_DeviceSurpriseRemoval.m_Method   = DispatchTable->EvtDeviceSurpriseRemoval;
-
     m_DeviceUsageNotification.m_Method = DispatchTable->EvtDeviceUsageNotification;
     m_DeviceUsageNotificationEx.m_Method = DispatchTable->EvtDeviceUsageNotificationEx;
-    m_DeviceRelationsQuery.m_Method    = DispatchTable->EvtDeviceRelationsQuery;
+    m_DeviceRelationsQuery.m_Method    = DispatchTable->EvtDeviceRelationsQuery; 
 
+
+    //
+    // Now see if SMIO is being used
+    //
     if (DispatchTable->EvtDeviceSelfManagedIoCleanup != NULL ||
         DispatchTable->EvtDeviceSelfManagedIoFlush != NULL ||
         DispatchTable->EvtDeviceSelfManagedIoInit != NULL ||
         DispatchTable->EvtDeviceSelfManagedIoSuspend != NULL ||
         DispatchTable->EvtDeviceSelfManagedIoRestart != NULL) {
+           
+        useSmIo = TRUE;
+    }
+    else if (GetDevice()->IsCxUsingSelfManagedIo()) {
+        useSmIo = TRUE;
+    }
+        
 
+    if (useSmIo) {
         status = FxSelfManagedIoMachine::_CreateAndInit(&m_SelfManagedIoMachine,
                                                         this);
 
@@ -2707,8 +2724,8 @@ FxPkgPnp::RegisterCallbacks(
 
         m_SelfManagedIoMachine->InitializeMachine(DispatchTable);
     }
-
-    return STATUS_SUCCESS;
+    
+    return status;
 }
 
 VOID
@@ -3769,6 +3786,7 @@ Return Value:
 
 VOID
 FxPkgPnp::SetDeviceFailed(
+    __in PFX_DRIVER_GLOBALS CallerFxDriverGlobals,
     __in WDF_DEVICE_FAILED_ACTION FailedAction
     )
 /*++
@@ -3783,6 +3801,7 @@ Routine Description:
     the hardware.
 
 Arguments:
+    CallerFxDriverGlobals - caller client's globals
     FailedAction - action to take once the stack has been removed
 
 Return Value:
@@ -3794,15 +3813,22 @@ Return Value:
     MdDeviceObject pdo;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-    if (GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(2, 15) == FALSE &&
+    //
+    // By checking the caller's globals instead of the device object's globals,
+    // we allow a 2.15+ caller CX to use WdfDeviceFailedAttemptRestart even if
+    // the driver (who owns the object and to whom the CX is bound) is 2.0.
+    //
+    if (CallerFxDriverGlobals->IsVersionGreaterThanOrEqualTo(2, 15) == FALSE &&
         FailedAction == WdfDeviceFailedAttemptRestart) {
         
         FailedAction = WdfDeviceFailedNoRestart;
         DoTraceLevelMessage(
-            GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGDEVICE,
+            CallerFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGDEVICE,
             "WdfDeviceFailedAttemptRestart is only available for UMDF 2.15 "
             "and later drivers. Reverting to WdfDeviceFailedNoRestart.");
     }
+#else
+    UNREFERENCED_PARAMETER(CallerFxDriverGlobals);
 #endif
 
     m_FailedAction = (BYTE) FailedAction;

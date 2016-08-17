@@ -1,7 +1,7 @@
 //
 //    Copyright (C) Microsoft.  All rights reserved.
 //
-#include "..\ioprivshared.hpp"
+#include "ioprivshared.hpp"
 
 
 extern "C" {

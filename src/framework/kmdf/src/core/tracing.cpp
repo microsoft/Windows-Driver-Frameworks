@@ -114,7 +114,6 @@ FxWmiTraceMessage(
 
     va_start(va, MessageNumber);
     
-#pragma prefast(suppress:__WARNING_BUFFER_OVERFLOW, "Recommneded by EndClean");
     status = WmiTraceMessageVa(LoggerHandle,
                                MessageFlags,
                                MessageGuid,
@@ -281,6 +280,8 @@ Routine Description:
 
     FxDriverGlobals->WdfLogHeader = pHeader;
 
+    InterlockedIncrement(&FxDriverGlobals->WdfLogHeaderRefCount);
+
     DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDRIVER,
                         "FxIFR logging started" );
 
@@ -321,10 +322,18 @@ Routine Description:
     }
 
     //
-    // Free the Log buffer.
+    // Under normal operation the ref count should usually drop to zero when 
+    // FxIfrStop is called by FxLibraryCommonUnregisterClient, unless 
+    // FxIfrReplay is in the process of making a copy of the IFR buffer. 
+    // In which case that thread will call FxIfrStop.
     //
-    ExFreePoolWithTag( FxDriverGlobals->WdfLogHeader, WDF_IFR_LOG_TAG );
-    FxDriverGlobals->WdfLogHeader = NULL;
+    if (0 == InterlockedDecrement(&(FxDriverGlobals->WdfLogHeaderRefCount))) {
+        //
+        // Free the Log buffer.
+        //
+        ExFreePoolWithTag(FxDriverGlobals->WdfLogHeader, WDF_IFR_LOG_TAG);
+        FxDriverGlobals->WdfLogHeader = NULL;
+    }
 }
 
 _Must_inspect_result_
@@ -395,7 +404,7 @@ Returns:
         size_t    argLen;
 
         va_start(ap, MessageNumber);
-#pragma prefast(suppress: __WARNING_BUFFER_OVERFLOW, "Recommneded by EndClean");
+        
         while ((va_arg(ap, PVOID)) != NULL) {
 
             argLen = va_arg(ap, size_t);

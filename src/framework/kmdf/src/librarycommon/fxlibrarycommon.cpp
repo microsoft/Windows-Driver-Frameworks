@@ -162,7 +162,8 @@ VOID
 ReportDdiFunctionCountMismatch(
     _In_ PCUNICODE_STRING ServiceName,
     _In_ ULONG ActualFunctionCount,
-    _In_ ULONG ExpectedFunctionCount
+    _In_ ULONG ExpectedFunctionCount,
+    _In_ BOOLEAN IssueBreak
     )
 {
     WCHAR    insertString[EVTLOG_DDI_COUNT_ERROR_MAX_LEN] = { 0 };
@@ -217,6 +218,14 @@ ReportDdiFunctionCountMismatch(
                     TraceLoggingUnicodeString(ServiceName, "ServiceName"),
                     TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
                     TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+
+    //
+    // If loader diagnostics are enabled and KD is connected, break-in
+    //
+    if (IssueBreak == TRUE &&
+        WdfLdrDbgPrintOn && KD_DEBUGGER_ENABLED && !KD_DEBUGGER_NOT_PRESENT) {
+        DbgBreakPoint();
+    }
 }
 
 _Must_inspect_result_
@@ -369,13 +378,14 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_15) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_17) {
         //
         // Make sure table count matches exactly with previously
         // released framework version table sizes.
         //
         switch (Info->FuncCount) {
 
+     // case WdfFunctionTableNumEntries_V1_17: // both 1.17 and 1.15 have 444 functions
         case WdfFunctionTableNumEntries_V1_15:
         case WdfFunctionTableNumEntries_V1_13:
         case WdfFunctionTableNumEntries_V1_11:
@@ -403,8 +413,12 @@ FxLibraryCommonRegisterClient(
 
 
 
+
+
+        //
         // Client version is same as framework version. Make
         // sure table count is exact. 
+        //
         if (Info->FuncCount != WdfFunctionTableNumEntries) {
             RtlZeroMemory(&serviceName, sizeof(UNICODE_STRING));
 
@@ -420,16 +434,9 @@ FxLibraryCommonRegisterClient(
             // will serve as diagnostic aid.
             //
             ReportDdiFunctionCountMismatch((PCUNICODE_STRING)&serviceName,
-                                        Info->FuncCount,
-                                        WdfFunctionTableNumEntries);
-
-            //
-            // If loader diagnostics are enabled and KD is connected, break-in
-            //
-            if (WdfLdrDbgPrintOn && KD_DEBUGGER_ENABLED && 
-                !KD_DEBUGGER_NOT_PRESENT) {
-                DbgBreakPoint();
-            }
+                                           Info->FuncCount,
+                                           WdfFunctionTableNumEntries,
+                                           TRUE); 
             goto Done;
         }
     }

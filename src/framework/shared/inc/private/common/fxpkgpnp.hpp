@@ -77,6 +77,7 @@ enum FxStateMachineDeviceType {
 // @@SMVERIFY_SPLIT_END
 
 #include "FxPnpCallbacks.hpp"
+#include "FxCxPnpPowerCallbacks.hpp"
 
 #include "FxEventQueue.hpp"
 
@@ -587,9 +588,11 @@ protected:
         );
     
     __drv_when(!NT_SUCCESS(return), __drv_arg(ResourcesMatched, _Must_inspect_result_))
+    __drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
     NTSTATUS
     PnpPrepareHardware(
-        __out PBOOLEAN ResourcesMatched
+        _Out_ PBOOLEAN ResourcesMatched,
+        _Out_ FxCxCallbackProgress* Progress
         );
 
     _Must_inspect_result_
@@ -1612,6 +1615,12 @@ protected:
 
     static
     WDF_DEVICE_POWER_STATE
+    PowerInitialPowerUpFailedPowerDown(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
     PowerInitialPowerUpFailedDerefParent(
         __inout FxPkgPnp* This
         );
@@ -1718,6 +1727,36 @@ protected:
         __inout FxPkgPnp*   This
         );
     
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerUpFailedPowerDown(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerUpFailedPowerDownNP(
+        __inout FxPkgPnp*   This
+        );
+
+    static 
+    WDF_DEVICE_POWER_STATE
+    PowerInitialSelfManagedIoFailedStarted(
+        __inout FxPkgPnp*   This
+        );
+
+    static 
+    WDF_DEVICE_POWER_STATE
+    PowerStartSelfManagedIoFailedStarted(
+        __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerStartSelfManagedIoFailedStartedNP(
+        __inout FxPkgPnp*   This
+        );
+
     static
     WDF_DEVICE_POWER_STATE
     PowerGotoDxFailed(
@@ -3456,6 +3495,7 @@ public:
 
     VOID
     SetDeviceFailed(
+        __in PFX_DRIVER_GLOBALS CallerFxDriverGlobals,
         __in WDF_DEVICE_FAILED_ACTION FailedAction
         );
 
@@ -3882,7 +3922,7 @@ private:
         ) =0;
 
     virtual
-    VOID
+    NTSTATUS
     QueryForReenumerationInterface(
         VOID
         ) =0;

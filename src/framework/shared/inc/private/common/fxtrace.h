@@ -64,6 +64,7 @@ typedef struct _WDF_DRIVER_CONFIG *PWDF_DRIVER_CONFIG;
         WPP_DEFINE_BIT(TRACINGUSEROBJECT)           \
         WPP_DEFINE_BIT(TRACINGOBJECT)               \
         WPP_DEFINE_BIT(TRACINGPNPPOWERSTATES)       \
+        WPP_DEFINE_BIT(TRACINGIFRCAPTURE)           \
         )
 
 #define WPP_CONTROL_GUIDS \
@@ -114,6 +115,11 @@ FxIFRStart(
 VOID
 FxIFRStop(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
+    );
+
+VOID
+FxIFRReplay(
+    __in TRACEHANDLE  LoggerHandle
     );
 
 #endif // _FXTRACE_H

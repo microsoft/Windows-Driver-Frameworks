@@ -439,14 +439,12 @@ RegistryWriteCurrentTime(
     currentTime.QuadPart = 0;
     Mx::MxQuerySystemTime(&currentTime);
 
-    status = Mx::MxSetValueKey(hWdf.m_Key,
-                           &wdfTimeOfLastTelemetryLog,
-                           0,
-                           REG_QWORD,
-                           &currentTime.QuadPart,
-                           sizeof(currentTime)
-                           );
-
+    status = FxRegKey::_SetValue(hWdf.m_Key,
+                                 &wdfTimeOfLastTelemetryLog,
+                                 REG_QWORD,
+                                 &currentTime.QuadPart,
+                                 sizeof(currentTime)
+                                 );
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(DriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
             "Failed to record current time for Telemetry log, status %!STATUS!",
@@ -545,7 +543,7 @@ Return Value:
     DECLARE_CONST_UNICODE_STRING(valueName, L"ImagePath");
     UNICODE_STRING imagePath = {0};
     UNICODE_STRING imageName = {0};
-    PKEY_VALUE_PARTIAL_INFORMATION value = NULL;
+    PWSTR stringBuffer = NULL;
     USHORT size;
 
     ASSERT(ImageName != NULL);
@@ -567,15 +565,18 @@ Return Value:
     status = QueryAndAllocString(hKey.m_Key,
                                 DriverGlobals,
                                 &valueName,
-                                &value);
+                                &stringBuffer);
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(DriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
             "Failed to get Image name from service key, status %!STATUS!",
             status);
         return status;
     }
-
-    BuildStringFromPartialInfo(value, &imagePath);
+    
+    //
+    // Build Unicode string out of registry data
+    //
+    RtlInitUnicodeString(&imagePath, stringBuffer);
 
     //
     // Now read the "ImagePath" and extract just the driver filename as a new
@@ -630,8 +631,8 @@ Return Value:
 
 cleanUp:
 
-    if (value != NULL) {
-        FxPoolFree(value);
+    if (stringBuffer != NULL) {
+        FxPoolFree(stringBuffer);
     }
 
     return status;
@@ -645,27 +646,34 @@ QueryAndAllocString(
     _In_  HANDLE Key,
     _In_  PFX_DRIVER_GLOBALS Globals,
     _In_  PCUNICODE_STRING ValueName,
-    _Out_ PKEY_VALUE_PARTIAL_INFORMATION* Info
+    _Out_ PWSTR* StringBuffer
     )
 {
-    PKEY_VALUE_PARTIAL_INFORMATION info;
     NTSTATUS status;
-    ULONG length;
+    ULONG dataLength;
+    PVOID dataBuffer;
+    ULONG dataType;
 
     status = STATUS_UNSUCCESSFUL;
-    info = NULL;
+    dataLength = 0;
+    dataBuffer = NULL;
 
-    ASSERT(Info != NULL);
-    *Info = NULL;
+    ASSERT(StringBuffer != NULL);
+    *StringBuffer = NULL;
 
-    status = Mx::MxQueryValueKey(Key,
-                             (PUNICODE_STRING)ValueName,
-                             KeyValuePartialInformation,
-                             NULL,
-                             0,
-                             &length);
-
-    if (!NT_SUCCESS(status) && status != STATUS_BUFFER_TOO_SMALL) {
+    //
+    // _QueryValue returns STATUS_BUFFER_OVERFLOW when we pass
+    // a NULL buffer and the value exists in the registry. See
+    // the function's implementation for the reason why.
+    //
+    status = FxRegKey::_QueryValue(Globals,
+                                   Key,
+                                   (PUNICODE_STRING)ValueName,
+                                   0,
+                                   NULL,
+                                   &dataLength,
+                                   NULL);
+    if (!NT_SUCCESS(status) && status != STATUS_BUFFER_OVERFLOW) {
         goto cleanup;
     }
 
@@ -673,58 +681,48 @@ QueryAndAllocString(
     // Pool can be paged b/c we are running at PASSIVE_LEVEL and we are going
     // to free it at the end of this function.
     //
-    status = RtlULongAdd(length,
-                         FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data),
-                         &length);
-
-    if (!NT_SUCCESS(status)) {
-        goto cleanup;
-    }
-
-    info = (PKEY_VALUE_PARTIAL_INFORMATION) FxPoolAllocate(Globals,
-                                                           PagedPool,
-                                                           length);
-
-    if (info == NULL) {
+    dataBuffer = FxPoolAllocate(Globals, PagedPool, dataLength);
+    if (dataBuffer == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
 
-    RtlZeroMemory(info, length);
+    RtlZeroMemory(dataBuffer, dataLength);
 
     //
     // Query registry for the data under ValueName
     //
-    status = Mx::MxQueryValueKey(Key,
-                             (PUNICODE_STRING) ValueName,
-                             KeyValuePartialInformation,
-                             info,
-                             length,
-                             &length);
-
-
+    status = FxRegKey::_QueryValue(Globals,
+                                   Key,
+                                   (PUNICODE_STRING)ValueName,
+                                   dataLength,
+                                   dataBuffer,
+                                   &dataLength,
+                                   &dataType);
     if (NT_SUCCESS(status)) {
-        if (info->Type != REG_SZ && info->Type != REG_EXPAND_SZ) {
+        if (FxRegKey::_IsValidSzType(dataType) == FALSE) {
             status = STATUS_OBJECT_TYPE_MISMATCH;
             goto cleanup;
         }
 
-        if (info->DataLength == 0 ||
-            (info->DataLength % 2) != 0 ||
-            (info->DataLength >
-            (length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data)))) {
+        if (dataLength == 0 || (dataLength % sizeof(WCHAR)) != 0) {
             status = STATUS_INVALID_PARAMETER;
             goto cleanup;
         }
 
-        *Info = info;
+        *StringBuffer = (PWSTR)dataBuffer;
+
+        //
+        // Ensure string is NULL-terminated
+        //
+        (*StringBuffer)[(dataLength / sizeof(WCHAR)) - 1] = UNICODE_NULL;
     }
 
 cleanup:
 
     if (!NT_SUCCESS(status)) {
-        if (info != NULL) {
-            FxPoolFree(info);
+        if (dataBuffer != NULL) {
+            FxPoolFree(dataBuffer);
         }
     }
 

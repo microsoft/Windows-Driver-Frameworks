@@ -238,12 +238,15 @@ WdfRegisterLibrary(
 // Frequency: Everytime a client driver binds to a class extension.
 //
 //
-#define WDF_CENSUS_EVT_WRITE_LINK_CLIENT_TO_CX(TraceHandle, CxImageName, ClientImageName)        \
+#define WDF_CENSUS_EVT_WRITE_LINK_CLIENT_TO_CX(TraceHandle, CxImageName, ClientImageName, ClientVerMajor, ClientVerMinor, ClientVerBuild)        \
             TraceLoggingWrite(TraceHandle,                                     \
                 "WdfCensusEvtLinkClientToCx",                                  \
                 WDF_TELEMETRY_EVT_KEYWORDS,                                    \
-                TraceLoggingWideString(CxImageName,       "CxImageName"),      \
-                TraceLoggingWideString(ClientImageName,   "ClientImageName"  ) \
+                TraceLoggingWideString(CxImageName,     "CxImageName"),        \
+                TraceLoggingWideString(ClientImageName, "ClientImageName"  ),  \
+                TraceLoggingUInt32(ClientVerMajor,      "ClientVersionMajor"), \
+                TraceLoggingUInt32(ClientVerMinor,      "ClientVersionMinor"), \
+                TraceLoggingUInt32(ClientVerBuild,      "ClientVersionBuild")  \
                 );
 
 #endif __FXLDR_H__

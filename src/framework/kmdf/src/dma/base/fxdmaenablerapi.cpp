@@ -344,7 +344,19 @@ WDFEXPORT(WdfDmaEnablerSetMaximumScatterGatherElements)(
         return;
     }
 
-    pDmaEnabler->SetMaxSGElements(MaximumElements);
+    if (MaximumElements > WDF_DMA_ENABLER_UNLIMITED_FRAGMENTS) {
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGDMA,
+            "Cannot set MaximumElements to %Iu on WDFDMAENABLER %p, "
+            "restricting to 0x%x",
+            MaximumElements,
+            DmaEnabler,
+            WDF_DMA_ENABLER_UNLIMITED_FRAGMENTS);
+
+        MaximumElements = WDF_DMA_ENABLER_UNLIMITED_FRAGMENTS;
+    }
+
+    pDmaEnabler->SetMaxSGElements((ULONG)MaximumElements);
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)

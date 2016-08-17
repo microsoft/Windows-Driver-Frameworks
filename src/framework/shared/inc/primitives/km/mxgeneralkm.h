@@ -577,17 +577,6 @@ Mx::MxFlushQueuedDpcs(
 
 __inline
 NTSTATUS
-Mx::MxOpenKey(
-    _Out_ PHANDLE KeyHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes
-    )
-{
-    return ZwOpenKey(KeyHandle, DesiredAccess, ObjectAttributes);
-}
-
-__inline
-NTSTATUS
 Mx::MxSetDeviceInterfaceState(
     _In_ PUNICODE_STRING SymbolicLinkName,
     _In_ BOOLEAN Enable
@@ -610,15 +599,6 @@ Mx::MxRegisterDeviceInterface(
                                      InterfaceClassGuid, 
                                      ReferenceString, 
                                      SymbolicLinkName);
-}
-
-__inline
-NTSTATUS
-Mx::MxDeleteKey(
-    _In_ HANDLE KeyHandle
-    )
-{
-    return ZwDeleteKey(KeyHandle);
 }
 
 __inline
@@ -664,46 +644,6 @@ Mx::MxQuerySystemTime(
     )
 {
     KeQuerySystemTime(CurrentTime);
-}
-
-__inline
-NTSTATUS 
-Mx::MxSetValueKey(
-    _In_      HANDLE KeyHandle,
-    _In_      PUNICODE_STRING ValueName,
-    _In_opt_  ULONG TitleIndex,
-    _In_      ULONG Type,
-    _In_opt_  PVOID Data,
-    _In_      ULONG DataSize
-    )
-{
-    return ZwSetValueKey(KeyHandle,
-                          ValueName,
-                          TitleIndex,
-                          Type,
-                          Data,
-                          DataSize
-                          );
-}
-
-__inline
-NTSTATUS 
-Mx::MxQueryValueKey(
-    _In_       HANDLE KeyHandle,
-    _In_       PUNICODE_STRING ValueName,
-    _In_       KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Out_opt_  PVOID KeyValueInformation,
-    _In_       ULONG Length,
-    _Out_      PULONG ResultLength
-)
-{
-    return ZwQueryValueKey(KeyHandle,
-                            ValueName,
-                            KeyValueInformationClass,
-                            KeyValueInformation,
-                            Length,
-                            ResultLength
-                            );
 }
 
 __inline

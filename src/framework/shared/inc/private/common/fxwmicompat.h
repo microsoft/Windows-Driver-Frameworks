@@ -45,7 +45,8 @@ FxWmiTraceMessage(
          ...
     );
 
-#define WPP_IFR   FxIFR
+#define WPP_IFR_REPLAY FxIFRReplay
+#define WPP_IFR        FxIFR
 
 extern "C"
 _Must_inspect_result_

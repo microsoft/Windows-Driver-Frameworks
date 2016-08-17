@@ -18,7 +18,7 @@ Revision History:
 
 --*/
 
-#include "..\FxTargetsShared.hpp"
+#include "FxTargetsShared.hpp"
 
 extern "C" {
 #include "FxIoTargetRemote.tmh"

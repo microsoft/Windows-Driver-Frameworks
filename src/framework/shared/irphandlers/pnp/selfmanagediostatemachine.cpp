@@ -92,6 +92,12 @@ const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
         ARRAY_SIZE(FxSelfManagedIoMachine::m_InitFailedStates),
     },
 
+    // FxSelfManagedIoInitStartedFailedPost
+    {   FxSelfManagedIoMachine::InitStartedFailedPost,
+        NULL,
+        0,
+    },
+
     // FxSelfManagedIoStarted
     {   NULL,
         FxSelfManagedIoMachine::m_StartedStates,
@@ -112,6 +118,12 @@ const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
 
     // FxSelfManagedIoRestarting
     {   FxSelfManagedIoMachine::Restarting,
+        NULL,
+        0,
+    },
+
+    // FxSelfManagedIoRestartedFailedPost
+    {   FxSelfManagedIoMachine::RestartedFailedPost,
         NULL,
         0,
     },
@@ -148,7 +160,7 @@ const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =
 };
 
 FxSelfManagedIoMachine::FxSelfManagedIoMachine(
-    __in FxPkgPnp* PkgPnp
+    _In_ FxPkgPnp* PkgPnp
     )
 {
     m_PkgPnp = PkgPnp;
@@ -169,8 +181,8 @@ FxSelfManagedIoMachine::FxSelfManagedIoMachine(
 
 NTSTATUS
 FxSelfManagedIoMachine::_CreateAndInit(
-    __deref_out FxSelfManagedIoMachine** SelfManagedIoMachine,
-    __in FxPkgPnp* PkgPnp
+    _Inout_ FxSelfManagedIoMachine** SelfManagedIoMachine,
+    _In_ FxPkgPnp* PkgPnp
     )
 {
     NTSTATUS status;
@@ -178,9 +190,7 @@ FxSelfManagedIoMachine::_CreateAndInit(
 
     *SelfManagedIoMachine = NULL;
         
-    selfManagedIoMachine = new (PkgPnp->GetDriverGlobals()) FxSelfManagedIoMachine(
-        PkgPnp
-        );
+    selfManagedIoMachine = new (PkgPnp->GetDriverGlobals()) FxSelfManagedIoMachine(PkgPnp);
 
     if (selfManagedIoMachine == NULL) {
         DoTraceLevelMessage(
@@ -214,7 +224,7 @@ FxSelfManagedIoMachine::_CreateAndInit(
 
 VOID
 FxSelfManagedIoMachine::InitializeMachine(
-    __in PWDF_PNPPOWER_EVENT_CALLBACKS Callbacks
+    _In_ PWDF_PNPPOWER_EVENT_CALLBACKS Callbacks
     )
 /*++
 
@@ -229,11 +239,16 @@ Return Value:
 
   --*/
 {
-    m_DeviceSelfManagedIoCleanup.m_Method = Callbacks->EvtDeviceSelfManagedIoCleanup;
-    m_DeviceSelfManagedIoFlush.m_Method = Callbacks->EvtDeviceSelfManagedIoFlush;
-    m_DeviceSelfManagedIoInit.m_Method    = Callbacks->EvtDeviceSelfManagedIoInit;
-    m_DeviceSelfManagedIoSuspend.m_Method = Callbacks->EvtDeviceSelfManagedIoSuspend;
-    m_DeviceSelfManagedIoRestart.m_Method = Callbacks->EvtDeviceSelfManagedIoRestart;
+    m_DeviceSelfManagedIoCleanup.Initialize(m_PkgPnp, 
+        Callbacks->EvtDeviceSelfManagedIoCleanup);
+    m_DeviceSelfManagedIoFlush.Initialize(m_PkgPnp, 
+        Callbacks->EvtDeviceSelfManagedIoFlush);
+    m_DeviceSelfManagedIoInit.Initialize(m_PkgPnp, 
+        Callbacks->EvtDeviceSelfManagedIoInit);
+    m_DeviceSelfManagedIoSuspend.Initialize(m_PkgPnp, 
+        Callbacks->EvtDeviceSelfManagedIoSuspend);
+    m_DeviceSelfManagedIoRestart.Initialize(m_PkgPnp, 
+        Callbacks->EvtDeviceSelfManagedIoRestart);
 }
 
 WDFDEVICE
@@ -247,7 +262,8 @@ FxSelfManagedIoMachine::GetDeviceHandle(
 _Must_inspect_result_
 NTSTATUS
 FxSelfManagedIoMachine::ProcessEvent(
-    __in FxSelfManagedIoEvents Event
+    _In_ FxSelfManagedIoEvents Event,
+    _Out_opt_ FxCxCallbackProgress* Progress
     )
 /*++
 
@@ -258,6 +274,9 @@ Routine Description:
 
 Arguments:
     Event - The event to feed into the state machine.
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
 
 Return Value:
     result of the event
@@ -276,6 +295,10 @@ Return Value:
 
     entry = &m_StateTable[m_CurrentState-FxSelfManagedIoCreated];
     newState = FxSelfManagedIoMax;
+
+    if (Progress) {
+        *Progress = FxCxCallbackProgressInitialized;
+    }
 
     for (ULONG i = 0; i < entry->TargetStatesCount; i++) {
         if (entry->TargetStates[i].SelfManagedIoEvent == Event) {
@@ -313,7 +336,7 @@ Return Value:
         entry = &m_StateTable[m_CurrentState-FxSelfManagedIoCreated];
 
         if (entry->StateFunc != NULL) {
-            newState = entry->StateFunc(this, &status);
+            newState = entry->StateFunc(this, &status, Progress);
         }
         else {
             newState = FxSelfManagedIoMax;
@@ -327,8 +350,9 @@ Return Value:
 
 FxSelfManagedIoStates
 FxSelfManagedIoMachine::Init(
-    __in  FxSelfManagedIoMachine* This,
-    __out PNTSTATUS Status
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
     )
 /*++
 
@@ -340,15 +364,34 @@ Arguments:
 
     Status - result of the event callback into the driver
 
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
 Return Value:
     new machine state
 
   --*/
 {
-    *Status = This->m_DeviceSelfManagedIoInit.Invoke(This->GetDeviceHandle());
+    FxCxCallbackProgress progress;
+    
+    *Status = This->m_DeviceSelfManagedIoInit.Invoke(This->GetDeviceHandle(), &progress);
 
+    if (Progress) {
+        *Progress = progress;
+    }
+    
     if (NT_SUCCESS(*Status))  {
         return FxSelfManagedIoStarted;
+    }
+    else if (progress < FxCxCallbackProgressClientCalled) {
+        //
+        // One of the Pre callback(s) failed so we go back to Created and wait 
+        // for cleanup
+        //
+        return FxSelfManagedIoCreated;
+    }
+    else if (progress >= FxCxCallbackProgressClientSucceeded) {
+        return FxSelfManagedIoInitStartedFailedPost;
     }
     else {
         return FxSelfManagedIoInitFailed;
@@ -357,8 +400,9 @@ Return Value:
 
 FxSelfManagedIoStates
 FxSelfManagedIoMachine::Suspending(
-    __in  FxSelfManagedIoMachine* This,
-    __out PNTSTATUS Status
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
     )
 /*++
 
@@ -371,11 +415,16 @@ Arguments:
 
     Status - result of the event callback into the driver
 
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
 Return Value:
     new machine state
 
   --*/
 {
+    UNREFERENCED_PARAMETER(Progress);
+
     *Status = This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
 
     if (NT_SUCCESS(*Status)) {
@@ -388,8 +437,9 @@ Return Value:
 
 FxSelfManagedIoStates
 FxSelfManagedIoMachine::Restarting(
-    __in  FxSelfManagedIoMachine* This,
-    __out PNTSTATUS Status
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
     )
 /*++
 
@@ -402,15 +452,27 @@ Arguments:
 
     Status - result of the event callback into the driver
 
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
 Return Value:
     new machine state
 
   --*/
 {
-    *Status = This->m_DeviceSelfManagedIoRestart.Invoke(This->GetDeviceHandle());
+    FxCxCallbackProgress progress;
+    
+    *Status = This->m_DeviceSelfManagedIoRestart.Invoke(This->GetDeviceHandle(),
+                                                        &progress);
+    if (Progress) {
+        *Progress = progress;
+    }
 
     if (NT_SUCCESS(*Status)) {
         return FxSelfManagedIoStarted;
+    }
+    else if (progress >= FxCxCallbackProgressClientSucceeded) {
+        return FxSelfManagedIoRestartedFailedPost;
     }
     else {
         return FxSelfManagedIoFailed;
@@ -419,8 +481,9 @@ Return Value:
 
 FxSelfManagedIoStates
 FxSelfManagedIoMachine::Flushing(
-    __in  FxSelfManagedIoMachine* This,
-    __out PNTSTATUS Status
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
     )
 /*++
 
@@ -432,20 +495,27 @@ Arguments:
 
     Status - result of the event callback into the driver
 
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
 Return Value:
     FxSelfManagedIoFlushed
 
   --*/
 {
     UNREFERENCED_PARAMETER(Status);
+    UNREFERENCED_PARAMETER(Progress);
+
     This->m_DeviceSelfManagedIoFlush.Invoke(This->GetDeviceHandle());
+
     return FxSelfManagedIoFlushed;
 }
 
 FxSelfManagedIoStates
 FxSelfManagedIoMachine::Cleanup(
-    __in  FxSelfManagedIoMachine* This,
-    __out PNTSTATUS Status
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
     )
 /*++
 
@@ -457,13 +527,92 @@ Arguments:
 
     Status - result of the event callback into the driver
 
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
 Return Value:
     FxSelfManagedIoFinal
 
   --*/
 {
     UNREFERENCED_PARAMETER(Status);
+    UNREFERENCED_PARAMETER(Progress);
 
     This->m_DeviceSelfManagedIoCleanup.Invoke(This->GetDeviceHandle());
+
     return FxSelfManagedIoFinal;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::InitStartedFailedPost(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the self managed io suspend routine routine.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    FxSelfManagedIoFailed
+
+  --*/
+{
+    UNREFERENCED_PARAMETER(Status);
+    UNREFERENCED_PARAMETER(Progress);
+
+    //
+    // Status should be set to failed by previous state
+    //
+    ASSERT(!NT_SUCCESS(*Status));
+
+    (VOID) This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
+
+    return FxSelfManagedIoInitFailed;
+}
+
+FxSelfManagedIoStates
+FxSelfManagedIoMachine::RestartedFailedPost(
+    _In_  FxSelfManagedIoMachine* This,
+    _Inout_ PNTSTATUS Status,
+    _Inout_opt_ FxCxCallbackProgress* Progress
+    )
+/*++
+
+Routine Description:
+    Calls the self managed io suspend routine routine.
+
+Arguments:
+    This - instance of the state machine
+
+    Status - result of the event callback into the driver
+
+    Progress - Indicates if clients callback was called and if was
+        successful.
+
+Return Value:
+    FxSelfManagedIoFailed
+
+  --*/
+{
+    UNREFERENCED_PARAMETER(Status);
+    UNREFERENCED_PARAMETER(Progress);
+
+    //
+    // Status should be set to failed by previous state
+    //
+    ASSERT(!NT_SUCCESS(*Status));
+
+    (VOID) This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
+
+    return FxSelfManagedIoFailed;
 }

@@ -17,7 +17,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "pnppriv.hpp"
 
 #if FX_IS_KERNEL_MODE
 #include <usbdrivr.h>

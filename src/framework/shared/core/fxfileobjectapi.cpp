@@ -178,4 +178,29 @@ Return Value:
     return pFO->GetDevice()->GetHandle();
 }
 
+__drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
+ULONG
+WDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFFILEOBJECT FileObject
+    )
+{
+    DDI_ENTRY();
+
+    FxFileObject* pFO;
+
+    //
+    // Validate the FileObject object handle, and get its FxFileObject*
+    //
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         FileObject,
+                         FX_TYPE_FILEOBJECT,
+                         (PVOID*)&pFO);
+
+    return pFO->GetInitiatorProcessId();
+}
+
 } // extern "C"

@@ -528,6 +528,9 @@ Returns:
     //
     m_PkgIo->RemoveQueueReferences(this);
 
+    //
+    // DispatchEvents drops the lock before returning
+    //
     DispatchEvents(irql);
 
     //

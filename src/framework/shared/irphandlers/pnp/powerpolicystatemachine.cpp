@@ -3602,6 +3602,13 @@ Return Value:
         return WdfDevStatePwrPolStartingPoweredUpFailed;
     }
 
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //
+    // Determine if this device can block DRIPS on AOAC (PoFx) based devices.
+    //
+    This->SleepStudyEvaluateParticipation();
+#endif
+
     return WdfDevStatePwrPolStartingSucceeded;
 }
 
@@ -6632,6 +6639,14 @@ Return Value:
 
     This->m_PowerPolicyMachine.m_Owner->
             m_PoxInterface.UninitializeComponents();
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //
+    // Stop Async thread attempting to determine if this device can block 
+    // DRIPS on AOAC (PoFx) based devices
+    //
+    This->SleepStudyStopEvaluation();
+#endif
 
     return WdfDevStatePwrPolRemoved;
 }

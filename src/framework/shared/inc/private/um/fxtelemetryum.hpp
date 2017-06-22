@@ -38,6 +38,10 @@ Notes:
 // Frequency:   If FX_TELEMETRY_ENABLED, once per driver session. This is tracked using the
 //              DoOnceFlag in the telemetry context.
 //
+// Version History:
+//              _NT_TARGET_VERSION_WIN10_RS2: added IsS0IdleEnabled
+//              _NT_TARGET_VERSION_WIN10: initial settings
+//
 #define UMDF_CENSUS_EVT_WRITE_DEVICE_START(TraceHandle , Globals, DriverConfig, SetupClass, BusEnum, HwID, Manafacturer)    \
             TraceLoggingWrite(TraceHandle,                                                                                  \
                 "UmdfCensusEvtDeviceStart",                                                                                 \
@@ -56,7 +60,7 @@ Notes:
 //
 #define TraceLoggingUmdfDriverConfigInfo(info, fieldName)   \
     \
-    TraceLoggingStruct(20, fieldName),  \
+    TraceLoggingStruct(21, fieldName),  \
     \
     TraceLoggingUInt8(info.bitmap.IsFilter,                                 "IsFilter"                              ), \
     TraceLoggingUInt8(info.bitmap.IsPowerPolicyOwner,                       "IsPowerPolicyOwner"                    ), \
@@ -80,7 +84,9 @@ Notes:
     TraceLoggingUInt8(info.bitmap.IsMethodNeitherActionCopy,                "IsMethodNeitherActionCopy"             ), \
     TraceLoggingUInt8(info.bitmap.IsUsingDirectIoForReadWrite,              "IsUsingDirectIoForReadWrite"           ), \
     TraceLoggingUInt8(info.bitmap.IsUsingDirectIoForIoctl,                  "IsUsingDirectIoForIoctl"               ), \
-    TraceLoggingUInt8(info.bitmap.IsUsingDriverWppRecorder,                 "IsUsingDriverWppRecorder"              )  \
+    TraceLoggingUInt8(info.bitmap.IsUsingDriverWppRecorder,                 "IsUsingDriverWppRecorder"              ), \
+    \
+    TraceLoggingUInt8(info.bitmap.IsS0IdleEnabled,                          "IsS0IdleEnabled"                       )  \
 
 //
 // bit-map for driver info stream
@@ -93,6 +99,7 @@ union UFxTelemetryDriverInfo {
     struct {
         DWORD IsFilter                              : 1;
         DWORD IsPowerPolicyOwner                    : 1;
+        DWORD IsS0IdleEnabled                       : 1;
         DWORD IsS0IdleWakeFromS0Enabled             : 1;
         DWORD IsS0IdleUsbSSEnabled                  : 1;
         DWORD IsS0IdleSystemManaged                 : 1;

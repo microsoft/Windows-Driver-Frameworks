@@ -43,6 +43,10 @@ extern "C" {
 //              DoOnceFlag in the telemetry context. Also not to exceed
 //              once in 24 hours (last write time stored in registry).
 //
+// Version History:
+//              _NT_TARGET_VERSION_WIN10_RS2: added IsS0IdleEnabled
+//              _NT_TARGET_VERSION_WIN10: initial settings
+//
 //
 #define KMDF_CENSUS_EVT_WRITE_DEVICE_START(TraceHandle , Globals, DriverConfig, SetupClass, BusEnum, HwID, Manafacturer)    \
             TraceLoggingWrite(TraceHandle,                                                                                  \
@@ -62,7 +66,7 @@ extern "C" {
 //
 #define TraceLoggingKmdfDriverConfigInfo(info, fieldName)   \
     \
-    TraceLoggingStruct(23, fieldName),  \
+    TraceLoggingStruct(24, fieldName),  \
     \
     TraceLoggingUInt8(info.bitmap.IsNonPnpDriver,                           "IsNonPnpDriver"                        ), \
     TraceLoggingUInt8(info.bitmap.IsNoDispatchOverride,                     "IsNoDispatchOverride"                  ), \
@@ -90,7 +94,8 @@ extern "C" {
     \
     TraceLoggingUInt8(info.bitmap.IsUsingSystemDmaDuplex,                   "IsUsingSystemDmaDuplex"                ), \
     TraceLoggingUInt8(info.bitmap.IsUsingStaticBusEnumration,               "IsUsingStaticBusEnumration"            ), \
-    TraceLoggingUInt8(info.bitmap.IsUsingDynamicBusEnumeration,             "IsUsingDynamicBusEnumeration"          )  \
+    TraceLoggingUInt8(info.bitmap.IsUsingDynamicBusEnumeration,             "IsUsingDynamicBusEnumeration"          ), \
+    TraceLoggingUInt8(info.bitmap.IsS0IdleEnabled,                          "IsS0IdleEnabled"                       )  \
 
 //
 // When changing the structure, do update TraceLoggingKmdfDriverConfigInfo
@@ -107,6 +112,7 @@ union FxTelemetryDriverInfo {
         DWORD IsUsingRemoveLockOption               : 1;
         DWORD IsUsingNonDefaultHardwareReleaseOrder : 1;
         DWORD IsPowerPolicyOwner                    : 1;
+        DWORD IsS0IdleEnabled                       : 1;
         DWORD IsS0IdleWakeFromS0Enabled             : 1;
         DWORD IsS0IdleUsbSSEnabled                  : 1;
         DWORD IsS0IdleSystemManaged                 : 1;

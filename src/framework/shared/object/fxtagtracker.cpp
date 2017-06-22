@@ -137,7 +137,7 @@ VOID
 FxTagTracker::UpdateTagHistory(
     __in        PVOID Tag,
     __in        LONG Line,
-    __in_opt    PSTR File,
+    __in_opt    PCSTR File,
     __in        FxTagRefType RefType,
     __in        ULONG RefCount
     )

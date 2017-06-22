@@ -25,6 +25,14 @@ Revision History:
 #ifndef _FXPKGPNP_H_
 #define _FXPKGPNP_H_
 
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+#include <SleepStudyHelper.h>
+#endif
+
+#define FX_INCLUDE_WNF_TYPES
+#include "MxWnf.h"
+
+
 //
 // These are all magical numbers based on inspection.  If the queue overflows,
 // it is OK to increase these numbers without fear of either dependencies or
@@ -111,6 +119,31 @@ typedef struct _POWER_THREAD_INTERFACE {
     PFN_POWER_THREAD_ENQUEUE PowerThreadEnqueue;
 
 } POWER_THREAD_INTERFACE, *PPOWER_THREAD_INTERFACE;
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+typedef struct _SLEEP_STUDY_INTERFACE {
+    //
+    // SleepstudyHelper handle used to track current session.
+    // 
+    SS_LIBRARY SleepStudyLibContext;
+
+    //
+    // Sleep study context for MxWnf (WNF) notifications
+    //
+    PMxWnfSubscriptionContext WnfContext;
+
+    //
+    // Sleep Study Component: Logs blockers against WdfDeviceStop/ResumeIdle
+    //
+    SS_COMPONENT ComponentPowerRef;
+
+    //
+    //  SleepStudy Export Lib is being initialize / is already initialized
+    //
+    volatile LONG LibInitializing;
+
+}SLEEP_STUDY_INTERFACE, *PSLEEP_STUDY_INTERFACE;
+#endif
 
 //
 // What follows here is a series of structures that define three state
@@ -3522,7 +3555,7 @@ public:
         __in BOOLEAN WaitForD0,
         __in_opt PVOID Tag = NULL,
         __in_opt LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         )
     {
         return m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.PowerReference(WaitForD0, Tag, Line, File);
@@ -3533,7 +3566,7 @@ public:
     PowerDereference(
         __in_opt PVOID Tag = NULL,
         __in_opt LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         )
     {
         m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.IoDecrement(Tag, Line, File);
@@ -3683,6 +3716,19 @@ public:
     {
         if (IsPowerPolicyOwner()) {
             return m_PowerPolicyMachine.m_Owner->m_IdleSettings.m_TimeoutMgmt.UsingSystemManagedIdleTimeout();
+        }
+        else {
+            return FALSE;
+        }
+    }
+
+    BOOLEAN
+    IsS0IdleEnabled(
+        VOID
+        )
+    {
+        if (IsPowerPolicyOwner()) {
+            return (m_PowerPolicyMachine.m_Owner->m_IdleSettings.Enabled);
         }
         else {
             return FALSE;
@@ -3963,6 +4009,9 @@ private:
         __out   PBOOLEAN CompleteRequest
         );
 
+    //
+    // TODO: remove this dead unused code
+    //
     _Must_inspect_result_
     NTSTATUS
     PnpPowerReferenceSelf(
@@ -4112,6 +4161,138 @@ public:
 
         ++m_WakeInterruptCount;
     }
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    _IRQL_requires_max_(PASSIVE_LEVEL)
+    static
+    NTSTATUS
+    _SleepStudyWnfCallback(
+        _In_ PMxWnfSubscriptionContext SubscriptionContext,
+        _In_ PVOID CallbackContext
+        );
+        
+    _IRQL_requires_max_(PASSIVE_LEVEL)
+    VOID
+    SleepStudyEvaluateParticipation(
+        VOID
+        );
+        
+    _IRQL_requires_max_(PASSIVE_LEVEL)
+    VOID
+    SleepStudyEvaluateDripsConstraint(
+        _In_ BOOLEAN ManualCheck
+        );
+        
+    _IRQL_requires_max_(PASSIVE_LEVEL)
+    VOID
+    SleepStudyStopEvaluation(
+        VOID
+        );
+
+    _IRQL_requires_max_(PASSIVE_LEVEL)
+    VOID
+    SleepStudyStop(
+        VOID
+        );
+
+    _IRQL_requires_max_(PASSIVE_LEVEL)
+    NTSTATUS 
+    SleepStudyRegisterBlockingComponents(
+        VOID
+        );
+
+    _IRQL_requires_max_(DISPATCH_LEVEL)
+    BOOLEAN 
+    __inline
+    IsSleepStudyTrackingRefs(
+        VOID
+        )
+    {
+        return m_SleepStudyTrackReferences == TRUE;
+    }
+
+    _IRQL_requires_max_(DISPATCH_LEVEL)
+    VOID
+    __inline
+    SleepStudyResetBlockersForD0(
+        VOID
+        )
+    /*++
+
+    Routine Description:
+        If the sleep study is enabled, this function will call into the sleep 
+        study library and reset the time the component was marked blocking.
+
+    Arguments:
+        N/A
+
+    Return Value:
+        None
+
+    --*/
+    {
+        if (m_SleepStudy != NULL && m_SleepStudy->ComponentPowerRef != NULL) {
+            SleepstudyHelper_ResetComponentsStartTime(
+                                            m_SleepStudy->ComponentPowerRef);
+        }
+    }
+
+    _IRQL_requires_max_(DISPATCH_LEVEL)
+    VOID
+    __inline
+    SleepStudyPowerRefDecrement(
+        VOID
+        )
+    /*++
+
+    Routine Description:
+        If this sleep study is enabled, this function will decrement the power 
+        reference count. When transitioning to 0 the components is marked as 
+        no longer blocking DRIPS
+
+    Arguments:
+        N/A
+
+    Return Value:
+        None
+
+    --*/
+    {
+        LONG c = InterlockedDecrement(&m_SleepStudyPowerRefIoCount);
+        if (c == 0 && m_SleepStudy != NULL && 
+            m_SleepStudy->ComponentPowerRef != NULL) {
+            SleepstudyHelper_ComponentInactive(m_SleepStudy->ComponentPowerRef);
+        }
+    }
+
+    _IRQL_requires_max_(DISPATCH_LEVEL)
+    VOID
+    __inline
+    SleepStudyPowerRefIncrement(
+        VOID
+        )
+    /*++
+
+    Routine Description:
+        If sleep study is enabled, this function will increment the power 
+        reference count. When transitioning from 1 to 0 the components is 
+        marked as blocking DRIPS
+
+    Arguments:
+        N/A
+
+    Return Value:
+        None
+
+    --*/
+    {
+        LONG c = InterlockedIncrement(&m_SleepStudyPowerRefIoCount);
+        if (c == 1 && m_SleepStudy != NULL && 
+            m_SleepStudy->ComponentPowerRef != NULL) {
+            SleepstudyHelper_ComponentActive(m_SleepStudy->ComponentPowerRef);
+        }
+    }
+#endif
 
     //
     // Start of members
@@ -4375,6 +4556,25 @@ private:
     // If TRUE, the PNP State has reached PnpEventStarted at least once.
     //
     BOOLEAN m_AchievedStart;
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    //
+    // Sleep Study struct used to track session - this is all the data that can be
+    // allocated dynamically.
+    // 
+    PSLEEP_STUDY_INTERFACE m_SleepStudy;
+    
+    //
+    // Count of driver requested power references
+    //
+    volatile LONG m_SleepStudyPowerRefIoCount;
+
+    //
+    // Flag to indicate if m_SleepStudyPowerRefIoCount should be used to track 
+    // power references
+    //
+    BOOLEAN m_SleepStudyTrackReferences;
+#endif
 
     //
     // Non NULL when this device is exporting the power thread interface.  This

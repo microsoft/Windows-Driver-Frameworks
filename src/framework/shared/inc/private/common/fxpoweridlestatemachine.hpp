@@ -172,7 +172,7 @@ public:
     IoDecrement(
         __in_opt PVOID Tag = NULL,
         __in_opt LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         );
 
     BOOLEAN
@@ -194,7 +194,7 @@ public:
         __in BOOLEAN WaitForD0,
         __in_opt PVOID Tag = NULL,
         __in_opt LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         )
     {
         return PowerReferenceWorker(WaitForD0, FxPowerReferenceDefault, Tag, Line, File);
@@ -269,7 +269,7 @@ protected:
         __in FxPowerReferenceFlags Flags,
         __in_opt PVOID Tag = NULL,
         __in_opt LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         );
 
     static

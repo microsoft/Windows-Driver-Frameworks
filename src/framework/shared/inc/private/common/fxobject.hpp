@@ -214,6 +214,12 @@ struct FxObjectDebugExtension {
     LONG StateHistoryIndex;
 
     //
+    // For object leak detection, TRUE indicates the object is been counted
+    // and needs it count removed
+    //
+    BOOLEAN ObjectCounted;
+
+    //
     // Signature lives after all the fields to avoid byte padding if it is
     // first on 64 bit systems.
     //
@@ -342,6 +348,11 @@ private:
     VOID, 
     VerifyConstruct, 
         _In_ BOOLEAN
+        );
+
+    FX_DECLARE_VF_FUNCTION(
+    VOID,
+    VerifyLeakDetectionConsiderObject
         );
 
     VOID
@@ -674,7 +685,7 @@ public:
         __in        WDFOBJECT Object,
         __in_opt    PVOID Tag,
         __in        LONG Line, 
-        __in        PSTR File
+        __in        PCSTR File
         )
     {
         FxObject* pObject;
@@ -698,7 +709,7 @@ public:
         __in        WDFOBJECT Object,
         __in_opt    PVOID Tag,
         __in        LONG Line, 
-        __in        PSTR File
+        __in        PCSTR File
         )
     {
         FxObject* pObject;
@@ -826,7 +837,7 @@ public:
     AddRef(
         __in_opt   PVOID Tag = NULL,
         __in       LONG Line = 0,
-        __in_opt   PSTR File = NULL
+        __in_opt   PCSTR File = NULL
         )
     {
         FxTagTracker* pTagTracker;
@@ -853,7 +864,7 @@ public:
     Release(
         __in_opt    PVOID Tag = NULL,
         __in        LONG Line = 0,
-        __in_opt    PSTR File = NULL
+        __in_opt    PCSTR File = NULL
         )
     {
         FxTagTracker* pTagTracker;
@@ -879,7 +890,7 @@ public:
         __in        WDFOBJECT_OFFSET Offset,
         __in_opt    PVOID Tag = NULL,
         __in        LONG Line = 0,
-        __in_opt    PSTR File = NULL
+        __in_opt    PCSTR File = NULL
         )
     {
         UNREFERENCED_PARAMETER(Offset);
@@ -893,7 +904,7 @@ public:
         __in        WDFOBJECT_OFFSET Offset,
         __in_opt    PVOID Tag = NULL,
         __in        LONG Line = 0,
-        __in_opt    PSTR File = NULL
+        __in_opt    PCSTR File = NULL
         )
     {
         UNREFERENCED_PARAMETER(Offset);
@@ -1486,8 +1497,8 @@ private:
         __in FxObject* ChildObject
         );
 
-   _Must_inspect_result_
-   NTSTATUS
+    _Must_inspect_result_
+    NTSTATUS
     RemoveChildObjectInternal(
         __in FxObject* ChildObject
         );

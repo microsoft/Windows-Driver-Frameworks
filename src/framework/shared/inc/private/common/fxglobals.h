@@ -51,6 +51,17 @@ Revision History:
 extern "C" {
 #endif
 
+const LONG FX_OBJECT_LEAK_DETECTION_DISABLED = 0xFFFFFFFF;
+const WCHAR FX_OBJECT_LEAK_DETECTION_DEFAULT_TYPES[] =
+                    L"WDFREQUEST\0"
+                    L"WDFMEMORY\0"
+                    L"WDFWORKITEM\0"
+                    L"WDFKEY\0"
+                    L"WDFSTRING\0"
+                    L"WDFOBJECT\0"
+                    L"WDFDEVICE\0";
+
+
 struct FxLibraryGlobalsType;
 
 class CWudfDriverGlobals; //UMDF driver globals
@@ -61,6 +72,7 @@ class CWudfDriverGlobals; //UMDF driver globals
 //
 enum FxObjectDebugInfoFlags {
     FxObjectDebugTrackReferences = 0x0001,
+    FxObjectDebugTrackObjectCount = 0x0002,
 };
 
 typedef enum FxTrackPowerOption : UCHAR {
@@ -101,8 +113,39 @@ struct FxObjectDebugInfo {
         //
         struct {
             USHORT TrackReferences : 1;
+            USHORT TrackObjectCountForLeak : 1;
         } Bits;
     } u;
+};
+
+struct FxObjectDebugLeakDetection{
+    //
+    // Verifier check to identify object leaks.
+    //
+    BOOLEAN         Enabled;
+    
+    //
+    // This value represents the threshold for generating a break. This value is 
+    // read from the registry.
+    // 
+    LONG             Limit;
+
+    //
+    // LimitScaled represents the total object count
+    // allowed and scaled based on the number of devices allocated by the driver. 
+    //
+    volatile LONG    LimitScaled;
+
+    // 
+    // ObjectCnt represents the total count off objects 
+    //
+    volatile LONG    ObjectCnt;
+
+    // 
+    // DeviceCnt represents the total count devices under the driver
+    //
+    volatile LONG    DeviceCnt;
+
 };
 
 struct FxDriverGlobalsDebugExtension {
@@ -164,7 +207,7 @@ public:
     AddRef(
         __in_opt   PVOID Tag = NULL,
         __in       LONG Line = 0,
-        __in_opt   PSTR File = NULL
+        __in_opt   PCSTR File = NULL
         )
     {
         ULONG c;
@@ -188,7 +231,7 @@ public:
     Release(
         __in_opt    PVOID Tag = NULL,
         __in        LONG Line = 0,
-        __in_opt    PSTR File = NULL
+        __in_opt    PCSTR File = NULL
         )
     {
         ULONG c;
@@ -243,7 +286,7 @@ public:
         FxPoolTrackingOn            = State;
 
         //
-        // Following two can be overridden by the registry settings
+        // Following can be overridden by the registry settings
         // WDFVERIFY matches the state of the verifier.
         //
         FxVerifyOn                  = State;
@@ -457,6 +500,16 @@ public:
     BOOLEAN FxVerboseOn;
 
     //
+    // Verifier check to identify object leaks.
+    //
+    FxObjectDebugLeakDetection *FxVerifyLeakDetection;
+    
+    //
+    // Tag tracking has been enabled
+    //
+    BOOLEAN FxVerifyTagTrackingEnabled;
+
+    //
     // Parent queue presented requests (to device).
     //
     BOOLEAN FxRequestParentOptimizationOn;
@@ -663,9 +716,10 @@ FxVerifierLockDestroy(
 
 _Must_inspect_result_
 BOOLEAN
-FxVerifierGetTrackReferences(
-    __in FxObjectDebugInfo* DebugInfo,
-    __in WDFTYPE ObjectType
+FxVerifierIsDebugInfoFlagSetForType(
+    _In_ FxObjectDebugInfo* DebugInfo,
+    _In_ WDFTYPE ObjectType,
+    _In_ FxObjectDebugInfoFlags Flag
     );
 
 PCSTR
@@ -866,6 +920,11 @@ struct FxLibraryGlobalsType {
     // Registry setting to disable IFR on low-memory systems.
     //
     BOOLEAN IfrDisabled;
+
+    //
+    // Registry setting to disable sleep study
+    //
+    BOOLEAN SleepStudyDisabled;
 };
 
 extern FxLibraryGlobalsType FxLibraryGlobals;

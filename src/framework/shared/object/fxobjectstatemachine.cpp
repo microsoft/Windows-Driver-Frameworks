@@ -345,6 +345,37 @@ FxObject::ProcessDestroy(
         }
     }
 
+    if (IsDebug() && (GetDebugExtension()->ObjectCounted)) {
+
+        //
+        // ObjectCounted cannot be set and have 
+        // m_Globals->FxVerifyLeakDetection == NULL
+        //
+        ASSERT(m_Globals->FxVerifyLeakDetection != NULL);
+        
+        //
+        // The object has been counted, now remove it.
+        //
+        InterlockedDecrement(&m_Globals->FxVerifyLeakDetection->ObjectCnt);
+
+        //
+        // Update the scaled limit if the device is removed, however the scaled
+        // limit should never go to zero, so we skip when device count == 0
+        //
+        if (FX_TYPE_DEVICE == m_Type) {
+            LONG c = InterlockedDecrement(&m_Globals->FxVerifyLeakDetection->DeviceCnt);
+            if (c != 0) {
+                //
+                // We don't decrement from 1->0 - limit should always be set for 
+                // 1 device
+                //
+                InterlockedExchangeAdd(&m_Globals->FxVerifyLeakDetection->LimitScaled,
+                                       -m_Globals->FxVerifyLeakDetection->Limit);
+            }
+        }
+    }
+
+
 
 
 

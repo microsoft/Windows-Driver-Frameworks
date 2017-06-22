@@ -1361,7 +1361,7 @@ VFWDFEXPORT(WdfDeviceStopIdleActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -1377,7 +1377,7 @@ VFWDFEXPORT(WdfDeviceResumeIdleActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -2411,6 +2411,16 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
 VFWDFEXPORT(WdfFileObjectGetDevice)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFFILEOBJECT FileObject
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+ULONG
+VFWDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -3527,7 +3537,7 @@ VFWDFEXPORT(WdfObjectReferenceActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -3543,7 +3553,7 @@ VFWDFEXPORT(WdfObjectDereferenceActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _Must_inspect_result_
@@ -4148,6 +4158,16 @@ VFWDFEXPORT(WdfRequestCreate)(
     WDFIOTARGET IoTarget,
     _Out_
     WDFREQUEST* Request
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+ULONG
+VFWDFEXPORT(WdfRequestGetRequestorProcessId)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFREQUEST Request
     );
 
 _Must_inspect_result_
@@ -6509,6 +6529,8 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfDeviceOpenDevicemapKey),
         VFWDFEXPORT(WdfDmaTransactionSetSingleTransferRequirement),
         VFWDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks),
+        VFWDFEXPORT(WdfFileObjectGetInitiatorProcessId),
+        VFWDFEXPORT(WdfRequestGetRequestorProcessId),
     }
 };
 

@@ -378,13 +378,14 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_17) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_19) {
         //
         // Make sure table count matches exactly with previously
         // released framework version table sizes.
         //
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V1_19:
      // case WdfFunctionTableNumEntries_V1_17: // both 1.17 and 1.15 have 444 functions
         case WdfFunctionTableNumEntries_V1_15:
         case WdfFunctionTableNumEntries_V1_13:

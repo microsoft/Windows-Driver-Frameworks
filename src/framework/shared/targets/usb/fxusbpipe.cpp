@@ -884,6 +884,14 @@ FxUsbPipeTransferContext::CopyParameters(
     __in FxRequestBase* Request
     )
 {
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    // 
+    // In case of UMDF since the URB itself is not sent down the stack
+    // we propagate the transfer length into the URB via the UM IRP 
+    //
+    m_UmUrb.UmUrbBulkOrInterruptTransfer.TransferBufferLength = (ULONG)m_CompletionParams.IoStatus.Information;
+#endif
+
     m_CompletionParams.IoStatus.Information = GetUrbTransferLength();
 
     //

@@ -187,6 +187,7 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfRegistryAssignString), \
     VFWDFEXPORT(WdfRegistryAssignULong), \
     VFWDFEXPORT(WdfRequestCreate), \
+    VFWDFEXPORT(WdfRequestGetRequestorProcessId), \
     VFWDFEXPORT(WdfRequestReuse), \
     VFWDFEXPORT(WdfRequestChangeTarget), \
     VFWDFEXPORT(WdfRequestFormatRequestUsingCurrentType), \
@@ -217,7 +218,6 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfRequestRequeue), \
     VFWDFEXPORT(WdfRequestStopAcknowledge), \
     VFWDFEXPORT(WdfRequestImpersonate), \
-    VFWDFEXPORT(WdfRequestGetRequestorProcessId), \
     VFWDFEXPORT(WdfRequestIsFromUserModeDriver), \
     VFWDFEXPORT(WdfRequestSetUserModeDriverInitiatedIo), \
     VFWDFEXPORT(WdfRequestGetUserModeDriverInitiatedIo), \
@@ -1052,7 +1052,7 @@ VFWDFEXPORT(WdfDeviceStopIdleActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     )    
 {
     PAGED_CODE_LOCKED();
@@ -1072,7 +1072,7 @@ VFWDFEXPORT(WdfDeviceResumeIdleActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     )    
 {
     PAGED_CODE_LOCKED();
@@ -1772,7 +1772,7 @@ VFWDFEXPORT(WdfFileObjectGetDevice)(
     return ((PFN_WDFFILEOBJECTGETDEVICE) WdfVersion.Functions.pfnWdfFileObjectGetDevice)(DriverGlobals, FileObject);
 }
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG
 VFWDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
@@ -2887,7 +2887,7 @@ VFWDFEXPORT(WdfObjectReferenceActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     )    
 {
     PAGED_CODE_LOCKED();
@@ -2907,7 +2907,7 @@ VFWDFEXPORT(WdfObjectDereferenceActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     )    
 {
     PAGED_CODE_LOCKED();
@@ -3346,6 +3346,20 @@ VFWDFEXPORT(WdfRequestCreate)(
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTCREATE) WdfVersion.Functions.pfnWdfRequestCreate)(DriverGlobals, RequestAttributes, IoTarget, Request);
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+ULONG
+VFWDFEXPORT(WdfRequestGetRequestorProcessId)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFREQUEST Request
+    )    
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFREQUESTGETREQUESTORPROCESSID) WdfVersion.Functions.pfnWdfRequestGetRequestorProcessId)(DriverGlobals, Request);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -3837,20 +3851,6 @@ VFWDFEXPORT(WdfRequestImpersonate)(
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTIMPERSONATE) WdfVersion.Functions.pfnWdfRequestImpersonate)(DriverGlobals, Request, ImpersonationLevel, EvtRequestImpersonate, Context);
-}
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-WDFAPI
-ULONG
-VFWDFEXPORT(WdfRequestGetRequestorProcessId)(
-    _In_
-    PWDF_DRIVER_GLOBALS DriverGlobals,
-    _In_
-    WDFREQUEST Request
-    )    
-{
-    PAGED_CODE_LOCKED();
-    return ((PFN_WDFREQUESTGETREQUESTORPROCESSID) WdfVersion.Functions.pfnWdfRequestGetRequestorProcessId)(DriverGlobals, Request);
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

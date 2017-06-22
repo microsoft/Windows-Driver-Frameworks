@@ -202,6 +202,7 @@ GetDriverInfo(
 
     DriverInfo->bitmap.IsFilter = Fdo->IsFilter();
     DriverInfo->bitmap.IsPowerPolicyOwner = pnpPkg->IsPowerPolicyOwner();
+    DriverInfo->bitmap.IsS0IdleEnabled = pnpPkg->IsS0IdleEnabled();
     DriverInfo->bitmap.IsS0IdleWakeFromS0Enabled =  pnpPkg->IsS0IdleWakeFromS0Enabled();
     DriverInfo->bitmap.IsS0IdleUsbSSEnabled = pnpPkg->IsS0IdleUsbSSEnabled();
     DriverInfo->bitmap.IsS0IdleSystemManaged = pnpPkg->IsS0IdleSystemManaged();

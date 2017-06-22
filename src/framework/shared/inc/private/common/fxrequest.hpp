@@ -146,7 +146,7 @@ public:
     AddRef(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         );
 
     virtual
@@ -154,7 +154,7 @@ public:
     Release(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         );
 
     virtual
@@ -292,7 +292,7 @@ public:
     AddRef(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         );
 
     virtual
@@ -300,7 +300,7 @@ public:
     Release(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         );
 
     virtual
@@ -583,7 +583,7 @@ public:
         __in WDFOBJECT_OFFSET Offset,
         __in PVOID Tag = NULL,
         __in LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         );
 
     virtual
@@ -592,7 +592,7 @@ public:
         __in WDFOBJECT_OFFSET Offset,
         __in PVOID Tag = NULL,
         __in LONG Line = 0,
-        __in_opt PSTR File = NULL
+        __in_opt PCSTR File = NULL
         );
 
     __inline
@@ -939,6 +939,11 @@ public:
         _In_opt_ PVOID Context
         );
 #endif
+
+    ULONG
+    GetRequestorProcessId(
+        VOID
+        );
 
     VOID
     SetImpersonationFlags(
@@ -1308,7 +1313,7 @@ public:
     Release(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
     );
   
     __inline

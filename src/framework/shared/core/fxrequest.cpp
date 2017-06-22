@@ -2694,7 +2694,7 @@ FxRequest::AddRefOverride(
     __in WDFOBJECT_OFFSET Offset,
     __in PVOID Tag,
     __in LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     )
 {
     if (Offset != 0x0) {
@@ -2713,7 +2713,7 @@ FxRequest::ReleaseOverride(
     __in WDFOBJECT_OFFSET Offset,
     __in PVOID Tag,
     __in LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     )
 {
     if (Offset != 0x0) {
@@ -3107,7 +3107,7 @@ ULONG
 FxRequest::Release(
     __in PVOID Tag,
     __in LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     ) 
 {
     ULONG   retValue; 

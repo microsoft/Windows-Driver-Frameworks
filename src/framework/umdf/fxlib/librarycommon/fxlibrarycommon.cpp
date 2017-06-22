@@ -15,6 +15,7 @@ extern "C" {
 #include "wdf20.h"
 #include "wdf215.h"
 #include "wdf217.h"
+#include "wdf219.h"
 
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
@@ -370,10 +371,11 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_17) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_19) {
 
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V2_19:
         case WdfFunctionTableNumEntries_V2_17:
         case WdfFunctionTableNumEntries_V2_15:
         case WdfFunctionTableNumEntries_V2_0:

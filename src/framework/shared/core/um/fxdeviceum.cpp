@@ -1890,17 +1890,16 @@ FxDevice::RetrieveDeviceInfoRegistrySettings(
                           &type,
                           (LPBYTE) buffer,
                           &bufferSize);
-    if (ERROR_MORE_DATA == Err) {
-
-        buffer = new WCHAR[bufferSize/sizeof(buffer[0])];
+    if (ERROR_SUCCESS == Err && type == REG_SZ) {
+        buffer = new WCHAR[(bufferSize / sizeof(buffer[0])) + 1];
         if (buffer == NULL) {
             Err = ERROR_NOT_ENOUGH_MEMORY;
             DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
                          "Failed to allocate memory for string buffer");
         }
         else {
-
             buffer[0] = L'\0';
+
             Err = RegQueryValueEx(wudfKey,
                                   FX_DEVICE_GROUP_ID,
                                   0,
@@ -1931,7 +1930,7 @@ FxDevice::RetrieveDeviceInfoRegistrySettings(
     }
     else if (ERROR_FILE_NOT_FOUND != Err) {
         DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-                     "Failed to read Group id value in registry");
+                     "Failed to read Group id value from registry %!WINERROR!", Err);
     }
 
 

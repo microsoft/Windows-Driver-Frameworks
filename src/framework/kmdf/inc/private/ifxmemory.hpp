@@ -83,7 +83,7 @@ public:
     AddRef(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         ) =0;
 
     virtual
@@ -91,7 +91,7 @@ public:
     Release(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         ) =0;
 
     virtual

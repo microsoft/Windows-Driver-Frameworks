@@ -260,5 +260,23 @@ FxRequest::Impersonate(
 
     return status;
 }
-    
 
+ULONG
+FxRequest::GetRequestorProcessId(
+    VOID
+    )
+{
+    NTSTATUS status;
+    MdIrp irp;
+
+    status = GetIrp(&irp);
+    if (!NT_SUCCESS(status)) {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGREQUEST,
+                            "Unable to obtain requestor ID. WDFREQUEST 0x%p is already completed, %!STATUS!",
+                            GetHandle(), status);
+        FxVerifierDbgBreakPoint(GetDriverGlobals());
+        return 0;
+    }
+
+    return irp->GetRequestorProcessId();
+}

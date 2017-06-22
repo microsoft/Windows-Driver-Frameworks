@@ -277,10 +277,12 @@ FxObject::AllocateTagTracker(
     ASSERT(IsDebug());
 
     if (m_Globals->DebugExtension != NULL &&
+        m_Globals->FxVerifyTagTrackingEnabled != FALSE &&
         m_Globals->DebugExtension->ObjectDebugInfo != NULL &&
-        FxVerifierGetTrackReferences(
+        FxVerifierIsDebugInfoFlagSetForType(
             m_Globals->DebugExtension->ObjectDebugInfo,
-            Type)) {
+            Type,
+            FxObjectDebugTrackReferences)) {
         //
         // Failure to CreateAndInitialize a tag tracker is no big deal, we just 
         // don't track references.
@@ -1036,7 +1038,115 @@ Returns:
         *ObjectHandle = object;
     }
 
+    VerifyLeakDetectionConsiderObject(m_Globals);
+
     return STATUS_SUCCESS;
+}
+
+VOID
+FX_VF_METHOD(FxObject, VerifyLeakDetectionConsiderObject) (
+    _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
+    )
+{
+    UNREFERENCED_PARAMETER(FxDriverGlobals);
+
+    //
+    // Check to see if we are potentially leaking objects.
+    // Verify leak detection is enabled and that the object type
+    // is configured to be counted. We always count WDFDEVICE because
+    // we need it to scale the limit if there are multiple devices.
+    // 
+    if ((m_Globals->FxVerifyLeakDetection != NULL) &&
+        (m_Globals->FxVerifyLeakDetection->Enabled) &&
+        (FxVerifierIsDebugInfoFlagSetForType(
+            m_Globals->DebugExtension->ObjectDebugInfo,
+            m_Type,
+            FxObjectDebugTrackObjectCount) ||
+            (m_Type == FX_TYPE_DEVICE))
+        ) {
+
+        LONG c;
+        FxObjectDebugLeakDetection *leakDetection = m_Globals->FxVerifyLeakDetection;
+        FxObjectDebugExtension* pExtension = GetDebugExtension();
+
+        switch (m_Type) {
+        case FX_TYPE_REQUEST:
+        {
+            FxRequestBase* requestBase = static_cast<FxRequestBase*>(this);
+            if (!requestBase->IsAllocatedDriver()) {
+                //
+                // Only count driver allocated requests, not framwork or 
+                // IO from callers
+                //
+                return;
+            }
+            break;
+        }
+        case FX_TYPE_DEVICE:
+        {
+            // 
+            // Scale the threshold the verify check happens at. For every
+            // device created we increase the limit by a multiple.
+            //
+            if (m_Type == FX_TYPE_DEVICE) {
+                c = InterlockedIncrement(&leakDetection->DeviceCnt);
+                if (c >= 2) {
+                    //
+                    // We skip 0->1 because LimitScaled is initialized
+                    // to Limit
+                    //
+                    InterlockedExchangeAdd(&leakDetection->LimitScaled,
+                        leakDetection->Limit);
+                }
+            }
+            break;
+        }
+        }
+
+        pExtension->ObjectCounted = TRUE;
+        c = InterlockedIncrement(&leakDetection->ObjectCnt);
+
+        //
+        // Check for exceeding the limit (no interlocked protection)
+        //
+        if (c == leakDetection->LimitScaled) {
+
+            //
+            // Potential leak of objects detected
+            // Device has exceeded WDF Verifiers peak threshold for 
+            // objects to be allocated. Use !wdfDriverInfo <drivername> 
+            // with flags 0x41 or 0x50 to see a list and count of objects 
+            // currently allocated. 
+            //
+            // To adjust this setting modify registry key 
+            // "ObjectLeakDetectionLimit", which is a REG_DWORD, 
+            // under the drivers Parameters\Wdf subkey. 0xFFFFFFFF 
+            // will disable the check, any other value to set the
+            // threshold.
+            //
+            // NOTE: the limit will be scaled based on the number of
+            // WDFDEVICE objects present under the driver.
+            //
+            DoTraceLevelMessage(
+                m_Globals, TRACE_LEVEL_ERROR, TRACINGOBJECT,
+                "WDF Verifier has detected an excessive number of "
+                "allocated WDF objects. Investigate with !wdfDriverInfo "
+                "<driverName> 0x41 or 0x50");
+
+            DoTraceLevelMessage(
+                m_Globals, TRACE_LEVEL_ERROR, TRACINGOBJECT,
+                "WDF Verifier found %u objects allocated, limit=%u,"
+                " and the scaled limit=%u",
+                c, leakDetection->Limit, leakDetection->LimitScaled);
+
+            FxVerifierDbgBreakPoint(m_Globals);
+
+            //
+            // Disable the check going forward
+            //
+            leakDetection->Enabled = FALSE;
+        }
+    }
 }
 
 _Must_inspect_result_

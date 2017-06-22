@@ -51,41 +51,8 @@ WDFEXPORT(WdfFileObjectClose)(
     UNREFERENCED_PARAMETER(FileObject);
 
     FX_VERIFY_WITH_NAME(INTERNAL, TRAPMSG("Not implemented"), DriverGlobals->DriverName);
-}    
+}
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-WDFAPI
-ULONG
-WDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
-    _In_
-    PWDF_DRIVER_GLOBALS DriverGlobals,
-    _In_
-    WDFFILEOBJECT FileObject
-    )
-{
-    DDI_ENTRY();
-
-    FxFileObject* pFO;
-    
-    //
-    // Validate the FileObject object handle, and get its FxFileObject*
-    //
-    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
-                         FileObject,
-                         FX_TYPE_FILEOBJECT,
-                         (PVOID*)&pFO);
-
-    if (pFO->GetWdmFileObject() != NULL) {
-        return pFO->GetWdmFileObject()->GetInitiatorProcessId();
-    }
-    else {
-        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), TRAPMSG("Cannot get initiator "
-            "process ID from a file object that doesn't have a WDM file object"),
-            DriverGlobals->DriverName);
-        return 0;
-    }
-}    
-    
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 WDFFILEOBJECT

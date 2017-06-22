@@ -122,6 +122,11 @@ FxDriver::~FxDriver()
     //
     ClearDriverObjectFxDriver();
 #endif
+    
+    if ((GetDriverGlobals()->FxVerifierOn) &&
+        (GetDriverGlobals()->FxVerifyLeakDetection != NULL) ) {
+        ASSERT(GetDriverGlobals()->FxVerifyLeakDetection->ObjectCnt == 0);
+    }
 }
 
 BOOLEAN

@@ -1342,6 +1342,9 @@ Return Value:
         //
         // Ignore potential failure, power ref tracking is not an essential feature.
         //
+
+
+        //
         (void)FxTagTracker::CreateAndInitialize(&m_TagTracker,
                                                 pFxDriverGlobals,
                                                 FxTagTrackerTypePower,
@@ -1482,7 +1485,7 @@ FxPowerIdleMachine::PowerReferenceWorker(
     __in FxPowerReferenceFlags Flags,
     __in_opt PVOID Tag,
     __in_opt LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     )
 /*++
 
@@ -1735,7 +1738,7 @@ VOID
 FxPowerIdleMachine::IoDecrement(
     __in_opt PVOID Tag,
     __in_opt LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     )
 /*++
 

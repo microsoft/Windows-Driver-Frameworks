@@ -95,3 +95,27 @@ FxFileObject::UpdateProcessKeepAliveCount(
 
     return STATUS_NOT_IMPLEMENTED;
 }
+
+ULONG
+FxFileObject::GetInitiatorProcessId(
+    VOID
+    )
+{
+    PEPROCESS initiatorProcess;
+
+    if (GetWdmFileObject() != NULL) {
+        initiatorProcess = IoGetInitiatorProcess(GetWdmFileObject());
+        if (initiatorProcess) {
+            return (ULONG)PsGetProcessId(initiatorProcess);
+        }
+        return 0;
+    }
+    else {
+        DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIO,
+            "Cannot get initiator process ID from a file object that doesn't "
+            "have a WDM file object\n");
+        FxVerifierDbgBreakPoint(GetDriverGlobals());
+        return 0;
+    }
+}
+

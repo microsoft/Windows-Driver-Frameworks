@@ -164,10 +164,14 @@ FxUsbDevice::InitDevice(
         hr = devstack2->OpenUSBCommunicationChannel(device,
                                                     device->GetAttachedDevice(),
                                                     &m_pHostTargetFile);
-
-        if (SUCCEEDED(hr)) {
-            m_WinUsbHandle = (WINUSB_INTERFACE_HANDLE)m_pHostTargetFile->GetCreateContext();
+        if (FAILED(hr)) {
+            DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
+                "Failed to OpenUSBCommunicationChannel with USB target");
+            status = CHostFxUtil::NtStatusFromHr(hr, 0, 0, FALSE);
+            goto Done;
         }
+
+        m_WinUsbHandle = (WINUSB_INTERFACE_HANDLE)m_pHostTargetFile->GetCreateContext();
     }
 
     //
@@ -205,7 +209,6 @@ FxUsbDevice::InitDevice(
     }
 
     if (config.wTotalLength < sizeof(USB_CONFIGURATION_DESCRIPTOR)) {
-
         //
         // Not enough info returned
         //

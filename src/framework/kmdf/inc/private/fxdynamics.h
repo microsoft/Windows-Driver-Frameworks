@@ -465,6 +465,8 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFDEVICEOPENDEVICEMAPKEY                             pfnWdfDeviceOpenDevicemapKey;
     PFN_WDFDMATRANSACTIONSETSINGLETRANSFERREQUIREMENT         pfnWdfDmaTransactionSetSingleTransferRequirement;
     PFN_WDFCXDEVICEINITSETPNPPOWEREVENTCALLBACKS              pfnWdfCxDeviceInitSetPnpPowerEventCallbacks;
+    PFN_WDFFILEOBJECTGETINITIATORPROCESSID                    pfnWdfFileObjectGetInitiatorProcessId;
+    PFN_WDFREQUESTGETREQUESTORPROCESSID                       pfnWdfRequestGetRequestorProcessId;
 
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
 
@@ -1822,7 +1824,7 @@ WDFEXPORT(WdfDeviceStopIdleActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -1838,7 +1840,7 @@ WDFEXPORT(WdfDeviceResumeIdleActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -2872,6 +2874,16 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
 WDFEXPORT(WdfFileObjectGetDevice)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFFILEOBJECT FileObject
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+ULONG
+WDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -3988,7 +4000,7 @@ WDFEXPORT(WdfObjectReferenceActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -4004,7 +4016,7 @@ WDFEXPORT(WdfObjectDereferenceActual)(
     _In_
     LONG Line,
     _In_z_
-    PCHAR File
+    PCCH File
     );
 
 _Must_inspect_result_
@@ -4609,6 +4621,16 @@ WDFEXPORT(WdfRequestCreate)(
     WDFIOTARGET IoTarget,
     _Out_
     WDFREQUEST* Request
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+ULONG
+WDFEXPORT(WdfRequestGetRequestorProcessId)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFREQUEST Request
     );
 
 _Must_inspect_result_
@@ -6970,6 +6992,8 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfDeviceOpenDevicemapKey),
         WDFEXPORT(WdfDmaTransactionSetSingleTransferRequirement),
         WDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks),
+        WDFEXPORT(WdfFileObjectGetInitiatorProcessId),
+        WDFEXPORT(WdfRequestGetRequestorProcessId),
     }
 };
 

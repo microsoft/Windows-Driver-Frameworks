@@ -67,7 +67,7 @@ struct FxTagTrackingBlock : public FxStump {
     FxTagTrackingBlock(
         __in        PVOID Tag,
         __in        LONG Line,
-        __in_opt    PSTR File,
+        __in_opt    PCSTR File,
         __in_opt    BOOLEAN Initial = FALSE
         ) :
         Tag(Tag),
@@ -106,7 +106,7 @@ struct FxTagTrackingBlock : public FxStump {
 
     struct FxTagTrackingBlock* Next;
     PVOID Tag;
-    PCHAR File;
+    PCCH File;
     LONG Line;
     LARGE_INTEGER TimeLocked;
     FxTagTrackingStackFrames* StackFrames;
@@ -123,7 +123,7 @@ struct FxTagHistory {
     //       an approximation and is for wdfkd consumption only.
     //
     ULONG RefCount;
-    PCHAR File;
+    PCCH File;
     LONG Line;
     PVOID Tag;
     LARGE_INTEGER Time;
@@ -261,7 +261,7 @@ public:
     UpdateTagHistory(
         __in        PVOID Tag,
         __in        LONG Line,
-        __in_opt    PSTR File,
+        __in_opt    PCSTR File,
         __in        FxTagRefType RefType,
         __in        ULONG RefCount
         );

@@ -316,4 +316,8 @@ __pragma(warning(suppress: 4127)) while(constant)
 #define SAFE_RELEASE(p) if( NULL != p ) { ( p )->Release(); p = NULL; }
 #endif
 
+#ifndef _countof 
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#endif
+
 #endif // _FX_MACROS_H_

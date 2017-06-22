@@ -192,7 +192,19 @@ FxPkgPnp::FxPkgPnp(
 #endif
 
     m_ReleaseHardwareAfterDescendantsOnFailure = FALSE;
-    
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    m_SleepStudy = NULL;
+    m_SleepStudyPowerRefIoCount = 0;
+
+    //
+    // Sleep Study relies on other OS components that do not start as early as 
+    // WDF. We automatically track references until we have determined if 
+    // Sleep Study is enabled for this driver.
+    //
+    m_SleepStudyTrackReferences = TRUE;
+#endif
+
     MarkDisposeOverride(ObjectDoNotLock);
 }
 
@@ -201,6 +213,10 @@ FxPkgPnp::~FxPkgPnp()
     PSINGLE_LIST_ENTRY ple;
 
     Mx::MxAssert(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    SleepStudyStop();
+#endif
 
     //
     // We should either have zero pending children or we never made it out of
@@ -5338,6 +5354,9 @@ Return Value:
     }
 }
 
+// 
+
+//
 _Must_inspect_result_
 NTSTATUS
 FxPkgPnp::PnpPowerReferenceSelf(
@@ -6510,4 +6529,3 @@ FxPkgPnp::PowerPolicyGetDeviceDeepestDeviceWakeState(
 
     return dxState;
 }
-

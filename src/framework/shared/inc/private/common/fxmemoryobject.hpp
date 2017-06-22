@@ -129,7 +129,7 @@ public:
     AddRef(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         )
     {
         return FxObject::AddRef(Tag, Line, File);
@@ -140,7 +140,7 @@ public:
     Release(
         __in PVOID Tag,
         __in LONG Line,
-        __in_opt PSTR File
+        __in_opt PCSTR File
         )
     {
         return FxObject::Release(Tag, Line, File);

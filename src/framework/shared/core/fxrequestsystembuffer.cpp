@@ -205,7 +205,7 @@ ULONG
 FxRequestSystemBuffer::AddRef(
     __in PVOID Tag,
     __in LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     )
 /*++
 
@@ -242,7 +242,7 @@ ULONG
 FxRequestSystemBuffer::Release(
     __in PVOID Tag,
     __in LONG Line,
-    __in_opt PSTR File
+    __in_opt PCSTR File
     )
 /*++
 

@@ -2218,6 +2218,18 @@ Return Value:
         }
         return WdfDevStatePowerInitialPowerUpFailedDerefParent;
     }
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    if (This->IsSleepStudyTrackingRefs() != FALSE) {
+        //
+        // WDF re-baselines the start time of WDF DRIPS blockers after D0Entry 
+        // succeeds so that we only measure the time blocking time while the 
+        // driver is in D0.
+        //
+        This->SleepStudyResetBlockersForD0();
+    }
+#endif
+
     return WdfDevStatePowerD0StartingConnectInterrupt;
 }
 
@@ -3506,6 +3518,17 @@ Return Value:
         }
     }
 
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    if (This->IsSleepStudyTrackingRefs() != FALSE) {
+        //
+        // WDF re-baselines the start time of WDF DRIPS blockers after D0Entry 
+        // succeeds so that we only measure the time blocking time while the 
+        // driver is in D0.
+        //
+        This->SleepStudyResetBlockersForD0();
+    }
+#endif
+
     return WdfDevStatePowerNotifyingD0EntryToWakeInterrupts;
 }
 
@@ -3549,6 +3572,17 @@ Return Value:
             return WdfDevStatePowerUpFailedDerefParentNP;
         }
     }
+
+    //
+    // WDF re-baselines the start time of WDF DRIPS blockers after D0Entry 
+    // succeeds and this state requires all actions to be non-paged. We 
+    // cannot guarantee the export driver will not use paged memory 
+    // so we skip the call. The consequence of this is that drivers that 
+    // report sleep study blockers will provide times that include the time
+    // to request the power IRP and the time other devices in the stack take 
+    // to process the IRP.
+    //
+    //This->SleepStudyResetBlockersForD0();
 
     return WdfDevStatePowerNotifyingD0EntryToWakeInterruptsNP;
 }

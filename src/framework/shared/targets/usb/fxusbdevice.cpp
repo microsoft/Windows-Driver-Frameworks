@@ -105,7 +105,12 @@ FxUsbDeviceControlContext::CopyParameters(
     m_CompletionParams.IoStatus.Information = m_Urb->TransferBufferLength;
     m_UsbParameters.Parameters.DeviceControlTransfer.Length = m_Urb->TransferBufferLength;
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
-    m_CompletionParams.IoStatus.Information = m_UmUrb.UmUrbControlTransfer.TransferBufferLength;
+    // 
+    // In case of UMDF since the URB itself is not sent down the stack
+    // we propagate the transfer length into the URB via the UM IRP 
+    //
+    m_UmUrb.UmUrbControlTransfer.TransferBufferLength = (ULONG)m_CompletionParams.IoStatus.Information;
+
     m_UsbParameters.Parameters.DeviceControlTransfer.Length = m_UmUrb.UmUrbControlTransfer.TransferBufferLength;
 #endif
     __super::CopyParameters(Request);
@@ -1453,6 +1458,7 @@ Return Value:
     ULONG iPipe;
     USHORT maxNumPipes, size;
     UCHAR numPipes;
+    UCHAR numPipesAllocated = 0;
     FxInterfacePipeInformation* pPipeInfo;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxUsbInterface * pUsbInterface ;
@@ -1505,9 +1511,11 @@ Return Value:
         // Use one in the zero case to make the logic simpler
         //
         size = sizeof(FxInterfacePipeInformation);
+        numPipesAllocated = 1;
     }
     else {
         size = m_NumInterfaces * sizeof(FxInterfacePipeInformation);
+        numPipesAllocated = m_NumInterfaces;
     }
 
     pPipeInfo = (FxInterfacePipeInformation*) FxPoolAllocate(
@@ -1840,7 +1848,7 @@ Done:
         //
         // Free all arrays that may have been allocated
         //
-        for (intfIndex = 0; intfIndex < m_NumInterfaces; intfIndex++) {
+        for (intfIndex = 0; intfIndex < numPipesAllocated; intfIndex++) {
             //
             // We can have NumPipes == 0 and still have an allocated array, so
             // use the array != NULL as the check.

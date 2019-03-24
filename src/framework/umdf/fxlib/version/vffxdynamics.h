@@ -109,6 +109,60 @@ VFWDFEXPORT(WdfCollectionGetLastItem)(
     WDFCOLLECTION Collection
     );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+VOID
+VFWDFEXPORT(WdfDeviceInitSetCompanionEventCallbacks)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit,
+    _In_
+    PWDF_COMPANION_EVENT_CALLBACKS CompanionEventCallbacks
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfCompanionCreate)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _Inout_
+    PWDFDEVICE_INIT* DeviceInit,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES DeviceAttributes,
+    _Out_
+    WDFCOMPANION* Companion
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+HANDLE
+VFWDFEXPORT(WdfCompanionWdmGetSecureDeviceHandle)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCOMPANION Companion
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfCompanionCreateTaskQueue)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCOMPANION Companion,
+    _In_
+    PWDF_TASK_QUEUE_CONFIG Config,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES QueueAttributes,
+    _Out_opt_
+    WDFTASKQUEUE* Queue
+    );
+
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
@@ -882,6 +936,18 @@ VFWDFEXPORT(WdfDeviceGetDeviceStackIoType)(
     WDF_DEVICE_IO_TYPE* IoControlIoType
     );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    WDFSTRING String
+    );
+
 _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
@@ -1034,6 +1100,52 @@ VFWDFEXPORT(WdfDriverIsVersionAvailable)(
     WDFDRIVER Driver,
     _In_
     PWDF_DRIVER_VERSION_AVAILABLE_PARAMS VersionAvailableParams
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL + 1)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverErrorReportApiMissing)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_opt_
+    PCWSTR FrameworkExtensionName,
+    _In_
+    ULONG ApiIndex,
+    _In_
+    BOOLEAN DoesApiReturnNtstatus
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    ACCESS_MASK DesiredAccess,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES KeyAttributes,
+    _Out_
+    WDFKEY* Key
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    WDFSTRING String
     );
 
 _Must_inspect_result_
@@ -3923,6 +4035,14 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue),
         VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback),
         VFWDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks),
+        VFWDFEXPORT(WdfCompanionCreate),
+        VFWDFEXPORT(WdfCompanionWdmGetSecureDeviceHandle),
+        VFWDFEXPORT(WdfCompanionCreateTaskQueue),
+        VFWDFEXPORT(WdfDeviceInitSetCompanionEventCallbacks),
+        VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey),
+        VFWDFEXPORT(WdfDriverErrorReportApiMissing),
+        VFWDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString),
+        VFWDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString),
     }
 };
 

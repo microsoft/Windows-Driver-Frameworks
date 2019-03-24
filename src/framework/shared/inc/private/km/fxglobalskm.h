@@ -316,6 +316,12 @@ VOID
     _In_ ULONG PoolTag
     );
 
+typedef
+BOOLEAN
+(*PFN_VF_IS_RULE_CLASS_ENABLED) (
+    _In_ ULONG RuleClassId
+    );
+
 VOID
 FxRegisterBugCheckCallback(
     __inout PFX_DRIVER_GLOBALS FxDriverGlobals,

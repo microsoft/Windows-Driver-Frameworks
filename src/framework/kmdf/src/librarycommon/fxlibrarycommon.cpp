@@ -107,9 +107,9 @@ GetTriageInfo(
     _WdfQueueTriageInfo.PkgIo = FIELD_OFFSET(FxIoQueue, m_PkgIo);
 
     // Forward Progress
-    _WdfFwdProgressTriageInfo.ReservedRequestList = 
+    _WdfFwdProgressTriageInfo.ReservedRequestList =
         FIELD_OFFSET(FXIO_FORWARD_PROGRESS_CONTEXT, m_ReservedRequestList);
-    _WdfFwdProgressTriageInfo.ReservedRequestInUseList = 
+    _WdfFwdProgressTriageInfo.ReservedRequestInUseList =
         FIELD_OFFSET(FXIO_FORWARD_PROGRESS_CONTEXT, m_ReservedRequestInUseList);
     _WdfFwdProgressTriageInfo.PendedIrpList =
         FIELD_OFFSET(FXIO_FORWARD_PROGRESS_CONTEXT, m_PendedIrpList);
@@ -129,9 +129,9 @@ GetTriageInfo(
         FIELD_OFFSET(FxRequest, m_OwnerListEntry);
     _WdfRequestTriageInfo.ListEntryQueueOwned2 =
         FIELD_OFFSET(FxRequest, m_OwnerListEntry2);
-    _WdfRequestTriageInfo.RequestListEntry = 
+    _WdfRequestTriageInfo.RequestListEntry =
         FIELD_OFFSET(FxRequest, m_ListEntry);
-    _WdfRequestTriageInfo.FwdProgressList = 
+    _WdfRequestTriageInfo.FwdProgressList =
         FIELD_OFFSET(FxRequest, m_ForwardProgressList);
 
     // WdfDevice
@@ -170,7 +170,7 @@ ReportDdiFunctionCountMismatch(
     NTSTATUS status;
 
     //
-    // NOTE: Any single call to DbgPrintEx will only transmit 512 bytes of 
+    // NOTE: Any single call to DbgPrintEx will only transmit 512 bytes of
     // information.
     //
     DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
@@ -191,8 +191,8 @@ ReportDdiFunctionCountMismatch(
             );
 
     //
-    // Report a warning level ETW event to the system event log. "Wdf01000" is 
-    // the listed event provider. 
+    // Report a warning level ETW event to the system event log. "Wdf01000" is
+    // the listed event provider.
     //
     status = RtlStringCchPrintfW(insertString,
                             RTL_NUMBER_OF(insertString),
@@ -270,7 +270,7 @@ FxLibraryCommonCommission(
         //
         status = STATUS_SUCCESS;
     }
-    
+
     //
     // Attempt to load RtlGetVersion (works for > w2k).
     //
@@ -293,7 +293,7 @@ FxLibraryCommonCommission(
     // Init triage info for 9f bugcheck analysis.
     //
     GetTriageInfo();
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -369,7 +369,7 @@ FxLibraryCommonRegisterClient(
     // Prefast is unable to make that determination.
     //
     __assume(WdfVersion.FuncCount == sizeof(WDFFUNCTIONS)/sizeof(PVOID));
-    
+
     if (Info->FuncCount > WdfVersion.FuncCount) {
         __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
                  ": version mismatch detected in function table count: client"
@@ -378,23 +378,26 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_19) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_25) {
         //
         // Make sure table count matches exactly with previously
         // released framework version table sizes.
         //
         switch (Info->FuncCount) {
 
-        case WdfFunctionTableNumEntries_V1_19:
-     // case WdfFunctionTableNumEntries_V1_17: // both 1.17 and 1.15 have 444 functions
-        case WdfFunctionTableNumEntries_V1_15:
-        case WdfFunctionTableNumEntries_V1_13:
-        case WdfFunctionTableNumEntries_V1_11:
-        case WdfFunctionTableNumEntries_V1_9:
-     // case WdfFunctionTableNumEntries_V1_7:  // both 1.7 and 1.5 have 387 functions
-        case WdfFunctionTableNumEntries_V1_5:
-        case WdfFunctionTableNumEntries_V1_1:
-        case WdfFunctionTableNumEntries_V1_0:
+        case WdfFunctionTableNumEntries_V1_25: // 453 - win10 1803 RS4
+        case WdfFunctionTableNumEntries_V1_23: // 451 - win10 1709 RS3
+        case WdfFunctionTableNumEntries_V1_21: // 448 - win10 1703 RS2
+        case WdfFunctionTableNumEntries_V1_19: // 446 - win10 1607 RS1
+     // case WdfFunctionTableNumEntries_V1_17: // 444 - win10 1511 TH2
+        case WdfFunctionTableNumEntries_V1_15: // 444 - win10 1507 TH1
+        case WdfFunctionTableNumEntries_V1_13: // 438 - win8.1
+        case WdfFunctionTableNumEntries_V1_11: // 432 - win8
+        case WdfFunctionTableNumEntries_V1_9:  // 396 - win7
+     // case WdfFunctionTableNumEntries_V1_7:  // 387 - vista sp1
+        case WdfFunctionTableNumEntries_V1_5:  // 387 - vista
+        case WdfFunctionTableNumEntries_V1_1:  // 386
+        case WdfFunctionTableNumEntries_V1_0:  // 383
             break;
 
         default:
@@ -412,14 +415,12 @@ FxLibraryCommonRegisterClient(
 
 
 
-
-
-
-
         //
         // Client version is same as framework version. Make
-        // sure table count is exact. 
+        // sure table count is exact.
         //
+        BOOLEAN issueBreak = WDF_PRODUCTION_RELEASE;
+
         if (Info->FuncCount != WdfFunctionTableNumEntries) {
             RtlZeroMemory(&serviceName, sizeof(UNICODE_STRING));
 
@@ -430,15 +431,17 @@ FxLibraryCommonRegisterClient(
                 RtlInitUnicodeString(&serviceName, L"Unknown");
             }
 
-            // 
-            // Report a DbgPrint message, telemetry event and an ETW event that 
+            //
+            // Report a DbgPrint message, telemetry event and an ETW event that
             // will serve as diagnostic aid.
             //
             ReportDdiFunctionCountMismatch((PCUNICODE_STRING)&serviceName,
                                            Info->FuncCount,
                                            WdfFunctionTableNumEntries,
-                                           TRUE); 
+                                           issueBreak);
+#if WDF_PRODUCTION_RELEASE
             goto Done;
+#endif
         }
     }
 
@@ -478,7 +481,7 @@ FxLibraryCommonRegisterClient(
             }
             else {
                 //
-                // FuncTable arrives with a ptr to &WdfFunctions, so we update 
+                // FuncTable arrives with a ptr to &WdfFunctions, so we update
                 // what WdfFunctions points to.
                 //
                 *((WDFFUNC**) Info->FuncTable) = (WDFFUNC*) &WdfVersion.Functions;
@@ -507,7 +510,7 @@ FxLibraryCommonRegisterClient(
             }
             else {
                 //
-                // FuncTable arrives with a ptr to &WdfFunctions, so we update 
+                // FuncTable arrives with a ptr to &WdfFunctions, so we update
                 // what WdfFunctions points to.
                 //
                 *((WDFFUNC**) Info->FuncTable) = (WDFFUNC*) &VfWdfVersion.Functions;

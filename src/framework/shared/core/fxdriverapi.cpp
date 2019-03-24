@@ -96,13 +96,26 @@ WDFEXPORT(WdfDriverCreate)(
     NTSTATUS status;
     WDFDRIVER hDriver;
     const LONG validFlags = WdfDriverInitNonPnpDriver |
-                            WdfDriverInitNoDispatchOverride;
+                            WdfDriverInitNoDispatchOverride |
+                            WdfDriverInitCompanion;
 
     hDriver = NULL;
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
 
     FxPointerNotNull(pFxDriverGlobals, DriverObject);
-    FxPointerNotNull(pFxDriverGlobals, RegistryPath);
+
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    PDRIVER_OBJECT_UM pDrvObj = DriverObject;
+    PWUDF_DRIVER_LOAD_CONTEXT pLoadContext = pDrvObj->DriverLoadContext;
+
+    pFxDriverGlobals->IsDriverCompanion = (pLoadContext->DriverType == WUDF_DRIVER_TYPE_COMPANION);
+#else
+    pFxDriverGlobals->IsDriverCompanion = FALSE;
+#endif
+
+    if (!pFxDriverGlobals->IsDriverCompanion) {
+        FxPointerNotNull(pFxDriverGlobals, RegistryPath);
+    }
     FxPointerNotNull(pFxDriverGlobals, DriverConfig);
 
     //
@@ -137,16 +150,30 @@ WDFEXPORT(WdfDriverCreate)(
         return status;
     }
 
+    //
+    // If this is a companion, validate if it has set the WdfDriverInitCompanion flag
+    //
+    if (pFxDriverGlobals->IsDriverCompanion && ((DriverConfig->DriverInitFlags & WdfDriverInitCompanion) == 0)) {
+        status = STATUS_INVALID_PARAMETER;
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
+            "DriverInitFlags missing WdfDriverInitCompanion, %!STATUS!",
+            status);
+
+        return status;
+    }
+
     status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
     if (!NT_SUCCESS(status)) {
         return status;
     }
 
-    status = FxValidateUnicodeString(pFxDriverGlobals, RegistryPath);
-    if (!NT_SUCCESS(status)) {
-        return status;
+    if (!pFxDriverGlobals->IsDriverCompanion) {
+        status = FxValidateUnicodeString(pFxDriverGlobals, RegistryPath);
+        if (!NT_SUCCESS(status)) {
+            return status;
+        }
     }
-
     //
     // Driver and Public.Driver are set once WdfDriverCreate returns successfully.
     // If they are set, that means this DDI has already been called for this
@@ -263,8 +290,8 @@ WDFEXPORT(WdfDriverCreate)(
     if (NT_SUCCESS(status)) {
         //
         // **** Note ****
-        // Do not introduce failures after this point without ensuring 
-        // FxObject::DeleteFromFailedCreate has a chance to clear out any 
+        // Do not introduce failures after this point without ensuring
+        // FxObject::DeleteFromFailedCreate has a chance to clear out any
         // assigned callbacks on the object.
         //
 
@@ -319,14 +346,14 @@ WDFEXPORT(WdfDriverCreate)(
 
             //
             // GetImageName can fail if the registry cannot be accessed. This
-            // can happen during system shutdown. Since the image name is only 
+            // can happen during system shutdown. Since the image name is only
             // used for telemetry the failure can be ignored.
-            // 
+            //
             (VOID) GetImageName(pFxDriverGlobals, &imageName.m_UnicodeString);
 
-            WDF_CENSUS_EVT_WRITE_DRIVER_LOAD(g_TelemetryProvider, 
-                                    pFxDriverGlobals, 
-                                    imageName.m_UnicodeString.Buffer, 
+            WDF_CENSUS_EVT_WRITE_DRIVER_LOAD(g_TelemetryProvider,
+                                    pFxDriverGlobals,
+                                    imageName.m_UnicodeString.Buffer,
                                     pVersionStr);
         }
     }
@@ -517,6 +544,111 @@ WDFEXPORT(WdfDriverIsVersionAvailable)(
     }
 
     return FALSE;
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL + 1)
+NTSTATUS
+WDFEXPORT(WdfDriverErrorReportApiMissing)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_opt_
+    PCWSTR FrameworkExtensionName,
+    _In_
+    ULONG ApiIndex,
+    _In_
+    BOOLEAN DoesApiReturnNtstatus
+    )
+{
+    DDI_ENTRY();
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDriver* pDriver;
+    PCSTR DriverName;
+    BOOLEAN IsWdf = FALSE;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Driver,
+                                   FX_TYPE_DRIVER,
+                                   (PVOID *)&pDriver,
+                                   &pFxDriverGlobals);
+
+    if (FrameworkExtensionName == NULL) {
+        IsWdf = TRUE;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        FrameworkExtensionName = L"KMDF";
+#else
+        FrameworkExtensionName = L"UMDF";
+#endif
+    }
+
+    //
+    // WDF_DRIVER_GLOBALS.DriverName is initialized in WdfDriverCreate().
+    //
+    // It is documented that a driver must call WdfDriverCreate from within its
+    // DriverEntry routine, before calling any other framework routines.
+    // Therefore we can safely assume that when WdfDriverReportApiMissing is
+    // called, WdfDriverCreate has alredy been called and DriverName is thus
+    // initialized properly. However, let's say, a new API WdfDriverCreate2
+    // is introduced and a driver wants to call that API which is unavailable,
+    // in such a case DriverName will not be initialized. But at least it is
+    // zeroed (in FxAllocateDriverGlobals) and does not contains garbage data.
+    //
+    DriverName = DriverGlobals->DriverName;
+    if (*DriverName == '\0') { // No need to check DriverName == NULL as it is a fixed array
+        DriverName = "(Unknown)";
+    }
+
+    WDF_DRIVER_ERROR_REPORT_API_MISSING(g_TelemetryProvider,
+        pFxDriverGlobals,
+        FrameworkExtensionName,
+        ApiIndex);
+
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGAPIERROR,
+        "Driver %s called a %ws API with index: %lu that is not available in "
+        "this version of %ws. The driver must check for API availability using "
+        "%s_IS_FUNCITON_AVAILABLE at runtime before calling it.",
+        DriverName, FrameworkExtensionName, ApiIndex, FrameworkExtensionName,
+        IsWdf ? "WDF" : " "); // Do not use "" as it shows "<NULL>" which is not ideal
+
+    //
+    // If the API is expected to return NTSTATUS, we returns a failure code,
+    // assuming that the caller is capable of handling error case properly.
+    //
+    // For all other return types (including VOID and Boolean), we do not know
+    // how to proceed safely, thus we bug check the system.
+    //
+    // If Driver Verifier is enabled, assume that the machine is being debugged,
+    // we also do a bug check so that the developer can catch the problem easily.
+    //
+    if ((DoesApiReturnNtstatus == FALSE)
+        || pFxDriverGlobals->FxVerifierOn
+        ) {
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        FxVerifierDriverReportedBugcheck(
+            pFxDriverGlobals,
+            WDF_VIOLATION,
+            WDF_API_UNAVAILABLE,
+            (ULONG_PTR)DriverName,
+            (ULONG_PTR)FrameworkExtensionName,
+            ApiIndex);
+#else
+        FX_VERIFY_BUGCHECK(
+            WDF_VIOLATION,
+            "Driver called an unavailable API",
+            DriverName,
+            FrameworkExtensionName,
+            ApiIndex,
+            "ApiMissing");
+#endif
+
+    }
+
+    return STATUS_PROCEDURE_NOT_FOUND;
 }
 
 } // extern "C"

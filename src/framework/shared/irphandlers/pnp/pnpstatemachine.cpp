@@ -2918,6 +2918,10 @@ Return Value:
 
   --*/
 {
+    BOOLEAN failedActionAttemptRestart;
+
+    failedActionAttemptRestart = FALSE;
+
     //
     // Finish processing any pended PnP IRP.  Since we can reach this state from
     // states where a pnp irp was *not* pended, we do not require a pnp irp to
@@ -2926,11 +2930,29 @@ Return Value:
     This->PnpFinishProcessingIrp(FALSE);
 
     //
+    // For compatibility reasons, in case of UMDF version < 2.23
+    // and KMDF version < 1.23 renumerate the PDO if FailedAction
+    // is WdfDeviceFailedAttemptRestart. For later versions
+    // reenumeration is done by SetDeviceFailed
+    //
+    if (This->m_FailedAction == WdfDeviceFailedAttemptRestart) {
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+        if (This->GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(2, 23) == FALSE) {
+            failedActionAttemptRestart = TRUE;
+        }
+#else
+        if (This->GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1, 23) == FALSE) {
+            failedActionAttemptRestart = TRUE;
+        }
+#endif
+    }
+
+    //
     // Request reenumeration if the client driver asked for it or if there was
     // an internal failure *and* if the client driver didn't specify failure...
     // AND if we have not yet exceeded our restart count within a period of time.
     //
-    if ((This->m_FailedAction == WdfDeviceFailedAttemptRestart ||
+    if ((failedActionAttemptRestart ||
          (This->m_FailedAction == WdfDeviceFailedUndefined && This->m_InternalFailure))
         &&
         This->PnpCheckAndIncrementRestartCount()) {

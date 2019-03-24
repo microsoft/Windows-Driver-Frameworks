@@ -14,6 +14,13 @@ typedef struct _ERROR_BUCKET {
 
 const NTSTATUS INVALID_STATUS = (ULONG)(-1);
 
+// VSTS 15705056: Wv17 Cleanup C4838: minkernel\wdf\framework\shared\inc\primitives\um\ErrToStatus.h. See bug for more details.
+// Any fixes for this should be made in drivers\wdf\umdf\tools\ErrToStatus\gencode.cpp and regenerated.
+// The resulting GenerateErrToStatusMapping.exe should be used to regenerate all ErrToStatus.h files listed in the above bug.
+// Currently (1/30/17), the checked in ErrToStatus.h files vary greatly from the generated ones and should be carefully looked over.
+// Contact wdfdevon@microsoft.com for more information.
+#pragma warning(push)
+#pragma warning(disable:4838)
 CONST NTSTATUS ErrorTable[] = {
     0x0,
     0xc0000010,
@@ -1736,6 +1743,7 @@ CONST NTSTATUS ErrorTable[] = {
     0xc03a0018,
     0xc03a0019,
 };
+#pragma warning(pop)
 
 CONST ERROR_BUCKET ErrorBucketTable[] = {
     {0x0, 7},

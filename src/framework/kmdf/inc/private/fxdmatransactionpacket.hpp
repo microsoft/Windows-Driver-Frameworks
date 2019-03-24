@@ -364,14 +364,12 @@ protected:
                                         GetTransferContext(),
                                         m_MapRegistersNeeded,
                                         m_Flags,
-#pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_CONTROL type.")
                                         _AdapterControl,
                                         this,
                                         NULL
                                         );
             }
             else {
-#pragma prefast(suppress:__WARNING_PASSING_FUNCTION_UNEXPECTED_NULL, "_AdapterControl does not actually use the IRP parameter.");
                 _AdapterControl(m_DmaEnabler->m_FDO,
                                 NULL,
                                 GetMapRegisterBase(),
@@ -388,7 +386,6 @@ protected:
                         AllocateAdapterChannel(m_AdapterInfo->AdapterObject,
                                     m_DmaEnabler->m_FDO,
                                     m_MapRegistersNeeded,
-#pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_CONTROL type.")
                                     _AdapterControl,
                                     this);
         }

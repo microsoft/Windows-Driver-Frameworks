@@ -48,6 +48,10 @@ UMDF_VERSION_DATA Microsoft_WDF_UMDF_Version = {__WUDF_MAJOR_VERSION,
 IUMDFPlatform *g_IUMDFPlatform = NULL;
 IWudfHost2 *g_IWudfHost2 = NULL;
 
+//
+// Pointer to the platform module interface obtained from platform interface
+//
+IUMDFPlatformModule *g_IUMDFPlatformModule = NULL;
 
 // ***********************************************************************************
 // DLL Entry Point
@@ -111,6 +115,17 @@ FxFrameworkEntryUm(
     
     FX_VERIFY(INTERNAL, CHECK_QI(hrQI, g_IWudfHost2));
     g_IWudfHost2->Release();
+
+    //
+    // Get the IUMDFPlatformModule * from LoaderInterface.
+    //
+    hrQI = LoaderInterface->pUMDFPlatform->QueryInterface(
+                                    IID_IUMDFPlatformModule, 
+                                    (PVOID*)&g_IUMDFPlatformModule
+                                    );
+
+    FX_VERIFY(INTERNAL, CHECK_QI(hrQI, g_IUMDFPlatformModule));
+    g_IUMDFPlatformModule->Release();
 
     //
     // Do first time init of this v2.x framework module.

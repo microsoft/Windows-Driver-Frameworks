@@ -279,6 +279,20 @@ public:
         _In_ CfxDevice* Device
         );
 
+    virtual
+    NTSTATUS
+    InvokeCompanionCallback(
+        _In_ FxCompanionTarget* CompanionTarget
+        )
+    {
+        UNREFERENCED_PARAMETER(CompanionTarget);
+        //
+        // By default the base class returns STATUS_SUCCESS. Specific
+        // callbacks such as prepare hw and d0entry will override this 
+        // definition
+        //
+        return STATUS_SUCCESS;
+    }
 protected:
     FxCxCallbackType m_CallbackType;
     FxPkgPnp*        m_PkgPnp;

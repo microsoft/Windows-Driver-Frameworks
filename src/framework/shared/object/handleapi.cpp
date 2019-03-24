@@ -636,7 +636,7 @@ Return Value:
         }
     }
 
-    PCHAR pGivenName;
+    LPCSTR pGivenName;
 
     if (TypeInfo->ContextName != NULL) {
         pGivenName = TypeInfo->ContextName;

@@ -346,6 +346,40 @@ VFWDFEXPORT(WdfCommonBufferGetLength)(
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfCompanionTargetSendTaskSynchronously)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCOMPANIONTARGET CompanionTarget,
+    _In_
+    USHORT TaskQueueIdentifier,
+    _In_
+    ULONG TaskOperationCode,
+    _In_opt_
+    PWDF_MEMORY_DESCRIPTOR InputBuffer,
+    _In_opt_
+    PWDF_MEMORY_DESCRIPTOR OutputBuffer,
+    _In_opt_
+    PWDF_TASK_SEND_OPTIONS TaskOptions,
+    _Out_
+    PULONG_PTR BytesReturned
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+PEPROCESS
+VFWDFEXPORT(WdfCompanionTargetWdmGetCompanionProcess)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCOMPANIONTARGET CompanionTarget
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
 PWDFDEVICE_INIT
 VFWDFEXPORT(WdfControlDeviceInitAllocate)(
     _In_
@@ -1559,6 +1593,19 @@ VFWDFEXPORT(WdfDeviceAssignProperty)(
     PVOID Data
     );
 
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceRetrieveCompanionTarget)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _Out_
+    WDFCOMPANIONTARGET* CompanionTarget
+    );
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFIOTARGET
@@ -2159,6 +2206,40 @@ VFWDFEXPORT(WdfDriverIsVersionAvailable)(
     WDFDRIVER Driver,
     _In_
     PWDF_DRIVER_VERSION_AVAILABLE_PARAMS VersionAvailableParams
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL + 1)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverErrorReportApiMissing)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_opt_
+    PCWSTR FrameworkExtensionName,
+    _In_
+    ULONG ApiIndex,
+    _In_
+    BOOLEAN DoesApiReturnNtstatus
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    ACCESS_MASK DesiredAccess,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES KeyAttributes,
+    _Out_
+    WDFKEY* Key
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -6531,6 +6612,11 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks),
         VFWDFEXPORT(WdfFileObjectGetInitiatorProcessId),
         VFWDFEXPORT(WdfRequestGetRequestorProcessId),
+        VFWDFEXPORT(WdfDeviceRetrieveCompanionTarget),
+        VFWDFEXPORT(WdfCompanionTargetSendTaskSynchronously),
+        VFWDFEXPORT(WdfCompanionTargetWdmGetCompanionProcess),
+        VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey),
+        VFWDFEXPORT(WdfDriverErrorReportApiMissing),
     }
 };
 

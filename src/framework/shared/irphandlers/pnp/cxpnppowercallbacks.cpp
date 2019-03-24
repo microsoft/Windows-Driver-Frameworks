@@ -446,18 +446,44 @@ Return Value:
     CfxDevice* device;
     NTSTATUS status = STATUS_SUCCESS;
     FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
+    FxCompanionTarget* companionTarget;
 
     device = m_PkgPnp->GetDevice();
+    companionTarget = m_PkgPnp->GetCompanionTarget();
 
-    if (device->IsACxPresent() == FALSE)
-    {
+    if (device->IsACxPresent() == FALSE) {
+        if (NULL != companionTarget) {
+            //
+            // If the companion callback fails, then the value of 'Progress' 
+            // which is FxCxCallbackProgressInitialized informs the caller that 
+            // the client callback was not called.
+            //
+            status = InvokeCompanionCallback(companionTarget);
+            if (!NT_SUCCESS(status)) {
+                goto exit;
+            }
+        }
+
         status = InvokeClient();
         progress = FxCxCallbackProgressClientCalled;
         if (NT_SUCCESS(status)) {
             progress = FxCxCallbackProgressClientSucceeded;
         }
+
     }
     else {
+        if (NULL != companionTarget) {
+            //
+            // If the companion callback fails, then the value of 'Progress' 
+            // which is FxCxCallbackProgressInitialized informs the caller that 
+            // the client callback was not called.
+            //
+            status = InvokeCompanionCallback(companionTarget);
+            if (!NT_SUCCESS(status)) {
+                goto exit;
+            }
+        }
+
         //
         // notify all CX's to call PRE callback function
         //
@@ -486,6 +512,7 @@ Return Value:
         }
     }
 
+exit:
     if (Progress) {
         *Progress = progress;
     }
@@ -575,11 +602,21 @@ Return Value:
     CfxDevice* device;
     NTSTATUS status = STATUS_SUCCESS;
     NTSTATUS tempStatus = STATUS_SUCCESS;
+    FxCompanionTarget* companionTarget;
 
     device = m_PkgPnp->GetDevice();
+    companionTarget = m_PkgPnp->GetCompanionTarget();
 
     if (device->IsACxPresent() == FALSE) {
         status = InvokeClient();
+
+        if (NULL != companionTarget) {
+#pragma warning(suppress: 28193)
+            tempStatus = InvokeCompanionCallback(companionTarget);
+            if (NT_SUCCESS(status)) {
+                status = tempStatus;
+            }
+        }
     }
     else {
         //
@@ -593,7 +630,7 @@ Return Value:
         if (NT_SUCCESS(status)) {
             status = tempStatus;
         }
-    
+
         //
         // notify all CX's to call POST callback function
         //
@@ -603,8 +640,16 @@ Return Value:
         if (NT_SUCCESS(status)) {
             status = tempStatus;
         }
+
+        if (NULL != companionTarget) {
+#pragma warning(suppress: 28193)
+            tempStatus = InvokeCompanionCallback(companionTarget);
+            if (NT_SUCCESS(status)) {
+                status = tempStatus;
+            }
+        }
     }
-    return status;        
+    return status;
 }
 
 _Must_inspect_result_

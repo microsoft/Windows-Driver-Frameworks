@@ -408,7 +408,6 @@ Returns:
         return status;
     }
 
-    #pragma prefast(suppress: __WARNING_PASSING_FUNCTION_UNEXPECTED_NULL, "Static child lists do not use the EvtChildListCreateDevice callback")
     WDF_CHILD_LIST_CONFIG_INIT(&config,
                                sizeof(FxStaticChildDescription),
                                NULL);
@@ -560,33 +559,8 @@ Done:
     return status;
 }
 
-VOID
-FxPkgFdo::_WorkItemSurpriseRemoveAndReenumerateSelf(
-    _In_ PVOID Parameter
-    )
-/*++
-
-Routine Description:
-    Work item helper to ask the PDO to ask its parent bus driver to Surprise-Remove
-    and re-enumerate the PDO.  This will be done only at the point of
-    catastrophic software failure, and occasionally after catastrophic hardware
-    failure.
-
-Arguments:
-    Parameter is a pointer to FxPkgFdo*
-
-Return Value:
-    N/A
-
-  --*/
-{
-    PREENUMERATE_SELF_INTERFACE_STANDARD pInterface;
-    pInterface = (PREENUMERATE_SELF_INTERFACE_STANDARD) Parameter;
-    pInterface->SurpriseRemoveAndReenumerateSelf(pInterface->Context);
-}
-    
-
 _Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
 FxPkgFdo::AskParentToRemoveAndReenumerate(
     VOID
@@ -612,19 +586,7 @@ Return Value:
     pInterface = &m_SurpriseRemoveAndReenumerateSelfInterface;
 
     if (pInterface->SurpriseRemoveAndReenumerateSelf != NULL) {
-
-        // 
-        // GUID_REENUMERATE_SELF_INTERFACE_STANDARD defines PASSIVE level 
-        // for calling SurpriseRemoveAndReenumerateSelf, WdfDeviceSetFailed can
-        // be called at <=DISPATCH_LEVEL
-        //
-        if (Mx::MxGetCurrentIrql() == PASSIVE_LEVEL) {
-            pInterface->SurpriseRemoveAndReenumerateSelf(pInterface->Context);
-        }
-        else {
-            m_SurpriseRemoveAndReenumerateSelfWorkItem->Enqueue(
-                _WorkItemSurpriseRemoveAndReenumerateSelf, pInterface);
-        }
+        pInterface->SurpriseRemoveAndReenumerateSelf(pInterface->Context);
 
         return STATUS_SUCCESS;
     }

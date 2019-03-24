@@ -113,6 +113,7 @@ class  FxWmiInstanceInternal;
 struct FxWmiInstanceInternalCallbacks;
 class  FxWmiIrpHandler;
 class  FxWorkItem;
+class  FxCompanionTarget;
 
 class  IFxHasCallbacks;
 class  IFxMemory;

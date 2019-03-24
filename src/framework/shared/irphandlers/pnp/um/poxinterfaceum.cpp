@@ -123,3 +123,20 @@ FxPoxInterface::PowerNotRequiredCallbackInvoked(
     return;
 }
 
+VOID
+FxPoxInterface::SimulateDevicePowerRequiredInReflector(
+    VOID
+    )
+{
+    if (FALSE == m_PkgPnp->m_PowerPolicyMachine.m_Owner->m_IdleSettings.
+                                m_TimeoutMgmt.UsingSystemManagedIdleTimeout()) {
+        //
+        // Driver-managed idle timeout. Nothing to do.
+        //
+        return;
+    }
+
+    m_PkgPnp->GetDevice()->GetDeviceStack2()->PoFxSimulateDevicePowerRequiredInReflector();
+}
+
+

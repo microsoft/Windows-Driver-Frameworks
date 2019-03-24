@@ -260,4 +260,79 @@ Done:
     return status;
 }
 
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    ACCESS_MASK DesiredAccess,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES KeyAttributes,
+    _Out_
+    WDFKEY* Key
+    )
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+    FxDriver* pDriver;
+    FxRegKey* pKey;
+    HANDLE hKey;
+    WDFKEY keyHandle;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, Key);
+
+    *Key = NULL;
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    status = FxValidateObjectAttributes(pFxDriverGlobals, KeyAttributes);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         Driver,
+                         FX_TYPE_DRIVER,
+                         (PVOID*) &pDriver);
+
+    pKey = new(pFxDriverGlobals, KeyAttributes) FxRegKey(pFxDriverGlobals);
+    if (pKey == NULL) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    status = pKey->Commit(KeyAttributes, (WDFOBJECT*)&keyHandle);
+    if (NT_SUCCESS(status)) {
+        status = IoOpenDriverRegistryKey(pDriver->GetDriverObject(),
+                                         DriverRegKeyPersistentState,
+                                         DesiredAccess,
+                                         0, // Flags - Must be 0
+                                         &hKey);
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGAPIERROR,
+                "WdfDriverOpenPersistentStateRegistryKey failed because "
+                "IoOpenDriverRegistryKey returned  %!STATUS!",
+                status);
+        }
+        else {
+            pKey->SetHandle(hKey);
+            *Key = keyHandle;
+        }
+    }
+
+    if (!NT_SUCCESS(status)) {
+        pKey->DeleteFromFailedCreate();
+    }
+
+    return status;
+}
+
 } // extern "C"

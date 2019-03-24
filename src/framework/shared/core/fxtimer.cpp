@@ -150,33 +150,33 @@ FxTimer::Initialize(
     //
     // Decide whether to use the legacy KTimer or the new Ktimer2/ExTimer
     // and call the appropriate initialization routine.
-    // The new ExTimers expose two kind of timers:no wake timers and the 
-    // high resolution timers. For kernel mode, these timers are only exposed 
+    // The new ExTimers expose two kind of timers:no wake timers and the
+    // high resolution timers. For kernel mode, these timers are only exposed
     // to new clients.
     // For user mode,the underlying Threadpool APIs internally were upgraded
     // to using the no wake timers and we don't expose the High
     // resolution timers. Therefore the user mode code does not need to use
     // the ex initialization.
     //
-    
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE) 
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,13)) {
         status = m_Timer.InitializeEx(this, FxTimer::_FxTimerExtCallbackThunk, m_Period,
                                       m_TolerableDelay, m_UseHighResolutionTimer);
     } else {
         status = m_Timer.Initialize(this, FxTimer::_FxTimerDpcThunk, m_Period);
     }
-#else 
+#else
     status = m_Timer.Initialize(this, FxTimer::_FxTimerDpcThunk, m_Period);
 #endif
-   
+
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
             "Failed to initialize timer %!STATUS!", status);
         return status;
     }
-            
+
     //
     // As long as we are associated, the parent object holds a reference
     // count on the TIMER.
@@ -195,6 +195,28 @@ FxTimer::Initialize(
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
+    //
+    // Ideally if it is WdfExecutionLevelInheritFromParent, we should use
+    // the exec level from the timer's parent:
+    //
+    //     pCallbacks->GetConstraints(&parentExecLevel, NULL);
+    //     if (parentExecLevel == WdfExecutionLevelPassive)
+    //         isPassiveTimer = TRUE;
+    //
+    // However, consider the following,
+    //     - timer uses WdfExecutionLevelInheritFromParent
+    //     - parent uses WdfExecutionLevelPassive and WdfSynchronizationScopeNone
+    //
+    // Current code sets isPassiveTimer to false, and don't create m_SystemWorkItem;
+    // the proposed change on the other hand does create m_SystemWorkItem.
+    //
+    // Those are subtle behavior change that might break existing drivers. Thus
+    // we decide to not change the existing (though not perfect) behavior.
+    //
+    // Instead, we'll document that to create a passive level timer you have to
+    // set Attributes->ExecutionLevel explicitly. This is especially true for UMDF
+    // where everything from driver object down are assumed passive level already.
+    //
     if (Attributes->ExecutionLevel == WdfExecutionLevelPassive) {
         isPassiveTimer = TRUE;
     }
@@ -456,7 +478,7 @@ BOOLEAN
 FxTimer::Dispose()
 {
     KIRQL   irql;
-    
+
     // MarkPassiveDispose() in Initialize ensures this
     ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -559,7 +581,7 @@ Returns:
     BOOLEAN startTimer = FALSE;
 
     Lock(&irql);
-    
+
     //
     // Basic check to make sure timer object is not deleted. Note that this
     // logic is not foolproof b/c someone may dispose the timer just after this
@@ -591,27 +613,27 @@ Returns:
         //
         startTimer = TRUE;
     }
-    
+
     Unlock(irql);
 
     if (startTimer) {
         //
         // It may be possible for the timer to fire before the call from
         // KeSetTimerEx completes. If this happens and if the timer callback
-        // disposes the timer object, a dispose work-item is queued. 
+        // disposes the timer object, a dispose work-item is queued.
         // This work-item in turn may also run before KeSetTimerEx completes,
-        // making the object invalid by the time we try to take its Lock() 
+        // making the object invalid by the time we try to take its Lock()
         // below. This ADDREF() prevents the object from going away and it is
         // matched by a RELEASE() when we are done.
         //
         ADDREF(this);
-        
+
         //
         // Call the tolerable timer API only if OS supports it and driver
         // requested it.
         //
         result = m_Timer.StartWithReturn(DueTime, m_TolerableDelay);
-        
+
         Lock(&irql);
         if (m_StopThread != NULL) {
             m_StopAgain = TRUE;
@@ -623,7 +645,7 @@ Returns:
         //
         RELEASE(this);
     }
-    
+
     return result;
 }
 
@@ -636,7 +658,7 @@ FxTimer::Stop(
     BOOLEAN result;
 #ifdef DBG
     ULONG   retryCount = 0;
-#endif 
+#endif
 
     if (Wait) {
         //
@@ -647,9 +669,9 @@ FxTimer::Stop(
         // timers, so we flush whenever the caller desires to ensure all
         // callbacks are complete.
         //
-        
+
         //
-        // Make sure the stop is not called from within the callback 
+        // Make sure the stop is not called from within the callback
         // because it's semantically incorrect and can lead to deadlock
         // if the wait parameter is set.
         //
@@ -662,7 +684,7 @@ FxTimer::Stop(
             FxVerifierDbgBreakPoint(GetDriverGlobals());
             return FALSE;
         }
-        
+
         if (GetDriverGlobals()->FxVerifierOn) {
             if (Mx::MxGetCurrentIrql() != PASSIVE_LEVEL) {
                 DoTraceLevelMessage(
@@ -680,7 +702,7 @@ FxTimer::Stop(
         Lock(&irql);
 
         //
-        // Driver issue. 
+        // Driver issue.
         //
         if (GetDriverGlobals()->IsVerificationEnabled(1, 9, OkForDownLevel) &&
             m_StopThread != NULL) {
@@ -688,20 +710,20 @@ FxTimer::Stop(
                     GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGDEVICE,
                     "Detected multiple calls to WdfTimerStop for "
                     "WDFTIMER 0x%p, stop in progress on PRKTHREAD 0x%p, "
-                    "current PRKTHREAD 0x%p", 
+                    "current PRKTHREAD 0x%p",
                     GetHandle(), m_StopThread, Mx::MxGetCurrentThread());
             FxVerifierDbgBreakPoint(GetDriverGlobals());
         }
-        
+
         //
         // Reset the flag to find out if the timer's start logic aborts
         // b/c of this stop operation.
         //
         m_StartAborted = FALSE;
-            
+
         //
         // This field is used for the following purposes:
-        // (a) Let the start thread know not to restart the timer while stop 
+        // (a) Let the start thread know not to restart the timer while stop
         //     is running.
         // (b) Detect concurrent calls to stop the timer.
         // (c) To remember the thread id of the stopping thread.
@@ -711,14 +733,14 @@ FxTimer::Stop(
         do {
 #ifdef DBG
             retryCount++;
-#endif 
+#endif
             //
-            // Reset flag to catch when timer callback is restarting the 
+            // Reset flag to catch when timer callback is restarting the
             // timer.
             //
             m_StopAgain = FALSE;
             Unlock(irql);
-        
+
             //
             // Cancel the timer
             //
@@ -742,9 +764,9 @@ FxTimer::Stop(
             // This loop is run for a max of 2 times.
             //
             ASSERT(retryCount < 3);
-#endif 
+#endif
             //
-            // Re-stop timer if timer was not in queue and 
+            // Re-stop timer if timer was not in queue and
             // it got restarted in callback.
             //
         }while (result == FALSE && m_StopAgain);
@@ -754,26 +776,26 @@ FxTimer::Stop(
         //
         m_StopThread = NULL;
         m_StopAgain = FALSE;
-    
+
         //
         // Return TRUE (i.e., timer in queue) if
-        // (a) stop logic successfully cancelled the timer or 
+        // (a) stop logic successfully cancelled the timer or
         // (b) the start logic aborted b/c of this stop.
         //
         if (m_StartAborted) {
             result = TRUE;
             m_StartAborted = FALSE;
         }
-        
+
         Unlock(irql);
     }
     else {
         //
         // Caller doesn't want any synchronization.
-        // Cancel the timer. 
+        // Cancel the timer.
         //
         result = m_Timer.Stop();
     }
-    
+
     return result;
 }

@@ -29,7 +29,8 @@ Revision History:
 #include <procgrp.h>
 #include <wdmsec.h>
 
-#include <wmikm.h> 
+#include <wmistr.h>
+#include <etwkmcallbacks.h> 
 #include <ntwmi.h>
 
 typedef KDEFERRED_ROUTINE MdDeferredRoutineType, *MdDeferredRoutine;

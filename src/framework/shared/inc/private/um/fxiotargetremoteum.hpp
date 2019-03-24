@@ -31,6 +31,11 @@ private:
     
     LONG m_cRefs;
 
+    //
+    // Weak reference to Remote target. Host takes a reference on
+    // FxIoTargetRemoteNotificationCallback before invoking any of
+    // its callbacks.
+    //
     FxIoTargetRemote* m_RemoteTarget; 
 
 public:
@@ -126,13 +131,7 @@ public:
     {
         LONG cRefs = InterlockedDecrement( &m_cRefs );
         if (0 == cRefs) {
-            //
-            // The lifetime of this object is controlled by FxIoTargetRemote 
-            // object (the container object), and not by this ref count. This 
-            // method is implemented just to satisfy the interface implemetation
-            // requirement.
-            //
-            DO_NOTHING();
+            delete this;
         }
         
         return cRefs;

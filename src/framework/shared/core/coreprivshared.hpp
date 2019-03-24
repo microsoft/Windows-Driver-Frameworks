@@ -64,6 +64,17 @@ extern "C" {
 #include "wdfqueryinterface.h"
 #include "wdftriage.h"
 
+//
+// Companion headers
+//
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+#include "wdfcompanion.h"
+#endif
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+#include "wdfcompaniontarget.h"
+#endif
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 #include "FxIrpUm.hpp"
 #else

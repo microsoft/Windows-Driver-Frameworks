@@ -678,11 +678,11 @@ Return Value:
         goto Done;
     }
 
-    status = ZwPowerInformation(PlatformInformation, 
-                                NULL, 
-                                0,
-                                &platformInfo, 
-                                sizeof(platformInfo));
+
+
+
+
+
     if (!NT_SUCCESS(status) || platformInfo.AoAc == FALSE) {
         // 
         // Sleep Study is only supported on AOAC systems
@@ -690,7 +690,7 @@ Return Value:
         if (!NT_SUCCESS(status)) {
             DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
                 TRACINGPNP,
-                "ZwPowerInformation failed aquiring AOAC state, disabling "
+
                 "Sleep Study for WDFDEVICE 0x%p", m_Device->GetHandle());
         }
         else {
@@ -843,7 +843,7 @@ Return Value:
         if (!NT_SUCCESS(status)) {
             DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR,
                 TRACINGPNP,
-                "ZwPowerInformation failed, disabling Sleep Study for "
+
                 "WDFDEVICE 0x%p, %!STATUS!",
                 m_Device->GetHandle(), status);
         }

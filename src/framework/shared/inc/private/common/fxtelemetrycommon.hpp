@@ -45,6 +45,9 @@ Notes:
 // WudfHost.exe
 #define UMDF_HOST_TRACE_LOGGING_PROVIDER_NAME  "Microsoft.Wdf.UMDF.Host"
 
+// WudfCompanionHost.exe
+#define COMPANION_HOST_TRACE_LOGGING_PROVIDER_NAME  "Microsoft.Wdf.Companion.Host"
+
 // WdfLdr.sys
 #define KMDF_LDR_TRACE_LOGGING_PROVIDER_NAME   "Microsoft.Wdf.KMDF.Ldr"
 

@@ -55,9 +55,6 @@ public:
 private:
     
     REENUMERATE_SELF_INTERFACE_STANDARD m_SurpriseRemoveAndReenumerateSelfInterface;
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-    FxSystemWorkItem*                   m_SurpriseRemoveAndReenumerateSelfWorkItem;
-#endif
 
     //
     // The following structure contains the function pointer table
@@ -410,12 +407,6 @@ private:
     VOID
     ReleaseReenumerationInterface(
         VOID
-        );
-
-    static
-    VOID
-    _WorkItemSurpriseRemoveAndReenumerateSelf(
-        _In_ PVOID Parameter
         );
 
     _Must_inspect_result_

@@ -371,7 +371,6 @@ FxDmaScatterGatherTransaction::StageTransfer(
         status = BuildScatterGatherList(m_CurrentFragmentMdl,
                                         m_CurrentFragmentOffset,
                                         (ULONG) m_CurrentFragmentLength,
-#pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_LIST_CONTROL type.")
                                         _AdapterListControl,
                                         this,
                                         m_SGListBuffer,
@@ -382,7 +381,6 @@ FxDmaScatterGatherTransaction::StageTransfer(
         status = GetScatterGatherList(m_CurrentFragmentMdl,
                                       m_CurrentFragmentOffset,
                                       (ULONG) m_CurrentFragmentLength,
-#pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_LIST_CONTROL type.")
                                       _AdapterListControl,
                                       this);
     }

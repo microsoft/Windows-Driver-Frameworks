@@ -93,6 +93,13 @@ protected:
         _In_ PFxCxPnpPowerCallbackContext Context
         );
 
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    NTSTATUS
+    InvokeCompanionCallback(
+        _In_ FxCompanionTarget* CompanionTarget
+        );
+#endif
+
 private:
     PFN_WDF_DEVICE_D0_ENTRY m_Method;
     WDFDEVICE               m_Device;
@@ -153,7 +160,12 @@ protected:
         _In_ PFxCxPnpPowerCallbackContext Context,
         _In_ FxCxInvokeCallbackSubType PrePost
         );
-
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    NTSTATUS
+    InvokeCompanionCallback(
+        _In_ FxCompanionTarget* CompanionTarget
+        );
+#endif
 private:
     PFN_WDF_DEVICE_D0_EXIT  m_Method;
     WDFDEVICE               m_Device;
@@ -223,6 +235,12 @@ protected:
         _In_ PFxCxPnpPowerCallbackContext Context
         );
 
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    NTSTATUS
+    InvokeCompanionCallback(
+        _In_ FxCompanionTarget* CompanionTarget
+        );
+#endif
 private:
     PFN_WDF_DEVICE_PREPARE_HARDWARE m_Method;
     WDFDEVICE                       m_Device;
@@ -267,6 +285,12 @@ protected:
         _In_ FxCxInvokeCallbackSubType PrePost
         );
 
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    NTSTATUS
+    InvokeCompanionCallback(
+        _In_ FxCompanionTarget* CompanionTarget
+        );
+#endif
 private:
     PFN_WDF_DEVICE_RELEASE_HARDWARE m_Method;
     WDFDEVICE                       m_Device;

@@ -8,7 +8,7 @@ Module Name:
 
 Abstract:
 
-    This is the header file for core framework (Wdf0100 and Wudfx02000) 
+    This is the header file for core framework (Wdf0100 and Wudfx02000)
     related telemetry.
 
 Author:
@@ -62,7 +62,7 @@ typedef enum _FX_TELEMETRY_DO_ONCE_BITS {
 //
 // Source:      Mode agnostic (UMDF and KMDF)
 //
-// Description: Written when a WDF client or cx calls WdfDriverCreate. 
+// Description: Written when a WDF client or cx calls WdfDriverCreate.
 //              The event contains information about the driver version,
 //              verifier options, service name and driver configuration
 //              to track non-pnp drivers or WDF miniports.
@@ -85,6 +85,31 @@ typedef enum _FX_TELEMETRY_DO_ONCE_BITS {
                     TraceLoggingBoolean(!!((Globals)->Public.DriverFlags & WdfDriverInitNoDispatchOverride), "DriverNoDispatchOverride"  ), \
                     TraceLoggingUInt32((Globals)->FxEnhancedVerifierOptions,                                 "FxEnhancedVeriferOptions"  )  \
                 );
+
+//
+// Event name:  WdfDriverErrorReportApiMissing
+//
+// Source:      Mode agnostic (UMDF and KMDF)
+//
+// Description: Written when a driver targetting multiple versions of framework (WDF or CX)
+//              calls a API that is not available in this version of framework.
+//
+// Frequency:   If FX_TELEMETRY_ENABLED then everytime a driver made the incorrect call.
+//
+// Version History:
+//              _NT_TARGET_VERSION_WIN10_RS4: added
+//
+#define WDF_DRIVER_ERROR_REPORT_API_MISSING(TraceHandle, Globals, FrameworkName, ApiIndex)  \
+            TraceLoggingWrite(TraceHandle,                                                  \
+                "WdfDriverErrorReportApiMissing",                                           \
+                WDF_TELEMETRY_EVT_KEYWORDS,                                                 \
+                WDF_CENSUS_EVT_DATA_COMMON(Globals),                                        \
+                TraceLoggingString((Globals)->Public.DriverName,          "DriverName"   ), \
+                TraceLoggingUInt32((Globals)->WdfBindInfo->Version.Major, "VersionMajor" ), \
+                TraceLoggingUInt32((Globals)->WdfBindInfo->Version.Minor, "VersionMinor" ), \
+                TraceLoggingWideString(FrameworkName,                     "FrameworkName"), \
+                TraceLoggingUInt32(ApiIndex,                              "ApiIndex"     )  \
+            );
 
 #define MIN_HOURS_BEFORE_NEXT_LOG  24
 #define BASE_10 (10)

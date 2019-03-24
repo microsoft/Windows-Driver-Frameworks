@@ -605,7 +605,7 @@ public:
     BOOLEAN m_AutoForwardCleanupClose;
 
     //
-    // If TRUE, an Io Target to the client itself is created to support 
+    // If TRUE, an Io Target to the client itself is created to support
     // Self Io Targets.
     //
     BOOLEAN m_SelfIoTargetNeeded;
@@ -983,10 +983,10 @@ public:
             return FxDeviceRemLockOptIn;
 #else
             //
-            // There is no forseeable scenario where a UMDF driver would need to 
+            // There is no forseeable scenario where a UMDF driver would need to
             // need to support remove lock for IO IRPs. While this ifdef can be safely
-            // removed and UMDF can also return FxDeviceRemLockOptIn, that is 
-            // being avoided here so that the caller does not need to test the 
+            // removed and UMDF can also return FxDeviceRemLockOptIn, that is
+            // being avoided here so that the caller does not need to test the
             // remove lock flags for IO which would never be set.
             //
             return FxDeviceRemLockNotRequired;
@@ -1738,6 +1738,11 @@ public:
         _Out_      PULONG ResultLength
         );
 
+    NTSTATUS
+    AllocateCompanionTarget(
+        _Out_ FxCompanionTarget ** DeviceCompanion
+        );
+
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
 
     static
@@ -1979,7 +1984,7 @@ public:
         _In_ ACCESS_MASK DesiredAccess,
         _In_ FxRegKey* pKey
         );
-        
+
     _Must_inspect_result_
     NTSTATUS
     AssignProperty (
@@ -1988,7 +1993,7 @@ public:
         _In_ DEVPROPTYPE Type,
         _In_ ULONG BufferLength,
         _In_opt_ PVOID PropertyBuffer
-        );   
+        );
 
 #if (FX_CORE_MODE==FX_CORE_USER_MODE)
 

@@ -38,6 +38,7 @@ extern "C" {
 #include "wdfdevicepri.h"
 #include "wdfiotargetpri.h"
 #include "wdfcx.h"
+#include "wdftriage.h"
 #include "wdfldr.h"
 
 #include <FxDynamicsWrapper.h>
@@ -52,6 +53,9 @@ extern "C" {
 #include "wdf115.h"
 #include "wdf117.h"
 #include "wdf119.h"
+#include "wdf121.h"
+#include "wdf123.h"
+#include "wdf125.h"
 }
 
 #define KMDF_ONLY_CODE_PATH_ASSERT()

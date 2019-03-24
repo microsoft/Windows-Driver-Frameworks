@@ -81,11 +81,7 @@ FxIoTargetRemote::RemoveModeSpecific(
     //
     // Delete callback object
     //
-    if (m_NotificationCallback != NULL) {
-        delete m_NotificationCallback;
-        m_NotificationCallback = NULL;
-    }
-
+    SAFE_RELEASE(m_NotificationCallback);
     SAFE_RELEASE(m_pIoDispatcher);
     SAFE_RELEASE(m_pRemoteDispatcher);
 }
@@ -296,10 +292,7 @@ FxIoTargetRemote::RegisterForPnpNotification(
              &m_TargetNotifyHandle);
 
     if (FAILED(hr)) {
-        if (m_NotificationCallback != NULL) {
-            delete m_NotificationCallback;
-            m_NotificationCallback = NULL;
-        }
+        SAFE_RELEASE(m_NotificationCallback);
         
         status = m_Device->NtStatusFromHr(hr);
         DoTraceLevelMessage(
@@ -437,20 +430,21 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
     )
 {
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    FxIoTargetRemote* pThis;
+    FxIoTargetRemote* pRemoteTarget;
     NTSTATUS status;
     BOOLEAN bStatus;
 
-    pThis = m_RemoteTarget;
+    pRemoteTarget = m_RemoteTarget;
 
     //
-    // In one of these callbacks, the driver may decide to delete the target.
-    // If that is the case, we need to be able to return and deref the object until
-    // we are done.
+    // This reference is retained for compatability reasons. The framework
+    // doesn't use the remote target in cases where the driver deletes
+    // it in the below callback, but could break existing drivers that
+    // touches it after deletion.
     //
-    pThis->ADDREF(m_RemoteTarget);
+    pRemoteTarget->ADDREF(this);
 
-    pFxDriverGlobals = pThis->GetDriverGlobals();
+    pFxDriverGlobals = pRemoteTarget->GetDriverGlobals();
 
     status = STATUS_SUCCESS;
     bStatus = TRUE;
@@ -483,20 +477,20 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
     // to do.  For instance, the driver could reopen the target to a
     // different device in a multi-path scenario.
     //
-    if (pThis->m_EvtQueryRemove.m_Method != NULL) {
-        status = pThis->m_EvtQueryRemove.Invoke(
-            pThis->GetHandle());
+    if (pRemoteTarget->m_EvtQueryRemove.m_Method != NULL) {
+        status = pRemoteTarget->m_EvtQueryRemove.Invoke(
+            pRemoteTarget->GetHandle());
     }
     else {
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
             "WDFIOTARGET %p: query remove, default action (close for QR)",
-            pThis->GetObjectHandle());
+            pRemoteTarget->GetObjectHandle());
     
         //
         // No callback, close it down conditionally.
         //
-        pThis->Close(FxIoTargetRemoteCloseReasonQueryRemove);
+        pRemoteTarget->Close(FxIoTargetRemoteCloseReasonQueryRemove);
     }
 
     if (!NT_SUCCESS(status)) {
@@ -505,7 +499,7 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
 
 exit:
     
-    pThis->RELEASE(m_RemoteTarget);
+    pRemoteTarget->RELEASE(this);
 
     return bStatus;
 }
@@ -517,18 +511,19 @@ FxIoTargetRemoteNotificationCallback::OnRemoveComplete(
     )
 {
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    FxIoTargetRemote* pThis;
+    FxIoTargetRemote* pRemoteTarget;
 
-    pThis = m_RemoteTarget;
+    pRemoteTarget = m_RemoteTarget;
 
     //
-    // In one of these callbacks, the driver may decide to delete the target.
-    // If that is the case, we need to be able to return and deref the object until
-    // we are done.
+    // This reference is retained for compatability reasons. The framework
+    // doesn't use the remote target in cases where the driver deletes
+    // it in the below callback, but could break existing drivers that
+    // touches it after deletion.
     //
-    pThis->ADDREF(m_RemoteTarget);
+    pRemoteTarget->ADDREF(this);
 
-    pFxDriverGlobals = pThis->GetDriverGlobals();
+    pFxDriverGlobals = pRemoteTarget->GetDriverGlobals();
 
     if (GetRegistrationId() != RegistrationID) {
         DoTraceLevelMessage(
@@ -540,30 +535,30 @@ FxIoTargetRemoteNotificationCallback::OnRemoveComplete(
 
     DoTraceLevelMessage(
         pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
-        "WDFIOTARGET %p: remove complete notification", pThis->GetObjectHandle());
+        "WDFIOTARGET %p: remove complete notification", pRemoteTarget->GetObjectHandle());
     
     //
     // The device was surprise removed, close it for good if the driver has
     // no override.
     //
-    if (pThis->m_EvtRemoveComplete.m_Method != NULL) {
-        pThis->m_EvtRemoveComplete.Invoke(pThis->GetHandle());
+    if (pRemoteTarget->m_EvtRemoveComplete.m_Method != NULL) {
+        pRemoteTarget->m_EvtRemoveComplete.Invoke(pRemoteTarget->GetHandle());
     }
     else {
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
             "WDFIOTARGET %p: remove complete, default action (close)",
-            pThis->GetObjectHandle());
+            pRemoteTarget->GetObjectHandle());
     
         //
         // The device is now gone for good.  Close down the target for good.
         //
-        pThis->Close(FxIoTargetRemoteCloseReasonPlainClose);
+        pRemoteTarget->Close(FxIoTargetRemoteCloseReasonPlainClose);
     }
 
 exit:
     
-    pThis->RELEASE(m_RemoteTarget);
+    pRemoteTarget->RELEASE(this);
 }
 
 VOID 
@@ -573,19 +568,20 @@ FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
     )
 {
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    FxIoTargetRemote* pThis;
+    FxIoTargetRemote* pRemoteTarget;
     NTSTATUS status;
 
-    pThis = m_RemoteTarget;
+    pRemoteTarget = m_RemoteTarget;
 
     //
-    // In one of these callbacks, the driver may decide to delete the target.
-    // If that is the case, we need to be able to return and deref the object until
-    // we are done.
+    // This reference is retained for compatability reasons. The framework
+    // doesn't use the remote target in cases where the driver deletes
+    // it in the below callback, but could break existing drivers that
+    // touches it after deletion.
     //
-    pThis->ADDREF(m_RemoteTarget);
+    pRemoteTarget->ADDREF(this);
 
-    pFxDriverGlobals = pThis->GetDriverGlobals();
+    pFxDriverGlobals = pRemoteTarget->GetDriverGlobals();
     status = STATUS_SUCCESS;
 
     if (GetRegistrationId() != RegistrationID) {
@@ -598,10 +594,10 @@ FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
 
     DoTraceLevelMessage(
         pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
-        "WDFIOTARGET %p: remove canceled notification", pThis->GetObjectHandle());
+        "WDFIOTARGET %p: remove canceled notification", pRemoteTarget->GetObjectHandle());
     
-    if (pThis->m_EvtRemoveCanceled.m_Method != NULL) {
-        pThis->m_EvtRemoveCanceled.Invoke(pThis->GetHandle());
+    if (pRemoteTarget->m_EvtRemoveCanceled.m_Method != NULL) {
+        pRemoteTarget->m_EvtRemoveCanceled.Invoke(pRemoteTarget->GetHandle());
     }
     else {
         WDF_IO_TARGET_OPEN_PARAMS params;
@@ -609,14 +605,14 @@ FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
             "WDFIOTARGET %p: remove canceled, default action (reopen)",
-            pThis->GetObjectHandle());
+            pRemoteTarget->GetObjectHandle());
     
         WDF_IO_TARGET_OPEN_PARAMS_INIT_REOPEN(&params);
     
         //
         // Attempt to reopen the target with stored settings
         //
-        status = pThis->Open(&params);
+        status = pRemoteTarget->Open(&params);
 
 
 
@@ -629,7 +625,7 @@ FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
 
 exit:
     
-    pThis->RELEASE(m_RemoteTarget);
+    pRemoteTarget->RELEASE(this);
 }
 
 VOID 

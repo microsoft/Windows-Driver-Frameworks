@@ -108,13 +108,13 @@ LogDeviceStartTelemetryEvent(
     // repeatedly firing events during PnP rebalance.
     //
     if (InterlockedBitTestAndSet(
-            &Globals->TelemetryContext->DoOnceFlagsBitmap, 
+            &Globals->TelemetryContext->DoOnceFlagsBitmap,
             DeviceStartEventBit) == 1) {
         return;
     }
 
     //
-    // log the DriverInfo stream. 
+    // log the DriverInfo stream.
     //
     LogDriverInfoStream(Globals, Fdo);
 }
@@ -143,7 +143,7 @@ LogDriverInfoStream(
         // current UMDF datapoint doesn't have a separate flag for non-pnp driver,
         // we still want to log the driver name and its properies if available.
         //
-        devStack = DriverGlobals->Driver->GetDriverObject()->WudfDevStack;
+        devStack = DriverGlobals->Driver->GetDriverObject()->DriverLoadContext->DeviceStack;
         if (devStack != NULL) {
             devStack->GetPdoProperties(&hardwareIds,
                                        &setupClass,
@@ -221,7 +221,7 @@ GetDriverInfo(
     DriverInfo->bitmap.IsUsingDirectIoForReadWrite = (readWritePreference == WdfDeviceIoDirect);
     DriverInfo->bitmap.IsUsingDirectIoForIoctl = (ioControlPreference == WdfDeviceIoDirect);
     DriverInfo->bitmap.IsUsingDriverWppRecorder = Fdo->GetDriver()->IsDriverObjectFlagSet(DriverObjectUmFlagsLoggingEnabled);
-    
+
     return;
 }
 
@@ -264,6 +264,14 @@ Return Value:
 
     ASSERT(ImageName != NULL);
     RtlZeroMemory(ImageName, sizeof(UNICODE_STRING));
+
+    if (FxDriverGlobals->IsCompanion()) {
+        //
+        // Driver companion has no access to registry
+        //
+        status = STATUS_UNSUCCESSFUL;
+        return status;
+    }
 
     //
     // Open driver's Service base key

@@ -468,11 +468,14 @@ Returns:
     ULONG sizeCb;
     HRESULT hr;
     IWudfDeviceStack2 *pDeviceStack2;
+    IWudfCompanion* pHostCompanion;
     PDRIVER_OBJECT_UM umDriverObject;
     PWCHAR serviceName;
     size_t bufferLengthCch;
     ULONG allocatedBufferLengthCb;
     LONG i;
+    DECLARE_UNICODE_STRING_SIZE(svcNameW, WDF_DRIVER_GLOBALS_NAME_LEN);
+    NTSTATUS ntStatus;
 
     //
     // Return early if IFR is disabled.
@@ -518,30 +521,49 @@ Returns:
 
     sizeCb = FxIFRGetSize(FxDriverGlobals, RegistryPath);
     pageCount = sizeCb / PAGE_SIZE;
-
-    //
-    // Get the IWudfDeviceStack interface
-    //
     umDriverObject = (PDRIVER_OBJECT_UM)DriverObject;
 
-    pDeviceStack2 = (IWudfDeviceStack2 *)umDriverObject->WudfDevStack;
+    if (FxDriverGlobals->IsCompanion()) {
+        pHostCompanion = (IWudfCompanion*)umDriverObject->DriverLoadContext->Companion;
+        if (pHostCompanion == NULL) {
+            return;
+        }
+        allocatedBufferLengthCb = 0;
+        pHeader = NULL;
 
-    if(pDeviceStack2 == NULL) {
-        return;
+        ntStatus = pHostCompanion->AllocateIfrMemory(serviceName, 
+                                              pageCount,
+                                              FALSE,  // IsDriverIFR
+                                              TRUE,   // Store in MiniDump
+                                              (PVOID *)&pHeader,
+                                              &allocatedBufferLengthCb);
+        if (!NT_SUCCESS(ntStatus) || pHeader == NULL || allocatedBufferLengthCb <= sizeof(WDF_IFR_HEADER)) {
+            return;
+        }
+
     }
+    else {
+        //
+        // Get the IWudfDeviceStack interface
+        //
+        pDeviceStack2 = (IWudfDeviceStack2 *)umDriverObject->DriverLoadContext->DeviceStack;
 
-    allocatedBufferLengthCb = 0;
-    hr = pDeviceStack2->AllocateIfrMemory(serviceName, 
-                                          pageCount,
-                                          FALSE,
-                                          TRUE,
-                                          (PVOID *)&pHeader,
-                                          &allocatedBufferLengthCb);
+        if(pDeviceStack2 == NULL) {
+            return;
+        }
 
-    if (pHeader == NULL || allocatedBufferLengthCb <= sizeof(WDF_IFR_HEADER)) {
-        return;
+        allocatedBufferLengthCb = 0;
+        hr = pDeviceStack2->AllocateIfrMemory(serviceName, 
+                                              pageCount,
+                                              FALSE, // IsDriverIFR
+                                              TRUE,  // Store in MiniDump
+                                              (PVOID *)&pHeader,
+                                              &allocatedBufferLengthCb);
+
+        if (pHeader == NULL || allocatedBufferLengthCb <= sizeof(WDF_IFR_HEADER)) {
+            return;
+        }
     }
-
     //
     // Initialize the header.
     // Base will be where the IFR records are placed.
@@ -560,7 +582,7 @@ Returns:
 
     FxDriverGlobals->WdfLogHeader = pHeader;
 
-    DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
+    DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDRIVER,
                         "FxIFR logging started" );
 
     if (sizeCb > FxIFRMinLogSize) {
@@ -591,26 +613,28 @@ Routine Description:
 
     This routine stops the In-Flight Recorder (IFR).
 
-    For UMDF FxIFRStop is no longer required as WudfRd manages the buffer's lifetime
+    For UMDF drivers FxIFRStop is not required as WudfRd manages the buffer's lifetime
     The buffer is kept alive till WudfRd unloads to aid in debugging in cases of
     WudfHost crash or in dumps with WudfHost paged out or not captured
     
-Arguments:
+    For UMDF companions FxIFRStop behaves similar to KMDF drivers. It frees the 
+    IFR buffer allocation, because it was allocated on the heap and not mapped to
+    user mode via the reflector.
 
+Arguments:
 Returns:
 
 --*/
 {
-    UNREFERENCED_PARAMETER(FxDriverGlobals);
+    if (FxDriverGlobals->IsCompanion()) {
+         if (FxLibraryGlobals.IfrDisabled) {
+             ASSERT(FxDriverGlobals->WdfLogHeader == NULL);
+             return;
+         }
 
-    //
-    // Uncomment the code below if you add any logic to this function.
-    //
-    // if (FxLibraryGlobals.IfrDisabled) {
-    //     ASSERT(FxDriverGlobals->WdfLogHeader == NULL);
-    //     return;
-    // }
-    //
+         delete[] FxDriverGlobals->WdfLogHeader;
+         FxDriverGlobals->WdfLogHeader = NULL;
+    }
 }
 
 _Must_inspect_result_

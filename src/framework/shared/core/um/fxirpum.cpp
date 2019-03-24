@@ -197,8 +197,10 @@ FxIrp::SendIrpSynchronously(
         DWORD retval = WaitForSingleObject(event, INFINITE);
         FX_VERIFY(INTERNAL, CHECK("INFNITE wait failed",
                                 (retval == WAIT_OBJECT_0)));
-            
+
         status = this->GetStatus();
+
+        CloseHandle(event);
     }
 
     return status;
@@ -224,15 +226,15 @@ FxIrp::GetMajorFunction(
 
     //
     // IWudfIrp does not expose a method to get major function code. So we
-    // find out if it's an I/O irp or pnp irp. If I/O irp then we use GetType 
+    // find out if it's an I/O irp or pnp irp. If I/O irp then we use GetType
     // method to retrieve request tyoe and then map it to major function code,
-    // otherwise if it is pnp irp then we just use GetMajorFunction method 
+    // otherwise if it is pnp irp then we just use GetMajorFunction method
     // exposed by IWudfPnpIrp.
     //
     HRESULT hrQI = m_Irp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
     if (SUCCEEDED(hrQI)) {
         UMINT::WDF_REQUEST_TYPE type;
-        
+
         //
         // for Io irp, map request type to major funcction
         //
@@ -274,18 +276,18 @@ FxIrp::GetMajorFunction(
         default:
             FX_VERIFY(INTERNAL, TRAPMSG("The request type is not expected"));
         }
-      
+
         pIoIrp->Release();
     }
     else {
         FX_VERIFY(INTERNAL, CHECK_NULL(pIoIrp));
-        
+
         //
         // see if it is a pnp irp
         //
         hrQI = m_Irp->QueryInterface(IID_IWudfPnpIrp, (PVOID*)&pPnpIrp);
         FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pPnpIrp));
-        
+
         majorFunction = pPnpIrp->GetMajorFunction();
         pPnpIrp->Release();
     }
@@ -310,7 +312,7 @@ FxIrp::GetMinorFunction(
     else {
         //
         // If this is not PnP irp then this must be Io irp.
-        // 
+        //
         hrQI = m_Irp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
         FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pIoIrp));
         pIoIrp->Release();
@@ -336,7 +338,7 @@ FxIrp::GetRequestorMode(
 
     if (SUCCEEDED(hrQI)) {
         KPROCESSOR_MODE requestorMode;
-        
+
         requestorMode = pIoIrp->GetRequestorMode();
         pIoIrp->Release();
 
@@ -375,7 +377,7 @@ FxIrp::GetCurrentIrpStackLocation(
 
 
 
-    // The Km implementation does some verifier checks in this function so 
+    // The Km implementation does some verifier checks in this function so
     // mode agnostic code uses it and therefore we provide the um version as a
     // stub. The return value is NULL and is not used by the caller.
     //
@@ -404,9 +406,9 @@ FxIrp::SkipCurrentIrpStackLocation(
     //
     // Earler we always used to copy because the framework always set a
     // completion routine to notify other packages that we completed. However,
-    // since some I/O paths relied on Skip to revert the action taken by 
+    // since some I/O paths relied on Skip to revert the action taken by
     // SetNextStackLocation in failure paths, we now skip instead of copy. The
-    // same behavior applies to KMDF as well. 
+    // same behavior applies to KMDF as well.
     //
     m_Irp->SkipCurrentIrpStackLocation();
 }
@@ -582,11 +584,11 @@ FxIrp::GetSystemBuffer(
         hr = E_NOTIMPL;
         break;
     }
-    
+
     if (FAILED(hr)) {
         systemBuffer = NULL;
     }
-    
+
     return systemBuffer;
 }
 
@@ -613,11 +615,11 @@ FxIrp::GetOutputBuffer(
         hr = E_NOTIMPL;
         break;
     }
-    
+
     if (FAILED(hr)) {
         outputBuffer = NULL;
     }
-    
+
     return outputBuffer;
 }
 
@@ -856,8 +858,8 @@ FxIrp::GetParameterAllocatedResources(
     res = pnpIrp->GetParameterAllocatedResources();
 
     //
-    // Release the ref even though we are returning a memory pointer from 
-    // IWudfIrp object. This is fine because we know irp is valid for the 
+    // Release the ref even though we are returning a memory pointer from
+    // IWudfIrp object. This is fine because we know irp is valid for the
     // lifetime of the caller who is calling this interface).
     //
 
@@ -915,9 +917,9 @@ FxIrp::SetMajorFunction(
     HRESULT hrQI = m_Irp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
     if (SUCCEEDED(hrQI)) {
         UMINT::WDF_REQUEST_TYPE type;
-        
+
         //
-        // for Io irp, map major function to request type 
+        // for Io irp, map major function to request type
         //
         switch(MajorFunction) {
         case IRP_MJ_CREATE:
@@ -1113,14 +1115,14 @@ FxIrp::AllocateIrp(
             "WDFDEVICE 0x%p Failed to allocate I/O request %!STATUS!",
             Device->GetHandle(), status);
 
-        FX_VERIFY_WITH_NAME(INTERNAL, CHECK_NULL(ioIrp), 
+        FX_VERIFY_WITH_NAME(INTERNAL, CHECK_NULL(ioIrp),
             Device->GetDriverGlobals()->Public.DriverName);
     }
     else {
         FX_VERIFY_WITH_NAME(INTERNAL, CHECK_NOT_NULL(ioIrp),
             Device->GetDriverGlobals()->Public.DriverName);
     }
-    
+
     return ioIrp;
 }
 
@@ -1228,7 +1230,7 @@ FxIrp::CopyToNextIrpStackLocation(
 
 
     FX_VERIFY(INTERNAL, TRAPMSG("To be implemented"));
-  
+
 }
 
 VOID
@@ -1347,7 +1349,7 @@ FxIrp::SetUserBuffer(
 
     FX_VERIFY(INTERNAL, TRAPMSG("To be implemented"));
 }
- 
+
 MdDeviceObject
 FxIrp::GetDeviceObject(
     VOID
@@ -1357,7 +1359,7 @@ FxIrp::GetDeviceObject(
     FX_VERIFY(INTERNAL, TRAPMSG("To be implemented"));
     return NULL;
 }
- 
+
 VOID
 FxIrp::SetCurrentDeviceObject(
     __in MdDeviceObject DeviceObject
@@ -1462,7 +1464,7 @@ FxIrp::GetFileObject(
     )
 {
     IWudfIoIrp * pIoIrp = NULL;
-    
+
     HRESULT hrQI = m_Irp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
     FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pIoIrp));
     pIoIrp->Release();
@@ -1477,7 +1479,7 @@ FxIrp::GetParameterIoctlCode(
 {
     IWudfIoIrp * ioIrp = NULL;
     ULONG ioControlCode = 0;
-    
+
     if (GetMajorFunction() == IRP_MJ_DEVICE_CONTROL) {
         ioIrp = GetIoIrp();
         ioIrp->GetDeviceIoControlParameters(&ioControlCode, NULL, NULL);
@@ -1493,13 +1495,13 @@ FxIrp::GetParameterIoctlCodeBufferMethod(
 {
     //
     // For UMDF, always return METHOD_BUFFERED. This is because merged code
-    // uses this info to decide how and where to fetch the buffers from, from 
-    // inside the irp, and for UMDF, the buffers are always fetched from host in 
+    // uses this info to decide how and where to fetch the buffers from, from
+    // inside the irp, and for UMDF, the buffers are always fetched from host in
     // same manner irrespective of IOCTL type.
     //
     return METHOD_BUFFERED;
 }
- 
+
 ULONG
 FxIrp::GetParameterIoctlOutputBufferLength(
     VOID
@@ -1513,7 +1515,7 @@ FxIrp::GetParameterIoctlOutputBufferLength(
 
     return outputBufferLength;
 }
- 
+
 ULONG
 FxIrp::GetParameterIoctlInputBufferLength(
     VOID
@@ -1568,7 +1570,7 @@ FxIrp::SetNextStackFlags(
 
     DO_NOTHING();
 }
- 
+
 VOID
 FxIrp::SetNextStackFileObject(
     _In_ MdFileObject FileObject
@@ -1593,10 +1595,10 @@ FxIrp::GetParameterReadLength(
     ULONG length;
 
     GetIoIrp()->GetReadParameters(&length, NULL, NULL);
-    
+
     return length;
 }
- 
+
 ULONG
 FxIrp::GetParameterWriteLength(
     VOID
@@ -1605,7 +1607,7 @@ FxIrp::GetParameterWriteLength(
     ULONG length;
 
     GetIoIrp()->GetWriteParameters(&length, NULL, NULL);
-    
+
     return length;
 }
 
@@ -1617,7 +1619,7 @@ FxIrp::GetCurrentFlags(
     FX_VERIFY(INTERNAL, TRAPMSG("To be implemented"));
     return 0;
 }
- 
+
 PVOID
 FxIrp::GetCurrentParametersPointer(
      VOID
@@ -1643,14 +1645,14 @@ FxIrp::Is32bitProcess(
 {
     return (GetIoIrp()->IsFrom32BitProcess() ? TRUE : FALSE);
 }
- 
+
 VOID
 FxIrp::FreeIrp(
      VOID
      )
 {
     //
-    // Release the um com irp creation ref 
+    // Release the um com irp creation ref
     //
     m_Irp->Release();
 
@@ -1668,7 +1670,7 @@ FxIrp::GetStatusBlock(
     FX_VERIFY(INTERNAL, TRAPMSG("To be implemented"));
     return NULL;
 }
- 
+
 PVOID
 FxIrp::GetDriverContext(
      VOID
@@ -1694,7 +1696,7 @@ FxIrp::CopyParameters(
 {
     IWudfIoIrp* ioIrp;
     UCHAR majorFunction;
-    
+
     ioIrp = GetIoIrp();
     majorFunction = GetMajorFunction();
 
@@ -1773,42 +1775,42 @@ FxIrp::IsCurrentIrpStackLocationValid(
     return TRUE;
 }
 
-IWudfIoIrp* 
+IWudfIoIrp*
 FxIrp::GetIoIrp(
     VOID
     )
 {
     IWudfIoIrp* pIoIrp;
     HRESULT hrQI;
-    
+
     hrQI = m_Irp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
     FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pIoIrp));
     pIoIrp->Release();
 
     //
-    // Now that we confirmed the irp is an io irp, just return the underlying 
-    // irp. 
+    // Now that we confirmed the irp is an io irp, just return the underlying
+    // irp.
     //
     return static_cast<IWudfIoIrp*>(m_Irp);
-}    
+}
 
 
-IWudfPnpIrp* 
+IWudfPnpIrp*
 FxIrp::GetPnpIrp(
     VOID
     )
 {
     IWudfPnpIrp* pPnpIrp;
     HRESULT hrQI;
-    
+
     hrQI = m_Irp->QueryInterface(IID_IWudfPnpIrp, (PVOID*)&pPnpIrp);
     FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pPnpIrp));
     pPnpIrp->Release();
 
     //
-    // Now that we confirmed the irp is a pnp irp, just return the underlying 
-    // irp. 
+    // Now that we confirmed the irp is a pnp irp, just return the underlying
+    // irp.
     //
     return static_cast<IWudfPnpIrp*>(m_Irp);
-}    
+}
 

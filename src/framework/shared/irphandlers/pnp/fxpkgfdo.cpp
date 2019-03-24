@@ -139,10 +139,6 @@ Returns:
 
     m_DefaultTarget = NULL;
     m_SelfTarget = NULL;
-    
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-    m_SurpriseRemoveAndReenumerateSelfWorkItem = NULL;
-#endif
 
     m_BusEnumRetries = 0;
 
@@ -1357,19 +1353,9 @@ FxPkgFdo::QueryForReenumerationInterface(
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     if (pInterface->SurpriseRemoveAndReenumerateSelf != NULL) {
-        PFX_DRIVER_GLOBALS pGlobals = GetDriverGlobals();
-
-        status = FxSystemWorkItem::_Create(pGlobals,
-                                           m_Device->GetDeviceObject(),
-                                           &m_SurpriseRemoveAndReenumerateSelfWorkItem
-                                           );
+        status = AllocateWorkItemForSetDeviceFailed();
         if (!NT_SUCCESS(status)) {
             ReleaseReenumerationInterface();
-            DoTraceLevelMessage(
-                pGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
-                "Could not allocate workitem for "
-                "GUID_REENUMERATE_SELF_INTERFACE_STANDARD: %!STATUS!", status);
-            return status;
         }
     }
 #endif
@@ -1396,12 +1382,9 @@ Return Value:
 
   --*/
 {
-    
+
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-    if (m_SurpriseRemoveAndReenumerateSelfWorkItem != NULL) {
-        m_SurpriseRemoveAndReenumerateSelfWorkItem->DeleteObject();
-        m_SurpriseRemoveAndReenumerateSelfWorkItem = NULL;
-    }
+    RemoveWorkItemForSetDeviceFailed();
 #endif
 
     PREENUMERATE_SELF_INTERFACE_STANDARD pInterface;

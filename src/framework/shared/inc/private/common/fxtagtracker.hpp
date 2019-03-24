@@ -61,7 +61,6 @@ struct FxTagTrackingStackFrames : public FxStump {
 //
 // Tracks outstanding references
 //
-
 struct FxTagTrackingBlock : public FxStump {
 
     FxTagTrackingBlock(

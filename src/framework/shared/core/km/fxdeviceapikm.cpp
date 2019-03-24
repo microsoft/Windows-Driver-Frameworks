@@ -956,4 +956,56 @@ Return Value:
     return status;
 }
 
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+WDFEXPORT(WdfDeviceRetrieveCompanionTarget)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _Out_
+    WDFCOMPANIONTARGET* CompanionTarget
+    )
+/*++
+
+Routine Description:
+    The DDI is invoked by KMDF drivers to retrieve the WDFCOMPANIONTARGET handle
+    that can be used to send tasks to the companion.
+
+Arguments:
+    Device - Handle to the framework device object. This must not be control or
+            miniport device.
+
+    CompanionTarget - Pointer to CompanionTarget handle
+
+Return Value:
+    An NTSTATUS value that denotes success or failure of the DDI. These are the
+    known failures, others could also be reported  -
+        STATUS_INVALID_DEVICE_REQUEST - Invalid device type.
+        STATUS_NOT_FOUND              - Companion not registered for device.
+--*/
+{
+    FxDevice *pDevice;
+    FxPkgPnp* pkgPnP;
+
+    FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
+                         Device,
+                         FX_TYPE_DEVICE,
+                         (PVOID*) &pDevice);
+
+    if (!pDevice->IsPnp()) {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    pkgPnP = pDevice->m_PkgPnp;
+    if (NT_SUCCESS(pkgPnP->m_CompanionTargetStatus)) {
+        *CompanionTarget = (WDFCOMPANIONTARGET) 
+                                pkgPnP->m_CompanionTarget->GetObjectHandle();
+    }
+
+    return pkgPnP->m_CompanionTargetStatus;
+}
+
 } // extern "C"

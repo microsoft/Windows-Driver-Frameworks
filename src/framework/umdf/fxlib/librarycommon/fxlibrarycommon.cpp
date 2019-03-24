@@ -16,6 +16,9 @@ extern "C" {
 #include "wdf215.h"
 #include "wdf217.h"
 #include "wdf219.h"
+#include "wdf221.h"
+#include "wdf223.h"
+#include "wdf225.h"
 
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
@@ -115,9 +118,9 @@ GetTriageInfo(
     _WdfQueueTriageInfo.PkgIo = FIELD_OFFSET(FxIoQueue, m_PkgIo);
 
     // Forward Progress
-    _WdfFwdProgressTriageInfo.ReservedRequestList = 
+    _WdfFwdProgressTriageInfo.ReservedRequestList =
         FIELD_OFFSET(FXIO_FORWARD_PROGRESS_CONTEXT, m_ReservedRequestList);
-    _WdfFwdProgressTriageInfo.ReservedRequestInUseList = 
+    _WdfFwdProgressTriageInfo.ReservedRequestInUseList =
         FIELD_OFFSET(FXIO_FORWARD_PROGRESS_CONTEXT, m_ReservedRequestInUseList);
     _WdfFwdProgressTriageInfo.PendedIrpList =
         FIELD_OFFSET(FXIO_FORWARD_PROGRESS_CONTEXT, m_PendedIrpList);
@@ -145,9 +148,9 @@ GetTriageInfo(
         FIELD_OFFSET(FxRequest, m_OwnerListEntry);
     _WdfRequestTriageInfo.ListEntryQueueOwned2 =
         FIELD_OFFSET(FxRequest, m_OwnerListEntry2);
-    _WdfRequestTriageInfo.RequestListEntry = 
+    _WdfRequestTriageInfo.RequestListEntry =
         FIELD_OFFSET(FxRequest, m_ListEntry);
-    _WdfRequestTriageInfo.FwdProgressList = 
+    _WdfRequestTriageInfo.FwdProgressList =
         FIELD_OFFSET(FxRequest, m_ForwardProgressList);
 
     // WdfDevice
@@ -188,7 +191,7 @@ ReportDdiFunctionCountMismatch(
     int nChars;
 
     //
-    // NOTE: Any single call to DbgPrintEx will only transmit 512 bytes of 
+    // NOTE: Any single call to DbgPrintEx will only transmit 512 bytes of
     // information.
     //
     DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
@@ -211,8 +214,8 @@ ReportDdiFunctionCountMismatch(
     //
     // Write an ETW event to the system event log.
     //
-    RtlCopyMemory(serviceName, 
-                ServiceName->Buffer, 
+    RtlCopyMemory(serviceName,
+                ServiceName->Buffer,
                 MIN(sizeof(serviceName), ServiceName->Length));
     EventWriteEVENT_UMDF_DRIVER_DDI_TABLE_MISMATCH(serviceName,
                                                 ActualFunctionCount,
@@ -230,9 +233,9 @@ ReportDdiFunctionCountMismatch(
 
     if (IssueBreak == TRUE) {
         //
-        // Convert to an ANSI string and generate a verifier failure so a Watson 
+        // Convert to an ANSI string and generate a verifier failure so a Watson
         // report is submitted
-        // 
+        //
         nChars = WideCharToMultiByte(CP_ACP,
                                     WC_NO_BEST_FIT_CHARS, //flags
                                     serviceName,
@@ -264,7 +267,7 @@ FxLibraryCommonCommission(
         __Print(("FxLibraryGlobalsCommission failed %X\n", status));
         return status;
     }
-    
+
     //
     // register for ETW tracing.
     //
@@ -362,7 +365,7 @@ FxLibraryCommonRegisterClient(
     // Prefast is unable to make that determination.
     //
     __assume(WdfVersion.FuncCount == sizeof(WDFFUNCTIONS)/sizeof(PVOID));
-    
+
     if (Info->FuncCount > WdfVersion.FuncCount) {
         __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
                  ": version mismatch detected in function table count: client"
@@ -371,14 +374,17 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_19) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_25) {
 
         switch (Info->FuncCount) {
 
-        case WdfFunctionTableNumEntries_V2_19:
-        case WdfFunctionTableNumEntries_V2_17:
-        case WdfFunctionTableNumEntries_V2_15:
-        case WdfFunctionTableNumEntries_V2_0:
+        case WdfFunctionTableNumEntries_V2_25: // 268 - win10 1803 RS4
+        case WdfFunctionTableNumEntries_V2_23: // 265 - win10 1709 RS3
+        case WdfFunctionTableNumEntries_V2_21: // 261 - win10 1703 RS2
+     // case WdfFunctionTableNumEntries_V2_19: // 261 - win10 1607 RS1
+        case WdfFunctionTableNumEntries_V2_17: // 260 - win10 1511 TH2
+        case WdfFunctionTableNumEntries_V2_15: // 257 - win10 1507 TH1
+        case WdfFunctionTableNumEntries_V2_0:  // 248 - win8.1
             break;
 
         default:
@@ -396,14 +402,12 @@ FxLibraryCommonRegisterClient(
 
 
 
-
-
-
-
         //
         // Client version is same as framework version. Make
-        // sure table count is exact. 
+        // sure table count is exact.
         //
+        BOOLEAN issueBreak = WDF_PRODUCTION_RELEASE;
+
         if (Info->FuncCount != WdfFunctionTableNumEntries) {
             RtlInitUnicodeString(&serviceName, WIDEN(WDF_UNKNOWN_SERVICE_NAME));
 
@@ -411,15 +415,17 @@ FxLibraryCommonRegisterClient(
                 GetNameFromPath(ClientInfo->RegistryPath, &serviceName);
             }
 
-            // 
-            // Report a DbgPrint message, telemetry event and an ETW event that 
+            //
+            // Report a DbgPrint message, telemetry event and an ETW event that
             // will serve as diagnostic aid.
             //
             ReportDdiFunctionCountMismatch((PCUNICODE_STRING)&serviceName,
                                            Info->FuncCount,
                                            WdfFunctionTableNumEntries,
-                                           TRUE); 
+                                           issueBreak);
+#if WDF_PRODUCTION_RELEASE
             goto Done;
+#endif
         }
     }
 
@@ -437,7 +443,7 @@ FxLibraryCommonRegisterClient(
         // if registry read fails, options value remains unchanged.
         // store enhanced verifier options in driver globals
         //
-        fxDriverGlobals = GetFxDriverGlobals(*WdfDriverGlobals); 
+        fxDriverGlobals = GetFxDriverGlobals(*WdfDriverGlobals);
         GetEnhancedVerifierOptions(ClientInfo, &fxDriverGlobals->FxEnhancedVerifierOptions);
         isFunctinTableHookingOn = IsFxVerifierFunctionTableHooking(fxDriverGlobals);
         isPerformanceAnalysisOn = IsFxPerformanceAnalysis(fxDriverGlobals);
@@ -459,7 +465,7 @@ FxLibraryCommonRegisterClient(
             }
             else {
                 //
-                // FuncTable arrives with a ptr to &WdfFunctions, so we update 
+                // FuncTable arrives with a ptr to &WdfFunctions, so we update
                 // what WdfFunctions points to
                 //
                 *((WDFFUNC**) Info->FuncTable) = (WDFFUNC*) &WdfVersion.Functions;
@@ -487,7 +493,7 @@ FxLibraryCommonRegisterClient(
             }
             else {
                 //
-                // FuncTable arrives with a ptr to &WdfFunctions, so we update 
+                // FuncTable arrives with a ptr to &WdfFunctions, so we update
                 // what WdfFunctions points to.
                 //
                 *((WDFFUNC**) Info->FuncTable) = (WDFFUNC*) &VfWdfVersion.Functions;
@@ -606,7 +612,7 @@ GetEnhancedVerifierOptions(
         status = FxRegKey::_QueryULong(
             hWdfSubkey.m_Key, &valueName, &value);
     }
-    
+
     if (!NT_SUCCESS(status)) {
         //
         // Older versions of WdfPerfEnhancedVerifier.cmd set the

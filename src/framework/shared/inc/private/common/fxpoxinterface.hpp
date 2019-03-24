@@ -101,6 +101,11 @@ public:
         VOID
         );
 
+    VOID
+    SimulateDevicePowerRequiredInReflector(
+        VOID
+        );
+
 private:
 
     NTSTATUS

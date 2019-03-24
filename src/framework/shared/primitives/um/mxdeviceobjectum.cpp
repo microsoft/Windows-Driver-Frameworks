@@ -68,7 +68,7 @@ MxDeviceObject::GetFlags(
 
 POWER_STATE
 MxDeviceObject::SetPowerState(
-    __in POWER_STATE_TYPE  /*Type*/,
+    __in POWER_STATE_TYPE PowerStateType,
     __in POWER_STATE  State
     )
 {
@@ -76,6 +76,7 @@ MxDeviceObject::SetPowerState(
     POWER_STATE oldStateEnum;
 
     m_DeviceObject->GetDeviceStackInterface()->SetPowerState(
+        PowerStateType,
         State.DeviceState,
         &oldState
         );

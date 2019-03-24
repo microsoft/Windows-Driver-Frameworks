@@ -1391,12 +1391,16 @@ FxUsbPipe::GotoRemoveState(
     if (m_Reader != NULL && m_Reader->m_ReadersSubmitted &&
         WdfIoTargetStarted == m_State) {
         //
-        // Driver forgot to stop the pipe on D0Exit.
+        // Driver forgot to stop the pipe on D0Exit. In case of miniport wdf driver, it 
+        // forgot to stop the pipe in EvtCleanupCallback of the framework device object.
         //
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
-            "WDFUSBPIPE %p was not stopped in EvtDeviceD0Exit callback",
-            GetHandle());
+            "WDFUSBPIPE %p was not stopped %s",
+            GetHandle(),
+            FLAG_TO_BOOL(GetDriverGlobals()->Public.DriverFlags, WdfDriverInitNoDispatchOverride) ?
+                "in EvtCleanupCallback of the miniport framework device object" :
+                "in EvtDeviceD0Exit callback");
 
         if (GetDriverGlobals()->IsVerificationEnabled(1,9,OkForDownLevel)) {
             FxVerifierDbgBreakPoint(GetDriverGlobals());            

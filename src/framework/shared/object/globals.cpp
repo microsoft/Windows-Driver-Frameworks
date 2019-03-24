@@ -693,6 +693,11 @@ FxLibraryGlobalsCommission(
     FxLibraryGlobals.VfCheckNxPoolType =
       (PFN_VF_CHECK_NX_POOL_TYPE) MmGetSystemRoutineAddress(&funcName);
 
+    // RS5 and forward
+    RtlInitUnicodeString(&funcName, L"VfIsRuleClassEnabled");
+    FxLibraryGlobals.VfIsRuleClassEnabled =
+      (PFN_VF_IS_RULE_CLASS_ENABLED) MmGetSystemRoutineAddress(&funcName);
+
 #endif //((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
 
     FxLibraryGlobals.OsVersionInfo.dwOSVersionInfoSize = sizeof(FxLibraryGlobals.OsVersionInfo);
@@ -1007,54 +1012,31 @@ IsDriverVerifierActive(
 
 Routine Description:
 
-    Driver verifier can run in an active mode that crashes the system when
-    a check fails. It can also run in a passive mode that generates logging / 
-    telemetry when a check fails. We are checking to see if DV is running
-    in an active mode.
+    This function checks whether WDF verification is turned on or not.
 
 Arguments:
 
-    DriverObject - Driver to test if DV is active.
+    DriverObject - Driver to test if WDF verification turned on.
 
 Returns:
 
-    TRUE if DV is running in manner that crashes the system when running
-    FALSE if DV is disabled or running passively.
+    TRUE if WDF verification is turned on. False otherwise.
 
 --*/
 {
-    BOOLEAN windowsVerifierActive;
+    BOOLEAN isWDFRuleClassTurnedOn = FALSE;
 
-    windowsVerifierActive = MmIsDriverVerifying(DriverObject) ? TRUE: FALSE;
+    //
+    // This is defined in VRF_RULE_CLASS_ID for WDF verification.
+    //
 
-    if (windowsVerifierActive) {
-    
-        NTSTATUS status;
-        FxAutoRegKey hVerifier;
-        DECLARE_CONST_UNICODE_STRING(verifierOptionsStr, L"XdvVerifierOptions");
-        DECLARE_CONST_UNICODE_STRING(verifierPath,
-            L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
+    const ULONG VrfWDFRuleClass = 33;
 
-        status = FxRegKey::_OpenKey(NULL, &verifierPath, &hVerifier.m_Key, KEY_READ);
-        if (NT_SUCCESS(status)) {
-
-            ULONG verifierOptions;
-            status = FxRegKey::_QueryULong(hVerifier.m_Key, &verifierOptionsStr, &verifierOptions); 
-            if (NT_SUCCESS(status)) {
-
-
-
-
-
-
-
-
-
-
-            }
-        }
+    if (MmIsDriverVerifying (DriverObject) > 0 && (FxLibraryGlobals.VfIsRuleClassEnabled != NULL)) {
+        isWDFRuleClassTurnedOn = FxLibraryGlobals.VfIsRuleClassEnabled (VrfWDFRuleClass);
     }
-    return windowsVerifierActive;
+
+    return isWDFRuleClassTurnedOn;
 }
 #endif
 

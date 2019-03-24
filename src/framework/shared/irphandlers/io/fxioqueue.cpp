@@ -3720,7 +3720,6 @@ Returns:
             //
             request->m_Canceled = TRUE;
 
-#pragma prefast(suppress:__WARNING_PASSING_FUNCTION_UNEXPECTED_NULL, "This is the tag value used in the ADDREF of Peek()")
             request->RELEASE(NULL);
         }        
         

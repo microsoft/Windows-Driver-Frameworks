@@ -4744,6 +4744,18 @@ Return Value:
         m_PoxInterface.SimulateDevicePowerRequired();
 
     //
+    // The reflector maintains state around pending PoFx callbacks/events
+    // and then notifies the host/fx asynchronously. It will reflect the 
+    // corresponding calls from the Fx/Host to PoFx IFF there is a
+    // pending callback.So we must simulate a device power required event in both
+    // the Fx state machine and reflector.
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+    This->m_PowerPolicyMachine.m_Owner->
+        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
+#endif
+
+    //
     // Notify the device-power-requirement state machine that we are powered on
     //
     This->m_PowerPolicyMachine.m_Owner->
@@ -5123,12 +5135,17 @@ Return Value:
         This, WdfDevStatePwrPolSystemWakeDeviceToD0CompletePowerUp);
 
     //
-    // Simulate a device-power-not-required notification from the power 
+    // Simulate a device-power-required notification from the power 
     // framework. An S0-IRP is essentially equivalent to a device-power-required
     // notification.
     //
     This->m_PowerPolicyMachine.m_Owner->
         m_PoxInterface.SimulateDevicePowerRequired();
+
+#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+    This->m_PowerPolicyMachine.m_Owner->
+        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
+#endif
 
     //
     // Notify the device-power-requirement state machine that we are powered on

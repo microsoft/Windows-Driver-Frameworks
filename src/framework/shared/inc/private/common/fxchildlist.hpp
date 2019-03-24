@@ -386,7 +386,7 @@ public:
     {
         return m_ScanCount;
     }
-    
+
 protected:
 
     FxChildList(
@@ -401,7 +401,7 @@ protected:
     Dispose(
         VOID
         );
-    
+
     VOID
     Initialize(
         __in PWDF_CHILD_LIST_CONFIG Config
@@ -620,7 +620,7 @@ protected:
     // Whether the child list is added to the enumerated children list.
     //
     BOOLEAN m_IsAdded;
-    
+
     UCHAR m_EnumRetries;
 
     PULONG m_ScanTag;
@@ -670,8 +670,8 @@ struct FxDeviceDescriptionEntry : public FxStump {
 public:
     FxDeviceDescriptionEntry(
         __inout FxChildList* DeviceList,
-        __in ULONG AddressDescriptionSize,
-        __in ULONG IdentificationDescriptionSize
+        __in ULONG IdentificationDescriptionSize,
+        __in ULONG AddressDescriptionSize
         );
 
     ~FxDeviceDescriptionEntry();

@@ -126,7 +126,7 @@ Return Value:
     }
 
     //
-    // For forward progress the IRP can be NULL. 
+    // For forward progress the IRP can be NULL.
     //
     if (Irp != NULL) {
         pRequest->AssignMemoryBuffers(Device->GetIoTypeForReadWriteBufferAccess());
@@ -137,16 +137,16 @@ Return Value:
     // turned on, the request is parented to the device to help track reference
     // leaks.
     //
-    if (Device->GetDriverGlobals()->FxRequestParentOptimizationOn) { 
-        status = pRequest->Commit(RequestAttributes, 
-                                  NULL, 
-                                  NULL, 
+    if (Device->GetDriverGlobals()->FxRequestParentOptimizationOn) {
+        status = pRequest->Commit(RequestAttributes,
+                                  NULL,
+                                  NULL,
                                   FALSE);
     }
     else {
-        status = pRequest->Commit(RequestAttributes, 
-                                  NULL, 
-                                  Device, 
+        status = pRequest->Commit(RequestAttributes,
+                                  NULL,
+                                  Device,
                                   FALSE);
     }
 
@@ -187,10 +187,10 @@ FxRequest::_Create(
     }
 
     pRequest = new (FxDriverGlobals, RequestAttributes)
-        FxRequest(FxDriverGlobals, 
-                  Irp, 
-                  Ownership, 
-                  Caller, 
+        FxRequest(FxDriverGlobals,
+                  Irp,
+                  Ownership,
+                  Caller,
                   sizeof(FxRequest));
 
     if (pRequest != NULL) {
@@ -294,7 +294,7 @@ Routine Description:
 Arguments:
 
     None
-    
+
 Returns:
 
     ULONG_PTR
@@ -552,7 +552,7 @@ Returns:
     FxRequestCompletionState state;
     FxIoQueue*          queue;
     CfxDevice*           pRefedDevice;
-      
+
     pFxDriverGlobals = GetDriverGlobals();
     queue = NULL;
     //
@@ -566,9 +566,9 @@ Returns:
     // serious driver error anyway
     //
 
-    
+
     VerifyCompleteInternal(pFxDriverGlobals, Status);
-   
+
     if (pFxDriverGlobals->FxVerifierOn == FALSE) {
         //
         // No lock needed in non-verifier case since this is only
@@ -606,15 +606,15 @@ Returns:
             " is zero", GetObjectHandle(), pIrp);
 
         //
-        // We will assert only if the Information field is not zero to warn  
-        // the developer that it's a bad thing to do. However, we do avoid 
-        // corruption of UserBuffer on completion by clearing the flag 
+        // We will assert only if the Information field is not zero to warn
+        // the developer that it's a bad thing to do. However, we do avoid
+        // corruption of UserBuffer on completion by clearing the flag
         // erroneously set by the I/O manager.
         //
         if (m_Irp.GetInformation() != 0L) {
             FxVerifierDbgBreakPoint(pFxDriverGlobals);
         }
-        
+
         //
         // Clear the flag to prevent the I/O manager from coping the
         // data back from the SystemBuffer to Irp->UserBuffer
@@ -678,7 +678,7 @@ Returns:
     ASSERTMSG("WDFREQUEST is part of a WDFQUEUE, it could be Cancellable\n",
               (m_IrpQueue == NULL));
 
-    state = (FxRequestCompletionState) m_CompletionState;    
+    state = (FxRequestCompletionState) m_CompletionState;
     queue = m_IoQueue;
 
     //
@@ -689,7 +689,7 @@ Returns:
         // Set the completion state to none
         //
         m_CompletionState = FxRequestCompletionStateNone;
-        
+
         if (IsReserved() == FALSE) {
             //
             // Don't set the Queue to NULL for reserved requests.
@@ -736,7 +736,7 @@ Returns:
         // away if it has used the WDM "escape" API's to either get the IRP, or
         // any resources it references.
         //
-    
+
         //
         // If a cleanup callback has been registered, we call it
         // just before completing the IRP to WDM, which can cause any
@@ -745,7 +745,7 @@ Returns:
         if (EarlyDispose() == FALSE) {
             VerifierBreakpoint_RequestEarlyDisposeDeferred(GetDriverGlobals());
         }
-    
+
         //
         // Now that the entire tree is disposed, we want to destroy all of the
         // children.  This will not put this object in the destroyed state.  For
@@ -757,7 +757,7 @@ Returns:
     else {
         //
         // We don't call cleanup callback for Reserved Requests.
-        // The driver can perform any cleanp it wants before completing the Request 
+        // The driver can perform any cleanp it wants before completing the Request
         // or before reusing the Reserved Request in its Dispatch callback.
 
 
@@ -826,12 +826,12 @@ Returns:
     // For driver created requests we need to use two phase
     // completion (pre and post) to detach the request from the queue before the
     // IRP is completed, and then allow a new request to be dispatched.
-    // Note that the IRP is actually completed when the reference on this object 
+    // Note that the IRP is actually completed when the reference on this object
     // goes to 1 (See FxRequest::Release() for more info).
     //
     if (IsAllocatedFromIo() == FALSE) {
         //
-        // Do not touch the request after this call. 
+        // Do not touch the request after this call.
         // Do not clear the request's IRP field before making this call.
         //
         PreProcessCompletionForDriverRequest(state, queue);
@@ -846,7 +846,7 @@ Returns:
         // error.
         //
         m_Irp.SetIrp(NULL);
-        
+
         if (irp.GetMajorFunction() == IRP_MJ_CREATE) {
             //
             // If this is the last handle to be closed on the device, then the call
@@ -856,7 +856,7 @@ Returns:
             //
             pRefedDevice = GetDevice();
             pRefedDevice->ADDREF(&irp);
-        
+
             pRefedDevice->m_PkgGeneral->CreateCompleted(&irp);
         }
         else {
@@ -867,20 +867,20 @@ Returns:
         // WDM IRP is completed.
         //
         irp.CompleteRequest(GetPriorityBoost());
-        
+
         if (IsReserved() == FALSE) {
             PostProcessCompletion(state, queue);
         }
         else {
             PostProcessCompletionForReserved(state, queue);
         }
-        
+
         if (pRefedDevice != NULL) {
             pRefedDevice->RELEASE(&irp);
             pRefedDevice = NULL;
         }
     }
-    
+
     return Status;
 }
 
@@ -959,7 +959,7 @@ FxRequest::PostProcessCompletionForReserved(
         //
         ADDREF(FXREQUEST_COMPLETE_TAG);
     }
-   
+
     RELEASE(FXREQUEST_FWDPRG_TAG);
 }
 
@@ -977,7 +977,7 @@ FxRequest::PreProcessCompletionForDriverRequest(
     //
     // Fire frameworks internal callback (pre) event if one is set.
     //
-    if (FxRequestCompletionStateQueue == State) {    
+    if (FxRequestCompletionStateQueue == State) {
         //
         // NOTE: This occurs before the IRP has already been released,
         //       and is only used to notify the queue to remove this request from this queue's
@@ -988,7 +988,7 @@ FxRequest::PreProcessCompletionForDriverRequest(
     }
     else if (Queue != NULL){
         //
-        // On return from PostProcessCompletionForDriverRequest, caller (framework) 
+        // On return from PostProcessCompletionForDriverRequest, caller (framework)
         // will try to release the last ref. Increase the ref count so request stays alive until
         // driver invokes WdfObjectDelete on this request.
         //
@@ -1000,7 +1000,7 @@ FxRequest::PreProcessCompletionForDriverRequest(
     //
     RELEASE(FXREQUEST_DCRC_TAG);
 }
-    
+
 //
 // Handles post-process completion for driver-created-requests queued by the driver.
 // On return the driver can delete the request with WdfObjectDelete.
@@ -1017,7 +1017,7 @@ FxRequest::PostProcessCompletionForDriverRequest(
     // NOTE: Do not touch the request object here. The request object may already be
     //           re-used or deleted.
     //
-    
+
     ASSERT(State == FxRequestCompletionStateNone ||
            State == FxRequestCompletionStateQueue);
     //
@@ -1025,8 +1025,8 @@ FxRequest::PostProcessCompletionForDriverRequest(
     //
     if (FxRequestCompletionStateQueue == State) {
         //
-        // NOTE: This occurs after the IRP has already been released,  and is only used 
-        //       to notify the queue to update its internal state and if appropriate, send 
+        // NOTE: This occurs after the IRP has already been released,  and is only used
+        //       to notify the queue to update its internal state and if appropriate, send
         //       another request.
         //
         Queue->PostRequestCompletedCallback(this);
@@ -1041,8 +1041,8 @@ FxRequest::FreeRequest(
 
 Routine Description:
 
-    This routine is called to free a reserved request or in case of Fxpkgio 
-    a non-reserved request. 
+    This routine is called to free a reserved request or in case of Fxpkgio
+    a non-reserved request.
 
 --*/
 {
@@ -1055,7 +1055,7 @@ Routine Description:
         //
         m_RequestContext->ReleaseAndRestore(this);
     }
-    
+
     //
     // If the request is not presented to the driver then clear the
     // cleanup & destroy callbacks before calling PerformEarlyDispose.
@@ -1063,7 +1063,7 @@ Routine Description:
     if (m_Presented == FALSE) {
         ClearEvtCallbacks();
     }
-       
+
     DeleteObject();
 }
 
@@ -1073,7 +1073,7 @@ FX_VF_METHOD(FxRequest, VerifyPreProcessSendAndForget) (
     )
 {
     PAGED_CODE_LOCKED();
-    
+
     if (m_CompletionRoutine.m_Completion != NULL) {
         DoTraceLevelMessage(
             FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
@@ -1082,7 +1082,7 @@ FX_VF_METHOD(FxRequest, VerifyPreProcessSendAndForget) (
             GetHandle(), m_CompletionRoutine.m_Completion);
 
         FxVerifierDbgBreakPoint(FxDriverGlobals);
-        
+
 
 
 
@@ -1099,7 +1099,7 @@ FX_VF_METHOD(FxRequest, VerifyPreProcessSendAndForget) (
     //
     if ((m_Irp.GetMajorFunction() == IRP_MJ_CREATE)
         &&
-        (FxFileObjectClassNormalize(GetDevice()->GetFileObjectClass()) != 
+        (FxFileObjectClassNormalize(GetDevice()->GetFileObjectClass()) !=
             WdfFileObjectNotRequired)) {
 
         DoTraceLevelMessage(
@@ -1149,7 +1149,7 @@ FxRequest::PreProcessSendAndForget(
         if (EarlyDispose() == FALSE) {
             VerifierBreakpoint_RequestEarlyDisposeDeferred(GetDriverGlobals());
         }
-            
+
         //
         // Now that the entire tree is disposed, we want to destroy all of the
         // children.  This will not put this object in the destroyed state.  For
@@ -1184,7 +1184,7 @@ FxRequest::PostProcessSendAndForget(
     //
     // Technically we did not complete the irp, but a send and forget is
     // functionally the same.  We  no longer own the irp.
-    // 
+    //
     if (IsReserved() == FALSE) {
         PostProcessCompletion(state, pQueue);
         }
@@ -1212,7 +1212,7 @@ FxRequest::GetStatus(
         KIRQL irql;
 
         Lock(&irql);
-        
+
 
 
 
@@ -1324,7 +1324,7 @@ FxRequest::GetMemoryObject(
         status = VerifyRequestIsNotCompleted(GetDriverGlobals());
         if (!NT_SUCCESS(status)) {
             goto Done;
-        }        
+        }
         if (m_Irp.GetRequestorMode() == UserMode
             &&
             (majorFunction == IRP_MJ_WRITE ||
@@ -1838,9 +1838,9 @@ FX_VF_METHOD(FxRequest, VerifyInsertIrpQueue) (
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
-    
+
     //
     // Check to make sure we are not already in an Irp queue
     //
@@ -1864,7 +1864,7 @@ FX_VF_METHOD(FxRequest, VerifyInsertIrpQueue) (
     // from EvtIoDefault
     //
     status = VerifyRequestIsNotCompleted(FxDriverGlobals);
-    
+
 Done:
     return status;
 }
@@ -2163,7 +2163,7 @@ FxRequest::Reuse(
     if (pFxDriverGlobals->IsVerificationEnabled(1, 9, OkForDownLevel)) {
         SHORT flags;
         KIRQL irql;
-        
+
         Lock(&irql);
         flags = GetVerifierFlagsLocked();
         if (flags & FXREQUEST_FLAG_SENT_TO_TARGET) {
@@ -2178,8 +2178,8 @@ FxRequest::Reuse(
     }
 
     //
-    // For drivers 1.9 and above (for maintaining backwards compatibility) 
-    // deregister previously registered completion routine. 
+    // For drivers 1.9 and above (for maintaining backwards compatibility)
+    // deregister previously registered completion routine.
     //
     if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,9)) {
        SetCompletionRoutine(NULL, NULL);
@@ -2187,7 +2187,7 @@ FxRequest::Reuse(
 
     pContext = NULL;
     currentIrp.SetIrp(m_Irp.GetIrp());
-    
+
     if (currentIrp.GetIrp() != NULL) {
         //
         // Release all outstanding references and restore original fields in
@@ -2213,9 +2213,9 @@ FxRequest::Reuse(
             currentIrp.SetCancel(FALSE);
 #else
             //
-            // For UMDF, host sets cancel flag to false as part of Reuse(), so no 
-            // need to have a separate call for UMDF (that's why host irp doesn't 
-            // expose any interface to set this independently). 
+            // For UMDF, host sets cancel flag to false as part of Reuse(), so no
+            // need to have a separate call for UMDF (that's why host irp doesn't
+            // expose any interface to set this independently).
 
 
 
@@ -2234,11 +2234,11 @@ FxRequest::Reuse(
             //
             if (m_CanComplete && m_Completed == FALSE) {
                 ASSERT(GetRefCnt() >= 2);
-                
+
                 if (pFxDriverGlobals->FxVerifierOn) {
                     ClearVerifierFlags(FXREQUEST_FLAG_DRIVER_OWNED);
                 }
-                
+
                 RELEASE(FXREQUEST_DCRC_TAG);
             }
         }
@@ -2259,7 +2259,7 @@ FxRequest::Reuse(
 
     if (ReuseParams->Flags & WDF_REQUEST_REUSE_SET_NEW_IRP) {
         currentIrp.SetIrp((MdIrp)ReuseParams->NewIrp);
-        
+
         //
         // If we are replacing an internal irp, we must free it later.
         //
@@ -2268,7 +2268,7 @@ FxRequest::Reuse(
 
             ASSERT(m_CanComplete == FALSE);
             pOldIrp = m_Irp.SetIrp(currentIrp.GetIrp());
-            
+
             if (pOldIrp != NULL) {
                 FxIrp oldIrp(pOldIrp);
                 oldIrp.FreeIrp();
@@ -2291,9 +2291,9 @@ FxRequest::Reuse(
         currentIrp.Reuse(ReuseParams->Status);
 
         //
-        // For UMDF, host sets cancel flag to false as part of Reuse(), so no 
-        // need to have a separate call for UMDF (that's why host irp doesn't 
-        // expose any interface to set this independently). 
+        // For UMDF, host sets cancel flag to false as part of Reuse(), so no
+        // need to have a separate call for UMDF (that's why host irp doesn't
+        // expose any interface to set this independently).
 
 
 
@@ -2314,7 +2314,7 @@ FxRequest::Reuse(
         // WDF guarantees a successful return code when the driver calls Reuse() from its
         // completion routine with valid input.
         //
-        
+
         //
         // This feature can only be used from WDF v1.11 and above.
         //
@@ -2386,21 +2386,21 @@ FxRequest::Reuse(
             FxVerifierDbgBreakPoint(pFxDriverGlobals);
             return status;
         }
-        
+
         //
         // This ref is removed when:
-        //   (a) the request is completed or 
+        //   (a) the request is completed or
         //   (b) the request is reused and old request/IRP was never sent and completed.
         //
         ADDREF(FXREQUEST_DCRC_TAG);
-            
+
         //
         // Note: strange why ClearFieldsForReuse() is not used all the time...  just in case,
         // keeping old logic for compatibility.
         //
         ClearFieldsForReuse();
         m_CanComplete = TRUE;
-        
+
         if (pFxDriverGlobals->FxVerifierOn) {
             SetVerifierFlags(FXREQUEST_FLAG_DRIVER_OWNED);
         }
@@ -2409,12 +2409,12 @@ FxRequest::Reuse(
         m_CanComplete = FALSE;
         m_Completed = FALSE;
         m_Canceled = FALSE;
-        
+
         if (pFxDriverGlobals->FxVerifierOn) {
             ClearVerifierFlags(FXREQUEST_FLAG_DRIVER_OWNED);
         }
     }
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -2443,12 +2443,12 @@ FxRequest::GetFileObject(
 
         Lock(&irql);
         status = VerifyRequestIsNotCompleted(pFxDriverGlobals);
-        
+
         Unlock(irql);
         if (!NT_SUCCESS(status)) {
             return status;
         }
-        
+
     }
 
     if (NULL == m_Irp.GetFileObject() && IsAllocatedDriver()) {
@@ -2471,7 +2471,7 @@ FxRequest::GetFileObject(
         *FileObject = pFileObject;
         return STATUS_SUCCESS;
     }
-    else if (NT_SUCCESS(status) && 
+    else if (NT_SUCCESS(status) &&
              FxIsFileObjectOptional(pDevice->GetFileObjectClass())) {
         //
         // Driver told us that it is ok for the file object to be NULL.
@@ -2501,11 +2501,11 @@ Routine Description:
 Arguments:
 
     None
-    
+
 Return Value:
 
     None
-    
+
 --*/
 {
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
@@ -2515,12 +2515,12 @@ Return Value:
         KIRQL irql;
 
         Lock(&irql);
-        
+
         (VOID)VerifyRequestIsNotCompleted(pFxDriverGlobals);
-        
+
         Unlock(irql);
     }
-    
+
     InterlockedIncrement(&m_IrpReferenceCount);
 
     return;
@@ -2567,7 +2567,7 @@ FX_VF_METHOD(FxRequest, VerifyProbeAndLock) (
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
-    
+
     PAGED_CODE_LOCKED();
 
     MdEThread thread = m_Irp.GetThread();
@@ -2598,7 +2598,7 @@ FX_VF_METHOD(FxRequest, VerifyProbeAndLock) (
         // Irp->Thread should be issued for all user mode requests
         ASSERT(m_Irp.GetRequestorMode() == KernelMode);
     }
-    
+
     return status;
 }
 
@@ -2611,9 +2611,9 @@ FX_VF_METHOD(FxRequest, VerifyStopAcknowledge) (
 {
     NTSTATUS status;
     KIRQL irql;
-    
+
     PAGED_CODE_LOCKED();
-    
+
     Lock(&irql);
 
     //
@@ -2761,7 +2761,7 @@ VOID
 FX_VF_METHOD(FxRequest, VerifierBreakpoint_RequestEarlyDisposeDeferred) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
-{    
+{
     PAGED_CODE_LOCKED();
 
     //
@@ -2771,10 +2771,12 @@ FX_VF_METHOD(FxRequest, VerifierBreakpoint_RequestEarlyDisposeDeferred) (
     if (FxDriverGlobals->IsVerificationEnabled(1, 11, OkForDownLevel)) {
         DoTraceLevelMessage(
             FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGREQUEST,
-            "WDFREQUEST %p deferred the dispose operation. This normally "
-            "indicates that at least one of its children asked for passive "
-            "level disposal. This is not supported.", GetHandle());
-        
+            "WDFREQUEST %p deferred the dispose operation. Usually this "
+            "indicates that some child object of the WDFREQUEST requires "
+            "passive level disposal (e.g. WDFTIMER). This is not supported. "
+            "Either ensure that the WDFREQUEST always completes at passive "
+            "level, or do not parent the object to the WDFREQUEST.", GetHandle());
+
         FxVerifierDbgBreakPoint(FxDriverGlobals);
     }
 }
@@ -2786,7 +2788,7 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsDriverOwned) (
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
 
     if ((m_VerifierFlags & FXREQUEST_FLAG_DRIVER_OWNED) == 0) {
@@ -2853,7 +2855,7 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsNotCancelable)(
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
 
     if (m_VerifierFlags & FXREQUEST_FLAG_DRIVER_CANCELABLE) {
@@ -2881,9 +2883,9 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsInCallerContext)(
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
-    
+
     if ((m_VerifierFlags & FXREQUEST_FLAG_DRIVER_INPROCESS_CONTEXT) == 0) {
         status = STATUS_INVALID_DEVICE_REQUEST;
 
@@ -2897,7 +2899,7 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsInCallerContext)(
     else {
         status = STATUS_SUCCESS;
     }
-    
+
     return status;
 }
 
@@ -2908,7 +2910,7 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsInEvtIoStopContext)(
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
 
     if ((m_VerifierFlags & FXREQUEST_FLAG_DRIVER_IN_EVTIOSTOP_CONTEXT) == 0) {
@@ -2935,9 +2937,9 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsNotCompleted)(
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
- 
+
     if (m_Completed) {
         status = STATUS_INTERNAL_ERROR;
 
@@ -2962,18 +2964,18 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsTagRequest) (
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
 
     //
     // A request that has been marked as a tag request can be retrieved
     // by the driver by calling WdfIoQueueRetrieveNextRequest instead of
-    // WdfIoQueueRetrieveFoundRequest. Some drivers use multiple threads 
-    // to scan the queue, not the best design but allowed. This means that 
-    // it is possible for one thread to remove and complete a request that is 
+    // WdfIoQueueRetrieveFoundRequest. Some drivers use multiple threads
+    // to scan the queue, not the best design but allowed. This means that
+    // it is possible for one thread to remove and complete a request that is
     // used as a tag by another thread.
     //
-    if (FALSE == m_Completed && (0x0 == (m_VerifierFlags & 
+    if (FALSE == m_Completed && (0x0 == (m_VerifierFlags &
             (FXREQUEST_FLAG_TAG_REQUEST | FXREQUEST_FLAG_DRIVER_OWNED)))) {
 
        status = STATUS_INVALID_PARAMETER;
@@ -2996,7 +2998,7 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsAllocatedFromIo)(
     )
 {
     NTSTATUS status;
-    
+
     PAGED_CODE_LOCKED();
 
     if (IsAllocatedFromIo() == FALSE) {
@@ -3021,9 +3023,9 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsCurrentStackValid)(
 {
     NTSTATUS status;
     MdIrp     irp;
-    
+
     PAGED_CODE_LOCKED();
-    
+
     //
     //Make sure there is an IRP.
     //
@@ -3049,23 +3051,23 @@ FX_VF_METHOD(FxRequest, VerifyRequestIsCurrentStackValid)(
         FxVerifierDbgBreakPoint(FxDriverGlobals);
         goto Done;
     }
-    
+
     status = STATUS_SUCCESS;
 
 Done:
-    return status;   
+    return status;
 }
 
 _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxRequest, VerifyRequestCanBeCompleted)(
-    _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals    
+    _In_ PFX_DRIVER_GLOBALS  FxDriverGlobals
     )
 {
     NTSTATUS            status;
-    
+
     PAGED_CODE_LOCKED();
-    
+
     if (GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1,11) == FALSE) {
         status = VerifyRequestIsAllocatedFromIo(FxDriverGlobals);
         goto Done;
@@ -3078,7 +3080,7 @@ FX_VF_METHOD(FxRequest, VerifyRequestCanBeCompleted)(
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
-        
+
     //
     // Note: There is no guarantees that the request has a completion routine in the current
     //          IRP stack location; thus we cannot check for it.
@@ -3096,11 +3098,11 @@ FX_VF_METHOD(FxRequest, VerifyRequestCanBeCompleted)(
         FxVerifierDbgBreakPoint(FxDriverGlobals);
         goto Done;
     }
-    
+
     status = STATUS_SUCCESS;
 
 Done:
-    return status;   
+    return status;
 }
 
 ULONG
@@ -3108,9 +3110,9 @@ FxRequest::Release(
     __in PVOID Tag,
     __in LONG Line,
     __in_opt PCSTR File
-    ) 
+    )
 {
-    ULONG   retValue; 
+    ULONG   retValue;
     BOOLEAN reservedRequest;
     BOOLEAN allocFromIo;
     BOOLEAN canComplete;
@@ -3123,7 +3125,7 @@ FxRequest::Release(
     canComplete     = IsCanComplete();
 
     retValue =  __super::Release(Tag, Line, File);
-    
+
     if (reservedRequest && retValue == 1 && m_Completed) {
         //
         // Reserved requests should have an associated queue all the time.
@@ -3131,16 +3133,16 @@ FxRequest::Release(
         m_ForwardProgressQueue->ReturnReservedRequest(this);
     }
     else if (allocFromIo == FALSE && canComplete && retValue == 1 && m_Completed) {
-             
+
         FxRequestCompletionState    state;
         FxIoQueue*                  queue;
 
         //
         // Make a local copy before request is gone.
         //
-        state = (FxRequestCompletionState) m_CompletionState;    
+        state = (FxRequestCompletionState) m_CompletionState;
         queue = m_IoQueue;
-        
+
         m_CompletionState = FxRequestCompletionStateNone;
         m_IoQueue = NULL;
 
@@ -3150,9 +3152,9 @@ FxRequest::Release(
         FxIrp irp(m_Irp.GetIrp());
 
         m_Irp.SetIrp(NULL);
-        
+
         irp.CompleteRequest(GetPriorityBoost());
-        
+
         PostProcessCompletionForDriverRequest(state, queue);
     }
 
@@ -3199,14 +3201,14 @@ FxRequestFromLookaside::SelfDestruct(
     //
     pDevice = GetDevice();
     ASSERT(pDevice != NULL);
-    
+
     //
     // Destroy the object
     //
     FxRequestFromLookaside::~FxRequestFromLookaside();
 
     if (IsRequestForwardedToParent()) {
-        
+
  #if FX_VERBOSE_TRACE
         DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGREQUEST,
                             "Free FxRequest* %p memory", this);
@@ -3219,7 +3221,7 @@ FxRequestFromLookaside::SelfDestruct(
         pHeader = FxObject::_CleanupPointer(GetDriverGlobals(), this);
         MxMemory::MxFreePool(pHeader->Base);
     }
-    else {                
-        pDevice->FreeRequestMemory(this);        
+    else {
+        pDevice->FreeRequestMemory(this);
     }
 }

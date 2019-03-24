@@ -30,8 +30,8 @@ extern "C" {
 
 FxDeviceDescriptionEntry::FxDeviceDescriptionEntry(
     __inout FxChildList* DeviceList,
-    __in ULONG AddressDescriptionSize,
-    __in ULONG IdentificationDescriptionSize
+    __in ULONG IdentificationDescriptionSize,
+    __in ULONG AddressDescriptionSize
     )
 {
     m_IdentificationDescription =
@@ -39,16 +39,16 @@ FxDeviceDescriptionEntry::FxDeviceDescriptionEntry(
         this, WDF_ALIGN_SIZE_UP(sizeof(*this), sizeof(PVOID)));
 
     m_IdentificationDescription->IdentificationDescriptionSize =
-        AddressDescriptionSize;
+        IdentificationDescriptionSize;
 
-    if (IdentificationDescriptionSize > 0) {
+    if (AddressDescriptionSize > 0) {
         m_AddressDescription =
             (PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER) WDF_PTR_ADD_OFFSET(
                 m_IdentificationDescription,
-                WDF_ALIGN_SIZE_UP(AddressDescriptionSize, sizeof(PVOID)));
+                WDF_ALIGN_SIZE_UP(IdentificationDescriptionSize, sizeof(PVOID)));
 
         m_AddressDescription->AddressDescriptionSize =
-            IdentificationDescriptionSize;
+            AddressDescriptionSize;
     }
 
     InitializeListHead(&m_DescriptionLink);
@@ -170,9 +170,9 @@ FxDeviceDescriptionEntry::IsDeviceRemoved(
         m_DescriptionState = DescriptionUnspecified;
 
         //
-        // Remove from the current list if no scan going on. 
-        // Note that the description entry can't be removed from list if scan 
-        // count is > 0 because it might be part of an iterator that driver is 
+        // Remove from the current list if no scan going on.
+        // Note that the description entry can't be removed from list if scan
+        // count is > 0 because it might be part of an iterator that driver is
         // still using to iterate thru the child list.
         //
         if (pList->GetScanCount() == 0) {
@@ -184,9 +184,9 @@ FxDeviceDescriptionEntry::IsDeviceRemoved(
         }
         else {
             //
-            // The entry will be removed and deleted when scan count goes to 
-            // zero by the scanning thread, so make sure pdo deosn't reference 
-            // the entry any more.    
+            // The entry will be removed and deleted when scan count goes to
+            // zero by the scanning thread, so make sure pdo deosn't reference
+            // the entry any more.
             //
             m_PendingDeleteOnScanEnd = TRUE;
             if (m_Pdo != NULL) {
@@ -225,9 +225,9 @@ FxDeviceDescriptionEntry::ProcessDeviceRemoved(
     KeAcquireSpinLock(&m_DeviceList->m_ListLock, &irql);
 
     //
-    // Remove from the current list. In some cases the entry may not be in any 
-    // list in which case RemoveEntryList() will be a noop. 
-    // Note that the description entry can't be removed from list if scan count 
+    // Remove from the current list. In some cases the entry may not be in any
+    // list in which case RemoveEntryList() will be a noop.
+    // Note that the description entry can't be removed from list if scan count
     // is > 0 because it might be part of an iterator that driver is still using
     // to iterate thru the child list.
     //
@@ -242,15 +242,15 @@ FxDeviceDescriptionEntry::ProcessDeviceRemoved(
     }
     else {
         //
-        // The entry will be removed when scan count goes to zero. 
+        // The entry will be removed when scan count goes to zero.
         //
-        ASSERT(m_ModificationState == ModificationUnspecified && 
+        ASSERT(m_ModificationState == ModificationUnspecified &&
                 m_DescriptionState == DescriptionUnspecified);
         m_PendingDeleteOnScanEnd = TRUE;
     }
 
     KeReleaseSpinLock(&m_DeviceList->m_ListLock, irql);
-    
+
     m_DeviceList->DrainFreeListHead(&freeHead);
 }
 
@@ -345,10 +345,10 @@ FxChildList::FxChildList(
     // We want all waiters on the event to be satisfied, not just the first one
     //
     m_ScanEvent.Initialize(NotificationEvent, TRUE);
-    
+
     MarkDisposeOverride(ObjectDoNotLock);
 }
-    
+
 BOOLEAN
 FxChildList::Dispose(
     VOID
@@ -716,8 +716,8 @@ FxChildList::EndScan(
 
             if (pEntry->m_PendingDeleteOnScanEnd) {
                 //
-                // The entry was pnp removed but was not removed from list 
-                // because scan count was > 0. It is safe to remove and delete 
+                // The entry was pnp removed but was not removed from list
+                // because scan count was > 0. It is safe to remove and delete
                 // it now.
 
                 // Update the current pointer before the entry is removed.
@@ -745,7 +745,7 @@ FxChildList::EndScan(
                 }
 
                 MarkDescriptionNotPresentWorker(pEntry, TRUE);
-            } 
+            }
         }
 
         //
@@ -832,12 +832,12 @@ FxChildList::BeginIteration(
 
     InitIterator(Iterator);
     //
-    // Set the scanevent to non-signaled state. Some code paths such as 
+    // Set the scanevent to non-signaled state. Some code paths such as
     // PDO eject will wait for the completion of child list iteration or scan
-    // so that a QDR that follows eject is guaranteed to pick up the change in 
-    // PDO state that the code path made. Note that scan and iteration can be 
+    // so that a QDR that follows eject is guaranteed to pick up the change in
+    // PDO state that the code path made. Note that scan and iteration can be
     // nested and in that case this event will be clear each time but it will be
-    // set (signalled) only after all the iteration and scan opeartions have 
+    // set (signalled) only after all the iteration and scan opeartions have
     // completed.
     //
     m_ScanEvent.Clear();
@@ -1010,7 +1010,7 @@ FxChildList::GetNextDevice(
 
             if (i > cur) {
                 found = TRUE;
-                
+
                 if (Info != NULL &&
                     Info->EvtChildListIdentificationDescriptionCompare != NULL) {
 
@@ -1104,11 +1104,11 @@ FxChildList::GetNextStaticDevice(
             pEntry = FxDeviceDescriptionEntry::_FromDescriptionLink(ple);
 
             //
-            // If the entry is marked pending delete, skip it, because the 
+            // If the entry is marked pending delete, skip it, because the
             // relationship between entry and its PDO has been removed and PDO
             // may have actually been deleted by this time. The only reason
-            // this entry is here is because there is still a scan going on 
-            // and the entry can't be removed in the midst of a scan. 
+            // this entry is here is because there is still a scan going on
+            // and the entry can't be removed in the midst of a scan.
             //
             if (pEntry->m_PendingDeleteOnScanEnd) {
                 continue;
@@ -1952,7 +1952,7 @@ Arguments:
 
     DescriptionEntry - Entry to be marked as "not present".
 
-    ModificationCanBeQueued - whether the caller allows for this description 
+    ModificationCanBeQueued - whether the caller allows for this description
         to be a modification already queued on the modification list
 
 Assumes:
@@ -2015,7 +2015,7 @@ Routine Description:
     This worker function marks the passed in mod or desc entry in the device
     list "not present". The change is enqueued in the mod list but the mod
     list is not drained.
-    
+
 Arguments:
 
     FreeListHead - Free list of entries.
@@ -2037,11 +2037,11 @@ Return Value:
 
         if (IsStaticList()) {
             //
-            // There is a corner case of a static PDO being added and 
-            // immediately marked as missing before it has a chance to move to 
-            // description list. This case is handled here by marking the 
+            // There is a corner case of a static PDO being added and
+            // immediately marked as missing before it has a chance to move to
+            // description list. This case is handled here by marking the
             // modification state to ModificationNeedsPnpRemoval. Fx cannot just
-            // delete the description because there is a driver-created PDO 
+            // delete the description because there is a driver-created PDO
             // associated with the description and it needs to be cleaned up.
             //
             ModificationEntry->m_ModificationState = ModificationNeedsPnpRemoval;
@@ -2094,11 +2094,11 @@ FxChildList::DrainFreeListHead(
         // If this is a static list and the entry has not yet been instantiated,
         // tell PnP to remove the device.
         //
-        // There is a corner case of a static PDO being added and 
-        // immediately marked as missing before it has a chance to move to 
-        // description list. This case is handled here by checking the 
+        // There is a corner case of a static PDO being added and
+        // immediately marked as missing before it has a chance to move to
+        // description list. This case is handled here by checking the
         // modification state of ModificationNeedsPnpRemoval. Fx cannot just
-        // delete the description because there is a driver-created PDO 
+        // delete the description because there is a driver-created PDO
         // associated with the description and it needs to be cleaned up.
         //
         if (m_StaticList &&
@@ -2111,15 +2111,15 @@ FxChildList::DrainFreeListHead(
 
             //
             // The pnp removal path expects that there is no modifcation pending
-            // when removing the description. 
+            // when removing the description.
             //
             if (pEntry->m_ModificationState == ModificationNeedsPnpRemoval) {
                 ASSERT(pEntry->m_DescriptionState == DescriptionUnspecified);
                 ASSERT(IsListEmpty(&pEntry->m_ModificationLink));
-                
+
                 pEntry->m_ModificationState = ModificationUnspecified;
             }
-            
+
             //
             // Change the state to reported missing (which is what we are basically
             // simulating here anyways) so that when we process the entry again
@@ -2283,7 +2283,7 @@ FxChildList::CreateDevice(
                 //
                 // Destroy any allocations assocated with the device.
                 //
-                init.CreatedDevice->Destroy();
+                ((FxDevice*)init.CreatedDevice)->Destroy();
             }
 
             *InvalidateRelations = TRUE;
@@ -2297,7 +2297,7 @@ FxChildList::CreateDevice(
             //
             if (init.CreatedDevice == NULL) {
                 //
-                // Driver didn't actually create the device, even though its 
+                // Driver didn't actually create the device, even though its
                 // EvtChildListCreateDevice returned a successful return code.
                 // Change the status to indicate an error, so that we enter the
                 // error handling code below.
@@ -2315,6 +2315,9 @@ FxChildList::CreateDevice(
 
         if (!NT_SUCCESS(status)) {
             if (init.CreatedDevice != NULL) {
+                FxDevice* createdDevice;
+                createdDevice = (FxDevice*)init.CreatedDevice;
+
                 KeAcquireSpinLock(&m_ListLock, &irql);
                 //
                 // Set to missing so that when the pnp machine evaluates whether the
@@ -2347,33 +2350,33 @@ FxChildList::CreateDevice(
                 }
                 KeReleaseSpinLock(&m_ListLock, irql);
 
-                ASSERT(init.CreatedDevice->IsPnp());
-                ASSERT(init.CreatedDevice->GetDevicePnpState() == WdfDevStatePnpInit);
-                ASSERT(init.CreatedDevice->GetPdoPkg()->m_Description != NULL);
+                ASSERT(createdDevice->IsPnp());
+                ASSERT(createdDevice->GetDevicePnpState() == WdfDevStatePnpInit);
+                ASSERT(createdDevice->GetPdoPkg()->m_Description != NULL);
 
                 ASSERT(Entry->m_Pdo == NULL);
 
                 DoTraceLevelMessage(
                     GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
                     "WDFDEVICE %p !devobj %p created, but EvtChildListCreateDevice "
-                    "returned status %!STATUS!", init.CreatedDevice->GetHandle(),
-                    init.CreatedDevice->GetDeviceObject(), status);
+                    "returned status %!STATUS!", createdDevice->GetHandle(),
+                    createdDevice->GetDeviceObject(), status);
 
                 //
                 // Simulate a remove event coming to the device.  After this call
                 // returns, init.CreatedDevice is no longer a valid pointer!
                 //
-                // Please note that DeleteDeviceFromFailedCreate just returns 
+                // Please note that DeleteDeviceFromFailedCreate just returns
                 // the passed status back unless device is a filter, in which
                 // case it changes it to success.
                 //
                 // It is not really the status of DeleteDeviceFromFailedCreate
                 // operation, which is why we don't check it.
                 //
-                (void) init.CreatedDevice->DeleteDeviceFromFailedCreate(
-                                                                status, 
+                (void) createdDevice->DeleteDeviceFromFailedCreate(
+                                                                status,
                                                                 TRUE);
-                
+
                 init.CreatedDevice = NULL;
             }
             else {
@@ -2399,7 +2402,7 @@ FxChildList::CreateDevice(
             }
 
             return FALSE;
-        } 
+        }
     }
 
     //
@@ -2407,7 +2410,7 @@ FxChildList::CreateDevice(
     // assign m_Pdo after we have completely initalized device because we check
     // for m_Pdo in PostParentToD0.
     //
-    Entry->m_Pdo = init.CreatedDevice;
+    Entry->m_Pdo = (FxDevice*)init.CreatedDevice;
     Entry->m_DescriptionState = DescriptionInstantiatedHasObject;
 
     return TRUE;
@@ -2503,7 +2506,7 @@ FxChildList::ProcessBusRelations(
     //   b) we have something to report and there are previous relations (which
     //      if left unchanged will be used to report our missing devices)
     //
-    // THEN nothing else to do except marking the NotPresent children as 
+    // THEN nothing else to do except marking the NotPresent children as
     // missing, unlock the list and return the special return
     // code STATUS_NOT_SUPPORTED indicating this condition.
     //
@@ -2651,7 +2654,7 @@ FxChildList::ProcessBusRelations(
                     if (m_StaticList == FALSE) {
                         if (ReenumerateEntryLocked(pEntry, TRUE)) {
                             DoTraceLevelMessage(
-                                pFxDriverGlobals, 
+                                pFxDriverGlobals,
                                 TRACE_LEVEL_INFORMATION, TRACINGPNP,
                                 "PDO WDFDEVICE %p !devobj %p being cloned "
                                 "because of the failure to allocate device "
@@ -2664,7 +2667,7 @@ FxChildList::ProcessBusRelations(
                     }
                     else {
                         DoTraceLevelMessage(
-                            pFxDriverGlobals, 
+                            pFxDriverGlobals,
                             TRACE_LEVEL_WARNING, TRACINGPNP,
                             "PDO WDFDEVICE %p !devobj %p is a statically "
                             "enumerated PDO therefore can not be cloned and is "
@@ -2849,7 +2852,7 @@ FxChildList::InvokeReportedMissingCallback(
     InitializeListHead(&freeHead);
 
     //
-    // Prevent modification list processing so that we can walk the 
+    // Prevent modification list processing so that we can walk the
     // description list safely.
     //
     KeAcquireSpinLock(&m_ListLock, &irql);
@@ -2857,14 +2860,14 @@ FxChildList::InvokeReportedMissingCallback(
     KeReleaseSpinLock(&m_ListLock, irql);
 
     //
-    // Invoke the ReportedMissing callback if present for children reported 
-    // missing. 
+    // Invoke the ReportedMissing callback if present for children reported
+    // missing.
     //
     for (ple = m_DescriptionListHead.Flink;
          ple != &m_DescriptionListHead;
          ple = pNext) {
         pNext = ple->Flink;
-    
+
         pEntry = FxDeviceDescriptionEntry::_FromDescriptionLink(ple);
 
         if (pEntry->m_ReportedMissingCallbackState == CallbackNeedsToBeInvoked) {
@@ -3158,7 +3161,7 @@ FxChildList::_ValidateConfig(
     )
 {
     NTSTATUS status;
-    
+
     if (Config == NULL) {
         status = STATUS_INVALID_PARAMETER;
         DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,

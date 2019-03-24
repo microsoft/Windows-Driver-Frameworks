@@ -525,8 +525,16 @@ private:
         //
         // As the PDO, we already have the interface built in
         //
+        NTSTATUS status;
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        status = AllocateWorkItemForSetDeviceFailed();
+#else
         DO_NOTHING();
-        return STATUS_SUCCESS;
+        status = STATUS_SUCCESS;
+#endif
+
+        return status;
     }
 
     virtual
@@ -538,7 +546,11 @@ private:
         //
         // As the PDO, we already have the interface built in
         //
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+        RemoveWorkItemForSetDeviceFailed();
+#else
         DO_NOTHING();
+#endif
     }
     
     _Must_inspect_result_

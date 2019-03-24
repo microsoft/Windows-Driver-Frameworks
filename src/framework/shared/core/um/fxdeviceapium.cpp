@@ -39,7 +39,7 @@ extern "C" {
 //
 // Do not specify argument names
 FX_DECLARE_VF_FUNCTION_P4(
-NTSTATUS, 
+NTSTATUS,
 VerifyWdfDeviceWdmDispatchIrpToIoQueue,
     _In_ FxDevice*,
     _In_ MdIrp,
@@ -62,28 +62,28 @@ WDFEXPORT(WdfDevicePostEvent)(
 
 Routine Description:
 
-    This method asynchronously notifies applications that are waiting for the 
+    This method asynchronously notifies applications that are waiting for the
     specified event from a driver.
-    
+
 Arguments:
     Device - WDF Device handle.
 
     EventGuid: The GUID for the event. The GUID is determined by the application
            and the driver and is opaque to the framework.
-    
-    EventType: A WDF_EVENT_TYPE-typed value that identifies the type of 
+
+    EventType: A WDF_EVENT_TYPE-typed value that identifies the type of
            event. In the current version of UMDF, the driver must set EventType
            to WdfEventBroadcast (1). WdfEventBroadcast indicates that the event
-           is broadcast. Applications can subscribe to WdfEventBroadcast-type 
-           events. To receive broadcast events, the application must register 
-           for notification through the Microsoft Win32 
-           RegisterDeviceNotification function. WdfEventBroadcast-type events 
+           is broadcast. Applications can subscribe to WdfEventBroadcast-type
+           events. To receive broadcast events, the application must register
+           for notification through the Microsoft Win32
+           RegisterDeviceNotification function. WdfEventBroadcast-type events
            are exposed as DBT_CUSTOMEVENT-type events to applications.
-    
-    Data: A pointer to a buffer that contains data that is associated with the 
+
+    Data: A pointer to a buffer that contains data that is associated with the
            event. NULL is a valid value.
-    
-    DataSizeCb : The size, in bytes, of data that Data points to. Zero is a 
+
+    DataSizeCb : The size, in bytes, of data that Data points to. Zero is a
            valid size value if Data is set to NULL.
 
 Return Value:
@@ -92,14 +92,14 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     NTSTATUS status;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice *pDevice;
     HRESULT hr;
-    
+
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -119,7 +119,7 @@ Return Value:
         status = STATUS_INVALID_PARAMETER;
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-            "WDFDEVICE 0x%p WdfEventType %d not expected %!STATUS!", 
+            "WDFDEVICE 0x%p WdfEventType %d not expected %!STATUS!",
             Device, WdfEventType, status);
         FxVerifierDbgBreakPoint(pFxDriverGlobals);
         return status;
@@ -128,16 +128,16 @@ Return Value:
     //
     // post the event
     //
-    hr = pDevice->GetDeviceStack()->PostEvent(EventGuid, 
-                                              WdfEventType, 
-                                              Data, 
+    hr = pDevice->GetDeviceStack()->PostEvent(EventGuid,
+                                              WdfEventType,
+                                              Data,
                                               DataSizeCb);
 
     if (FAILED(hr)) {
         status = FxDevice::NtStatusFromHr(pDevice->GetDeviceStack(), hr);
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-            "WDFDEVICE 0x%p Failed to post event %!STATUS!", 
+            "WDFDEVICE 0x%p Failed to post event %!STATUS!",
             Device, status);
     }
     else {
@@ -169,7 +169,7 @@ WDFEXPORT(WdfDeviceMapIoSpace)(
 
 Routine Description:
 
-    This routine maps given physical address of a device register into 
+    This routine maps given physical address of a device register into
     system address space and optionally into user-mode address space.
 
 Arguments:
@@ -182,11 +182,11 @@ Arguments:
 
     NumberOfBytes - Length of resource to be mapped in bytes.
 
-    CacheType - supplies type of caching desired 
+    CacheType - supplies type of caching desired
 
-    PseudoBaseAddress - Pseudo base address (opaque base address) of the 
+    PseudoBaseAddress - Pseudo base address (opaque base address) of the
         mapped resource.
-    
+
 Return Value:
 
     HRESULT
@@ -194,15 +194,15 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     FxCmResList* transResources;
     NTSTATUS status;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice *pDevice;
     HRESULT hr;
-    
+
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -210,27 +210,27 @@ Return Value:
                                    FX_TYPE_DEVICE,
                                    (PVOID *) &pDevice,
                                    &pFxDriverGlobals);
-    
+
     //
     // Is direct hardware access allowed?
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
         CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED,
         (pDevice->IsDirectHardwareAccessAllowed() == TRUE)),
         DriverGlobals->DriverName);
 
     //
-    // Validate input parameters. 
+    // Validate input parameters.
     //
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(PhysicalAddress.QuadPart),
         DriverGlobals->DriverName);
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("NumberOfBytes should be > 0", 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("NumberOfBytes should be > 0",
                                          (NumberOfBytes > 0)), DriverGlobals->DriverName);
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("CacheType incorrect", 
-                                         (CacheType >= MmNonCached && 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("CacheType incorrect",
+                                         (CacheType >= MmNonCached &&
                                           CacheType < MmMaximumCacheType)),
                                           DriverGlobals->DriverName);
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(PseudoBaseAddress), 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(PseudoBaseAddress),
         DriverGlobals->DriverName);
 
     *PseudoBaseAddress = NULL;
@@ -247,7 +247,7 @@ Return Value:
     }
 
     return status;
-}    
+}
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
@@ -284,16 +284,16 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     IWudfDeviceStack *deviceStack;
     HRESULT hr;
     FxCmResList* resources;
     PVOID systemBaseAddress;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice *pDevice;
-    
+
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -301,24 +301,24 @@ Return Value:
                                    FX_TYPE_DEVICE,
                                    (PVOID *) &pDevice,
                                    &pFxDriverGlobals);
-    
+
     //
     // Is direct hardware access allowed?
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED, 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED,
         (pDevice->IsDirectHardwareAccessAllowed() == TRUE)),
         DriverGlobals->DriverName);
 
     //
-    // Validate input parameters. 
+    // Validate input parameters.
     //
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(PseudoBaseAddress),
         DriverGlobals->DriverName);
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("NumberOfBytes should be > 0", 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("NumberOfBytes should be > 0",
                                          (NumberOfBytes > 0)), DriverGlobals->DriverName);
     //
-    // Get system address. 
+    // Get system address.
     //
     systemBaseAddress = pDevice->GetSystemAddressFromPseudoAddress(PseudoBaseAddress);
 
@@ -331,7 +331,7 @@ Return Value:
                                             NumberOfBytes);
 
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("Driver attempted to unmap "
-        "incorrect register address, or provided incorrect size", 
+        "incorrect register address, or provided incorrect size",
         SUCCEEDED(hr)), DriverGlobals->DriverName);
 
     //
@@ -342,7 +342,7 @@ Return Value:
 
         deviceStack->UnmapIoSpace(systemBaseAddress, NumberOfBytes);
     }
-   
+
     return;
 }
 
@@ -362,7 +362,7 @@ WDFEXPORT(WdfDeviceGetHardwareRegisterMappedAddress)(
 Routine Description:
 
     This routine returns user-mode base address where registers corresponing
-    to supplied pseudo base address have been mapped..   
+    to supplied pseudo base address have been mapped..
 
 Arguments:
     DriverGlobals - DriverGlobals pointer
@@ -371,7 +371,7 @@ Arguments:
 
     PseudoBaseAddress - Pseudo base address for which the caller needs to get
          user-mode mapped address.
-    
+
 Return Value:
 
     User-mode mapped base address.
@@ -379,16 +379,16 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     HRESULT hr;
     FxCmResList* transResources;
     PVOID usermodeBaseAddress;
     PVOID systemBaseAddress;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice *pDevice;
-    
+
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -400,8 +400,8 @@ Return Value:
     //
     // Is direct hardware access allowed?
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED, 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED,
         (pDevice->IsDirectHardwareAccessAllowed() == TRUE)),
         DriverGlobals->DriverName);
 
@@ -411,17 +411,17 @@ Return Value:
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("Incorrect register access mode."
         " Register mapping to user-mode is not enabled. Set the INF directive"
         " UmdfRegisterAccessMode to RegisterAccessUsingUserModeMapping"
-        " in driver's INF file to enable Register mapping to user-mode", 
+        " in driver's INF file to enable Register mapping to user-mode",
         (pDevice->AreRegistersMappedToUsermode() == TRUE)), DriverGlobals->DriverName);
-    
+
     //
-    // Validate input parameters. 
+    // Validate input parameters.
     //
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(PseudoBaseAddress),
         DriverGlobals->DriverName);
 
     //
-    // check if this base address is valid. 
+    // check if this base address is valid.
     //
     usermodeBaseAddress = NULL;
     transResources = pDevice->GetTranslatedResources();
@@ -459,15 +459,15 @@ WDFEXPORT(WdfDeviceReadFromHardware)(
 
 Routine Description:
 
-    This routine does read from a device port or register.   
+    This routine does read from a device port or register.
 
 Arguments:
     DriverGlobals - DriverGlobals pointer
 
     Device - WDF Device handle.
 
-    Type - Specified whether it is port or register 
-    
+    Type - Specified whether it is port or register
+
     Size - Supplies size of read in bytes.
 
     TargetAddress - Supplies address of port or register to read from
@@ -478,13 +478,13 @@ Arguments:
 
 Return Value:
 
-    Returns the read value if it is non-buffered port or register. 
+    Returns the read value if it is non-buffered port or register.
     Otherwise zero.
 
 --*/
 {
     DDI_ENTRY();
-        
+
     SIZE_T value = 0;
     PVOID systemAddress = NULL;
     HRESULT hr = S_OK;
@@ -499,7 +499,7 @@ Return Value:
     EventWriteEVENT_UMDF_FX_DDI_READ_FROM_HARDWARE_START(Type, Size, Count);
 
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -511,32 +511,32 @@ Return Value:
     //
     // See if direct hwaccess is allowed
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED, 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED,
         (pDevice->IsDirectHardwareAccessAllowed() == TRUE)),
         DriverGlobals->DriverName);
 
     //
     // validate parameters
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK("Incorrect Type parameter", 
-            (Type > WdfDeviceHwAccessTargetTypeInvalid && 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK("Incorrect Type parameter",
+            (Type > WdfDeviceHwAccessTargetTypeInvalid &&
              Type < WdfDeviceHwAccessTargetTypeMaximum)),
              DriverGlobals->DriverName);
 
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK("Incorrect Size parameter", 
-            (Size > WdfDeviceHwAccessTargetSizeInvalid && 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK("Incorrect Size parameter",
+            (Size > WdfDeviceHwAccessTargetSizeInvalid &&
              Size < WdfDeviceHwAccessTargetSizeMaximum)),
              DriverGlobals->DriverName);
-    
+
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(TargetAddress),
         DriverGlobals->DriverName);
 
     if (pDevice->IsBufferType(Type)) {
         FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(Buffer), DriverGlobals->DriverName);
-        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("Count should be > 0", (Count > 0)), 
+        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("Count should be > 0", (Count > 0)),
             DriverGlobals->DriverName);
     }
     else {
@@ -563,7 +563,7 @@ Return Value:
     //
     // For buffer access for registers, compute the length of buffer using Count.
     // Count is the element count in the buffer (of UCHAR/USHORT/ULONG/ULONG64).
-    // Note that Port is accessed differently than registers - the buffer is 
+    // Note that Port is accessed differently than registers - the buffer is
     // written into the port address of specified size (UCHAR/USHORT/ULONG).
     //
     if (pDevice->IsBufferType(Type) && pDevice->IsRegister(Type)) {
@@ -573,7 +573,7 @@ Return Value:
         FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("Integer overflow occurred "
         "when computing length of read access", (SUCCEEDED(hr))),
         DriverGlobals->DriverName);
-        
+
         length = tmp;
     }
 
@@ -582,14 +582,14 @@ Return Value:
     //
     // Port access is always handled through system call.
     // Register access can be handled in usermode if driver enabled
-    // mapping registers to usermode. 
-    //        
-    if (pDevice->AreRegistersMappedToUsermode() && pDevice->IsRegister(Type)) {        
+    // mapping registers to usermode.
+    //
+    if (pDevice->AreRegistersMappedToUsermode() && pDevice->IsRegister(Type)) {
         PVOID umAddress = NULL;
-        
+
         //
-        // Acquire the resource validation table lock for read/write as well 
-        // since a driver's thread accessing hardware register/port and 
+        // Acquire the resource validation table lock for read/write as well
+        // since a driver's thread accessing hardware register/port and
         // race with Map/Unmap operations.
         //
         resources->LockResourceTable();
@@ -598,10 +598,10 @@ Return Value:
                                                            length,
                                                            &umAddress);
 
-        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
             CHECK("Driver attempted to read from invalid register address or "
             "address range", (SUCCEEDED(hr))),
-            DriverGlobals->DriverName); 
+            DriverGlobals->DriverName);
 
         if (pDevice->IsBufferType(Type)) {
             pDevice->ReadRegisterBuffer(Size, umAddress, Buffer, Count);
@@ -614,42 +614,42 @@ Return Value:
     }
     else {
         //
-        // Registers are not mapped to user-mode address space so send 
+        // Registers are not mapped to user-mode address space so send
         // message to reflector to use system HAL routines to access register.
-        // Acquire validation table lock here as well since some read/write 
-        // thread might race with PrepareHardware/ReleaseHardware that may be 
+        // Acquire validation table lock here as well since some read/write
+        // thread might race with PrepareHardware/ReleaseHardware that may be
         // building/deleting the table.
         //
         IWudfDeviceStack *deviceStack;
 
         resources->LockResourceTable();
-        
+
         if (pDevice->IsRegister(Type)) {
             hr = resources->ValidateRegisterSystemAddressRange(systemAddress,
                                                                length,
                                                                NULL);
-            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
                 CHECK("Driver attempted to read from invalid register address "
                 "or address range", (SUCCEEDED(hr))),
-                DriverGlobals->DriverName); 
+                DriverGlobals->DriverName);
         }
         else {
             hr = resources->ValidatePortAddressRange(TargetAddress,
                                                      length);
-            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
                 CHECK("Driver attempted to read from invalid port address or "
                 "address range", (SUCCEEDED(hr))),
-                DriverGlobals->DriverName); 
+                DriverGlobals->DriverName);
         }
-        
+
         resources->UnlockResourceTable();
 
         deviceStack = pDevice->GetDeviceStack();
-        deviceStack->ReadFromHardware((UMINT::WDF_DEVICE_HWACCESS_TARGET_TYPE)Type, 
-                                      (UMINT::WDF_DEVICE_HWACCESS_TARGET_SIZE)Size, 
-                                      TargetAddress, 
-                                      &value, 
-                                      Buffer, 
+        deviceStack->ReadFromHardware((UMINT::WDF_DEVICE_HWACCESS_TARGET_TYPE)Type,
+                                      (UMINT::WDF_DEVICE_HWACCESS_TARGET_SIZE)Size,
+                                      TargetAddress,
+                                      &value,
+                                      Buffer,
                                       Count);
     }
 
@@ -686,15 +686,15 @@ WDFEXPORT(WdfDeviceWriteToHardware)(
 
 Routine Description:
 
-    This routine does writes to a device port or register.   
+    This routine does writes to a device port or register.
 
 Arguments:
     DriverGlobals - DriverGlobals pointer
 
     Device - WDF Device handle.
 
-    Type - Specified whether it is port or register 
-    
+    Type - Specified whether it is port or register
+
     Size - Supplies size of read in bytes.
 
     TargetAddress - Supplies address of port or register to read from
@@ -702,7 +702,7 @@ Arguments:
     Value - value to write
 
     Buffer - Supplies optionally a buffer that has data that needs to be
-            written. 
+            written.
 
     Count - Size of buffer in bytes
 
@@ -713,7 +713,7 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     PVOID systemAddress = NULL;
     FxCmResList* resources;
     HRESULT hr = S_OK;
@@ -727,7 +727,7 @@ Return Value:
     EventWriteEVENT_UMDF_FX_DDI_WRITE_TO_HARDWARE_START(Type, Size, Count);
 
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -739,26 +739,26 @@ Return Value:
     //
     // See if direct hwaccess is allowed
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED, 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED,
         (pDevice->IsDirectHardwareAccessAllowed() == TRUE)),
         DriverGlobals->DriverName);
 
     //
     // validate parameters
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK("Incorrect Type parameter", 
-            (Type > WdfDeviceHwAccessTargetTypeInvalid && 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK("Incorrect Type parameter",
+            (Type > WdfDeviceHwAccessTargetTypeInvalid &&
              Type < WdfDeviceHwAccessTargetTypeMaximum)),
              DriverGlobals->DriverName);
 
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK("Incorrect Size parameter", 
-            (Size > WdfDeviceHwAccessTargetSizeInvalid && 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK("Incorrect Size parameter",
+            (Size > WdfDeviceHwAccessTargetSizeInvalid &&
              Size < WdfDeviceHwAccessTargetSizeMaximum)),
              DriverGlobals->DriverName);
-    
+
     FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK_NOT_NULL(TargetAddress),
         DriverGlobals->DriverName);
 
@@ -792,7 +792,7 @@ Return Value:
     //
     // For buffer access for registers, compute the length of buffer using Count.
     // Count is the element count in the buffer (of UCHAR/USHORT/ULONG/ULONG64).
-    // Note that Port is accessed differently than registers - the buffer is 
+    // Note that Port is accessed differently than registers - the buffer is
     // written into the port address of specified size (UCHAR/USHORT/ULONG).
     //
     if (pDevice->IsBufferType(Type) && pDevice->IsRegister(Type)) {
@@ -802,7 +802,7 @@ Return Value:
         FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), CHECK("Integer overflow occurred "
         "when computing length of write access", (SUCCEEDED(hr))),
         DriverGlobals->DriverName);
-        
+
         length = tmp;
     }
 
@@ -811,15 +811,15 @@ Return Value:
     //
     // Port access is always handled through system call.
     // Register access can be handled in usermode if driver enabled
-    // mapping registers to usermode. 
-    //        
-    if (pDevice->AreRegistersMappedToUsermode() && pDevice->IsRegister(Type)) {        
+    // mapping registers to usermode.
+    //
+    if (pDevice->AreRegistersMappedToUsermode() && pDevice->IsRegister(Type)) {
         PVOID umAddress = NULL;
 
         //
-        // Acquire the resource validation table lock for read/write as well 
-        // since a driver's thread accessing hardware register/port and 
-        // race with Map/Unmap operations. 
+        // Acquire the resource validation table lock for read/write as well
+        // since a driver's thread accessing hardware register/port and
+        // race with Map/Unmap operations.
         //
         resources->LockResourceTable();
 
@@ -828,10 +828,10 @@ Return Value:
                                                            length,
                                                            &umAddress);
 
-        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+        FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
             CHECK("Driver attempted to write to invalid register address or "
             "address range", (SUCCEEDED(hr))),
-            DriverGlobals->DriverName); 
+            DriverGlobals->DriverName);
 
         if (pDevice->IsBufferType(Type)) {
             pDevice->WriteRegisterBuffer(Size, umAddress, Buffer, Count);
@@ -844,43 +844,43 @@ Return Value:
     }
     else {
         //
-        // Registers are not mapped to user-mode address space so send 
+        // Registers are not mapped to user-mode address space so send
         // message to reflector to use system HAL routines to access register.
-        // Acquire validation table lock here as well since some read/write 
-        // thread might race with PrepareHardware/ReleaseHardware that may be 
+        // Acquire validation table lock here as well since some read/write
+        // thread might race with PrepareHardware/ReleaseHardware that may be
         // building/deleting the table.
         //
         IWudfDeviceStack *deviceStack;
 
         resources->LockResourceTable();
-        
+
         if (pDevice->IsRegister(Type)) {
             hr = resources->ValidateRegisterSystemAddressRange(systemAddress,
                                                                length,
                                                                NULL);
-            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
                 CHECK("Driver attempted to write to invalid register address "
                 "or address range", (SUCCEEDED(hr))),
-                DriverGlobals->DriverName); 
+                DriverGlobals->DriverName);
 
         }
         else {
             hr = resources->ValidatePortAddressRange(TargetAddress,
                                                      length);
-            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+            FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
                 CHECK("Driver attempted to write to invalid port address or "
                 "address range", (SUCCEEDED(hr))),
-                DriverGlobals->DriverName); 
+                DriverGlobals->DriverName);
         }
-        
+
         resources->UnlockResourceTable();
 
         deviceStack = pDevice->GetDeviceStack();
-        deviceStack->WriteToHardware((UMINT::WDF_DEVICE_HWACCESS_TARGET_TYPE)Type, 
-                                     (UMINT::WDF_DEVICE_HWACCESS_TARGET_SIZE)Size, 
-                                     TargetAddress, 
-                                     Value, 
-                                     Buffer, 
+        deviceStack->WriteToHardware((UMINT::WDF_DEVICE_HWACCESS_TARGET_TYPE)Type,
+                                     (UMINT::WDF_DEVICE_HWACCESS_TARGET_SIZE)Size,
+                                     TargetAddress,
+                                     Value,
+                                     Buffer,
                                      Count);
     }
 
@@ -913,7 +913,7 @@ WDFEXPORT(WdfDeviceAssignInterfaceProperty) (
 
 Routine Description:
 
-    This routine assigns interface property.   
+    This routine assigns interface property.
 
 Arguments:
 
@@ -921,35 +921,35 @@ Arguments:
 
     Device - WDF Device handle.
 
-    PropertyData - A pointer to WDF_DEVICE_INTERFACE_PROPERTY_ DATA structure. 
-    
-    Type - Set this parameter to the DEVPROPTYPE value that specifies the type 
+    PropertyData - A pointer to WDF_DEVICE_INTERFACE_PROPERTY_ DATA structure.
+
+    Type - Set this parameter to the DEVPROPTYPE value that specifies the type
            of the data that is supplied in the Data buffer.
 
-    BufferLength - Specifies the length, in bytes, of the buffer that 
+    BufferLength - Specifies the length, in bytes, of the buffer that
            PropertyBuffer points to.
-           
-    PropertyBuffer - optional, A pointer to the device interface property data. 
+
+    PropertyBuffer - optional, A pointer to the device interface property data.
            Set this parameter to NULL to delete the specified property.
 
 Return Value:
 
-    Mthod returns an NTSTATUS value. This routine might return one of the 
+    Mthod returns an NTSTATUS value. This routine might return one of the
     following values. It might return other NTSTATUS-codes as well.
 
-    STATUS_SUCCESS - The operation succeeded. 
+    STATUS_SUCCESS - The operation succeeded.
     STATUS_INVALID_PARAMETER - One of the parameters is incorrect.
 
 --*/
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice *pDevice;
     NTSTATUS status;
 
     //
-    // Validate the Device object handle and get its FxDevice. Also get the 
+    // Validate the Device object handle and get its FxDevice. Also get the
     // driver globals pointer.
     //
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -959,12 +959,12 @@ Return Value:
                                    &pFxDriverGlobals);
 
     //
-    // Validate PropertyData 
+    // Validate PropertyData
     //
     status = pDevice->FxValidateInterfacePropertyData(PropertyData);
     if (!NT_SUCCESS(status)) {
         return status;
-    }    
+    }
 
     if (BufferLength == 0 && PropertyBuffer != NULL) {
         status = STATUS_INVALID_PARAMETER;
@@ -973,7 +973,7 @@ Return Value:
                     ", %!STATUS!", status);
         return status;
     }
-        
+
     status = pDevice->AssignProperty(PropertyData,
                                      FxInterfaceProperty,
                                      Type,
@@ -1006,7 +1006,7 @@ WDFEXPORT(WdfDeviceAllocAndQueryInterfaceProperty) (
 
 Routine Description:
 
-    This routine queries interface property.   
+    This routine queries interface property.
 
 Arguments:
 
@@ -1014,37 +1014,37 @@ Arguments:
 
     Device - WDF Device handle.
 
-    PropertyData - A pointer to WDF_DEVICE_INTERFACE_PROPERTY_ DATA structure. 
-    
-    PoolType - A POOL_TYPE-typed enumerator that specifies the type of memory 
+    PropertyData - A pointer to WDF_DEVICE_INTERFACE_PROPERTY_ DATA structure.
+
+    PoolType - A POOL_TYPE-typed enumerator that specifies the type of memory
                to be allocated.
 
-    PropertyMemoryAttributes - optional, A pointer to a caller-allocated 
+    PropertyMemoryAttributes - optional, A pointer to a caller-allocated
                WDF_OBJECT_ATTRIBUTES structure that describes object attributes
-               for the memory object that the function will allocate. This 
+               for the memory object that the function will allocate. This
                parameter is optional and can be WDF_NO_OBJECT_ATTRIBUTES.
 
-    PropertyMemory - A pointer to a WDFMEMORY-typed location that receives a 
+    PropertyMemory - A pointer to a WDFMEMORY-typed location that receives a
                handle to a framework memory object.
 
     Type - A pointer to a DEVPROPTYPE variable. If method successfully retrieves
                the property data, the routine writes the property type value to
-               this variable. This value indicates the type of property data 
+               this variable. This value indicates the type of property data
                that is in the Data buffer.
-               
+
 
 Return Value:
 
-    Method returns an NTSTATUS value. This routine might return one of the 
+    Method returns an NTSTATUS value. This routine might return one of the
     following values. It might return other NTSTATUS-codes as well.
 
-    STATUS_SUCCESS  The operation succeeded. 
+    STATUS_SUCCESS  The operation succeeded.
     STATUS_INVALID_PARAMETER    One of the parameters is incorrect.
 
 --*/
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice* pDevice;
     NTSTATUS status;
@@ -1056,12 +1056,12 @@ Return Value:
                                    &pFxDriverGlobals);
 
     //
-    // Validate PropertyData 
+    // Validate PropertyData
     //
     status = pDevice->FxValidateInterfacePropertyData(PropertyData);
     if (!NT_SUCCESS(status)) {
         return status;
-    }    
+    }
 
     FxPointerNotNull(pFxDriverGlobals, PropertyMemory);
     FxPointerNotNull(pFxDriverGlobals, Type);
@@ -1114,7 +1114,7 @@ WDFEXPORT(WdfDeviceQueryInterfaceProperty) (
 
 Routine Description:
 
-    This routine queries interface property.   
+    This routine queries interface property.
 
 Arguments:
 
@@ -1122,35 +1122,35 @@ Arguments:
 
     Device - WDF Device handle.
 
-    PropertyData - A pointer to WDF_DEVICE_INTERFACE_PROPERTY_ DATA structure. 
-    
-    BufferLength - The size, in bytes, of the buffer that is pointed to by 
+    PropertyData - A pointer to WDF_DEVICE_INTERFACE_PROPERTY_ DATA structure.
+
+    BufferLength - The size, in bytes, of the buffer that is pointed to by
                    PropertyBuffer.
-                   
+
     PropertyBuffer - A caller-supplied pointer to a caller-allocated buffer that
-                  receives the requested information. The pointer can be NULL 
+                  receives the requested information. The pointer can be NULL
                   if the BufferLength parameter is zero.
-                  
-    ResultLength - A caller-supplied location that, on return, contains the 
-                  size, in bytes, of the information that the method stored in 
-                  PropertyBuffer. If the function's return value is 
-                  STATUS_BUFFER_TOO_SMALL, this location receives the required 
+
+    ResultLength - A caller-supplied location that, on return, contains the
+                  size, in bytes, of the information that the method stored in
+                  PropertyBuffer. If the function's return value is
+                  STATUS_BUFFER_TOO_SMALL, this location receives the required
                   buffer size.
-                  
+
     Type - A pointer to a DEVPROPTYPE variable. If method successfully retrieves
                   the property data, the routine writes the property type value
-                  to this variable. This value indicates the type of property 
+                  to this variable. This value indicates the type of property
                   data that is in the Data buffer.
 
 Return Value:
 
-    Method returns an NTSTATUS value. This routine might return one of the 
-    following values. 
+    Method returns an NTSTATUS value. This routine might return one of the
+    following values.
 
-    STATUS_BUFFER_TOO_SMALL - The supplied buffer is too small to receive the 
+    STATUS_BUFFER_TOO_SMALL - The supplied buffer is too small to receive the
                             information. The ResultLength member receives the
                             size of buffer required.
-    STATUS_SUCCESS  - The operation succeeded. 
+    STATUS_SUCCESS  - The operation succeeded.
     STATUS_INVALID_PARAMETER - One of the parameters is incorrect.
 
     The method might return other NTSTATUS values.
@@ -1158,7 +1158,7 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice* pDevice;
     NTSTATUS status;
@@ -1170,12 +1170,12 @@ Return Value:
                                    &pFxDriverGlobals);
 
     //
-    // Validate PropertyData 
+    // Validate PropertyData
     //
     status = pDevice->FxValidateInterfacePropertyData(PropertyData);
     if (!NT_SUCCESS(status)) {
         return status;
-    }    
+    }
 
     FxPointerNotNull(pFxDriverGlobals, ResultLength);
     FxPointerNotNull(pFxDriverGlobals, PropertyType);
@@ -1223,7 +1223,7 @@ WDFEXPORT(WdfDeviceGetDeviceStackIoType) (
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDevice* pDevice;
 
@@ -1263,7 +1263,7 @@ WDFEXPORT(WdfDeviceHidNotifyPresence)(
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
-                                   Device, 
+                                   Device,
                                    FX_TYPE_DEVICE,
                                    (PVOID *)&pDevice,
                                    &pFxDriverGlobals);
@@ -1313,10 +1313,10 @@ Return Value:
     UNREFERENCED_PARAMETER(Device);
     UNREFERENCED_PARAMETER(FileObject);
 
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
         TRAPMSG("The DDI WdfDeviceGetFileObject is not supported for UMDF"),
         DriverGlobals->DriverName);
-    
+
     return NULL;
 }
 
@@ -1335,7 +1335,7 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
     __in
     ULONG Flags
     )
-{    
+{
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
     FxDevice* pDevice;
@@ -1354,24 +1354,24 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
 
     FxPointerNotNull(pFxDriverGlobals, Irp);
 
-    FxIrp fxIrp(Irp); 
+    FxIrp fxIrp(Irp);
 
     //
     // Unlike in KMDF, It's not possible for UMDF to forward to a parent queue.
     //
     ASSERT(pDevice->m_ParentDevice != pQueue->GetDevice());
- 
+
     status = VerifyWdfDeviceWdmDispatchIrpToIoQueue(pFxDriverGlobals,
                                                     pDevice,
                                                     Irp,
                                                     pQueue,
-                                                    Flags);                                                  
+                                                    Flags);
     if (!NT_SUCCESS(status)) {
-        
+
         fxIrp.SetStatus(status);
         fxIrp.SetInformation(0x0);
         fxIrp.CompleteRequest(IO_NO_INCREMENT);
-        
+
         return status;
     }
 
@@ -1380,8 +1380,8 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
     // the request to the driver if possible.
     //
     return pDevice->m_PkgIo->DispatchStep2(reinterpret_cast<MdIrp>(Irp),
-                                                                   NULL, 
-                                                                   pQueue); 
+                                                                   NULL,
+                                                                   pQueue);
 }
 
 
@@ -1398,13 +1398,13 @@ WDFEXPORT(WdfDeviceWdmDispatchIrp)(
     _In_
     WDFCONTEXT DispatchContext
     )
-    
+
 /*++
 
 Routine Description:
 
-    This DDI returns control of the IRP to the framework. 
-    This must only be called from the dispatch callback passed to 
+    This DDI returns control of the IRP to the framework.
+    This must only be called from the dispatch callback passed to
     WdfDeviceConfigureWdmIrpDispatchCallback
 
 
@@ -1421,7 +1421,7 @@ Returns:
 
     IRP's status.
 
---*/  
+--*/
 {
     DDI_ENTRY();
 
@@ -1436,15 +1436,15 @@ Returns:
 
     //
     // Validate parameters and dispatch state. DispatchContext has already been
-    // validated in DispatchStep1. 
+    // validated in DispatchStep1.
     //
     FxPointerNotNull(pFxDriverGlobals, pIrp);
     FxPointerNotNull(pFxDriverGlobals, DispatchContext);
 
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
                         CHECK("This function must be called from within a "
-                        "EVT_WDFDEVICE_WDM_IRP_DISPATCH callback", 
-                        ((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK)), 
+                        "EVT_WDFDEVICE_WDM_IRP_DISPATCH callback",
+                        ((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK)),
                         DriverGlobals->DriverName);
 
     //
@@ -1455,8 +1455,65 @@ Returns:
     //
     // Cast this pIrp back to its composite parts and dispatch it again
     //
-    return pDevice->m_PkgIo->DispatchStep1(reinterpret_cast<MdIrp>(pIrp), 
+    return pDevice->m_PkgIo->DispatchStep1(reinterpret_cast<MdIrp>(pIrp),
                                            DispatchContext);
 }
-  
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    WDFDEVICE Device,
+    __in
+    WDFSTRING String
+    )
+{
+    DDI_ENTRY();
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDevice *pDevice;
+    FxString* pString;
+    NTSTATUS status;
+    HRESULT hr;
+    PCWSTR dirPath;
+
+    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
+                                   Device,
+                                   FX_TYPE_DEVICE,
+                                   (PVOID *) &pDevice,
+                                   &pFxDriverGlobals);
+
+    if (pDevice->IsLegacy()) {
+        status = STATUS_INVALID_DEVICE_REQUEST;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+            "WDFDEVICE %p is not a PNP device. "
+            "WdfDeviceRetrieveDeviceDirectoryString failed %!STATUS!",
+            Device, status);
+        return status;
+    }
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         String,
+                         FX_TYPE_STRING,
+                         (PVOID*) &pString);
+
+    hr = pDevice->GetDeviceStack2()->GetDeviceDirectory(&dirPath);
+    if (FAILED(hr)) {
+        status = FxDevice::NtStatusFromHr(pDevice->GetDeviceStack(), hr);
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+            "WdfDeviceRetrieveDeviceDirectoryString for WDFDEVICE %p failed %!STATUS!",
+            Device, status);
+    }
+    else {
+        status = pString->Assign(dirPath);
+        HeapFree(GetProcessHeap(), 0, (PVOID)dirPath);
+    }
+
+    return status;
+}
 } // extern "C"

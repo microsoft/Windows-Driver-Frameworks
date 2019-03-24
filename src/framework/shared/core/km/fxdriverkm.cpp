@@ -96,7 +96,7 @@ FxDriver::AddDevice(
         return status;
     }
 
-    pDevice = init.CreatedDevice;
+    pDevice = (FxDevice*)init.CreatedDevice;
 
     if (NT_SUCCESS(status)) {
         //

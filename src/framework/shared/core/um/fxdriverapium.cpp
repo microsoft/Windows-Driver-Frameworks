@@ -52,13 +52,11 @@ WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     )
 {
     NTSTATUS status;
-    LONG result;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDriver* pDriver;
     FxRegKey* pKey;
-    HKEY hKey = NULL;
     WDFKEY keyHandle;
-    
+
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
 
     FxPointerNotNull(pFxDriverGlobals, Key);
@@ -86,69 +84,20 @@ WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     }
 
     status = pKey->Commit(KeyAttributes, (WDFOBJECT*)&keyHandle);
-    if (NT_SUCCESS(status)) {
-        if (DesiredAccess & (GENERIC_WRITE | KEY_CREATE_SUB_KEY | WRITE_DAC)) {
-            //
-            // These access rights are not allowed. This restriction is
-            // imposed by the host process and the reflector driver.
-            //
-            // Even though the maximum-permissions handle is already opened,
-            // we fail so that the caller knows not to assume it has the
-            // GENERIC_WRITE, KEY_CREATE_SUB_KEY, or WRITE_DAC permissions.
-            //
-            status = STATUS_ACCESS_DENIED;
-            DoTraceLevelMessage(
-                    pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
-                    "Could not open '%s' service parameters key "
-                    "with access rights 0x%x, %!STATUS!",
-                    pFxDriverGlobals->Public.DriverName,
-                    DesiredAccess, status);
-        } else if ((DesiredAccess & ~(KEY_READ | GENERIC_READ)) == 0) {
-            //
-            // If caller requested read-only access, open a new handle
-            // to the parameters key, no reason to give more privileges
-            // than needed.
-            //
-            result = RegOpenKeyEx(pDriver->GetDriverParametersKey(),
-                                  L"",
-                                  0,
-                                  DesiredAccess,
-                                  &hKey);
-            status = WinErrorToNtStatus(result);
-            if (!NT_SUCCESS(status)) {
-                DoTraceLevelMessage(
-                    pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
-                    "Could not open '%s' service parameters key "
-                    "with access rights 0x%x, %!STATUS!",
-                    pFxDriverGlobals->Public.DriverName,
-                    DesiredAccess, status);
-            }
-        } else {
-            //
-            // If caller requested write access, give it the pre-opened
-            // handle, since we do not have permission to open this key
-            // with write access rights from user mode.
-            //
-            hKey = pDriver->GetDriverParametersKey();
-
-            //
-            // Mark the registry key handle such that it won't be closed
-            // when this FxRegKey is deleted. We might need the handle again
-            // for future calls to WdfDriverOpenParametersRegistryKey.
-            //
-            pKey->SetCanCloseHandle(FALSE);
-        }
-
-        if (NT_SUCCESS(status)) {
-            pKey->SetHandle((HANDLE)hKey);
-            *Key = keyHandle;
-        }
+    if (!NT_SUCCESS(status)) {
+        return status;
     }
 
+    status = pDriver->InitFxRegKey(DesiredAccess,
+                            UMINT::WdfPropertyStoreRootDriverParametersKey,
+                            pKey);
     if (!NT_SUCCESS(status)) {
         pKey->DeleteFromFailedCreate();
+        return status;
     }
 
+    status = STATUS_SUCCESS;
+    *Key = keyHandle;
     return status;
 }
 
@@ -165,7 +114,7 @@ WDFEXPORT(WdfDriverWdmGetDriverObject)(
 
     UNREFERENCED_PARAMETER(DriverGlobals);
     UNREFERENCED_PARAMETER(Driver);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
     return NULL;
@@ -184,7 +133,7 @@ WDFEXPORT(WdfWdmDriverGetWdfDriverHandle)(
 
     UNREFERENCED_PARAMETER(DriverGlobals);
     UNREFERENCED_PARAMETER(DriverObject);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
     return NULL;
@@ -202,7 +151,7 @@ WDFEXPORT(WdfDriverMiniportUnload)(
 
     UNREFERENCED_PARAMETER(DriverGlobals);
     UNREFERENCED_PARAMETER(Driver);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
@@ -235,10 +184,115 @@ WDFEXPORT(WdfDeviceMiniportCreate)(
     UNREFERENCED_PARAMETER(AttachedDeviceObject);
     UNREFERENCED_PARAMETER(Pdo);
     UNREFERENCED_PARAMETER(Device);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
     return STATUS_NOT_IMPLEMENTED;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    ACCESS_MASK DesiredAccess,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES KeyAttributes,
+    _Out_
+    WDFKEY* Key
+    )
+{
+    NTSTATUS status;
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxDriver* pDriver;
+    FxRegKey* pKey;
+    WDFKEY keyHandle;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    FxPointerNotNull(pFxDriverGlobals, Key);
+
+    *Key = NULL;
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    status = FxValidateObjectAttributes(pFxDriverGlobals, KeyAttributes);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         Driver,
+                         FX_TYPE_DRIVER,
+                         (PVOID*) &pDriver);
+
+    pKey = new(pFxDriverGlobals, KeyAttributes) FxRegKey(pFxDriverGlobals);
+    if (pKey == NULL) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    status = pKey->Commit(KeyAttributes, (WDFOBJECT*)&keyHandle);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    status = pDriver->InitFxRegKey(DesiredAccess,
+                        UMINT::WdfPropertyStoreRootDriverPersistentStateKey,
+                        pKey);
+    if (!NT_SUCCESS(status)) {
+        pKey->DeleteFromFailedCreate();
+        return status;
+    }
+
+    status = STATUS_SUCCESS;
+    *Key = keyHandle;
+
+    return status;
+}
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NTSTATUS
+WDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    WDFSTRING String
+    )
+{
+    DDI_ENTRY();
+    PFX_DRIVER_GLOBALS  pFxDriverGlobals;
+    FxDriver*           pDriver;
+    FxString*           pString;
+    NTSTATUS            status;
+
+    pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         Driver,
+                         FX_TYPE_DRIVER,
+                         (PVOID*) &pDriver);
+
+    FxObjectHandleGetPtr(pFxDriverGlobals,
+                         String,
+                         FX_TYPE_STRING,
+                         (PVOID*) &pString);
+
+    return pDriver->GetDriverDataDirectory(pString);
 }
 
 } // extern "C"

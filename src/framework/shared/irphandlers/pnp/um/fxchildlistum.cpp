@@ -30,8 +30,8 @@ Revision History:
 
 FxDeviceDescriptionEntry::FxDeviceDescriptionEntry(
     __inout FxChildList* DeviceList,
-    __in ULONG AddressDescriptionSize,
-    __in ULONG IdentificationDescriptionSize
+    __in ULONG IdentificationDescriptionSize,
+    __in ULONG AddressDescriptionSize
     )
 {
     UfxVerifierTrapNotImpl();
@@ -125,7 +125,7 @@ FxChildList::FxChildList(
 {
     UfxVerifierTrapNotImpl();
 }
-    
+
 BOOLEAN
 FxChildList::Dispose(
     VOID

@@ -31,7 +31,8 @@ extern RTL_OSVERSIONINFOW  gOsVersion;
 
 #define WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME      L"EnhancedVerifierOptions"
 
-#define WIDEN(str)                                 L#str
+#define WIDEN(str)                                 WIDEN2(str)
+#define WIDEN2(str)                                L##str
 #define WDF_UNKNOWN_SERVICE_NAME                   "Unknown"
 
 typedef

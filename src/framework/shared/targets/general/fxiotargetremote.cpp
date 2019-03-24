@@ -545,7 +545,7 @@ FxIoTargetRemote::Close(
     // Pick a value that is not used anywhere in the function and make sure that 
     // we have changed it, before we go to the Remove state
     //
-#pragma prefast(suppress: __WARNING_UNUSED_SCALAR_ASSIGNMENT, "PFD is warning that the following assignement is unused. Suppress it to prevent changing any logic.")
+#pragma prefast(suppress: __WARNING_UNUSED_ASSIGNMENT, "PFD is warning that the following assignement is unused. Suppress it to prevent changing any logic.")
     removeState = WdfIoTargetStarted;
 
 CheckState:

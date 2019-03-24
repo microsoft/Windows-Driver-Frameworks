@@ -26,7 +26,8 @@ Revision History:
 enum FxDeviceInitType {
     FxDeviceInitTypeFdo = 0,
     FxDeviceInitTypePdo,
-    FxDeviceInitTypeControlDevice
+    FxDeviceInitTypeControlDevice,
+    FxDeviceInitTypeCompanion
 };
 
 struct FileObjectInit {
@@ -48,6 +49,13 @@ struct SecurityInit {
 
     BOOLEAN DeviceClassSet;
 };
+
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+struct CompanionInit
+{
+    WDF_COMPANION_EVENT_CALLBACKS CompanionEventCallbacks;
+};
+#endif
 
 struct PnpPowerInit {
     WDF_PNPPOWER_EVENT_CALLBACKS PnpPowerEventCallbacks;
@@ -93,6 +101,11 @@ struct ControlInit {
 
     UCHAR Flags;
 };
+
+//
+// Forward declaration
+//
+class FxCompanion;
 
 //
 // The typedef for a pointer to this structure is exposed in wdfdevice.h
@@ -155,6 +168,22 @@ public:
         )
     {
         return InitType == FxDeviceInitTypeControlDevice;
+    }
+
+    BOOLEAN
+    IsCompanionInit(
+        VOID
+        )
+    {
+        return InitType == FxDeviceInitTypeCompanion;
+    }
+
+    BOOLEAN
+    IsNotCompanionInit(
+        VOID
+        )
+    {
+        return InitType != FxDeviceInitTypeCompanion;
     }
 
     BOOLEAN
@@ -233,7 +262,7 @@ public:
 
     FxDriver* Driver;
 
-    FxDevice* CreatedDevice;
+    PVOID CreatedDevice;
 
     BOOLEAN CreatedOnStack;
 
@@ -283,6 +312,9 @@ public:
     LIST_ENTRY      CxDeviceInitListHead;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
+
+    CompanionInit   CompanionInit;
+
     //
     // IoType preference for IOCTL
     //
@@ -297,6 +329,11 @@ public:
     // Weak reference to host side device stack
     //
     IWudfDeviceStack * DevStack;
+
+    //
+    // Weak reference to host side companion
+    //
+    IWudfCompanion * Companion;
 
     //
     // Kernel redirector's side object name.

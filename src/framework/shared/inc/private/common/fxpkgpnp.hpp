@@ -4379,6 +4379,19 @@ public:
     //
     D3COLD_SUPPORT_INTERFACE m_D3ColdInterface;
 
+    //
+    // Device companion target
+    //
+    FxCompanionTarget* m_CompanionTarget;
+    NTSTATUS           m_CompanionTargetStatus;
+
+    FxCompanionTarget*
+    GetCompanionTarget(
+        VOID
+        ) 
+    {
+        return m_CompanionTarget;
+    }
 protected:
     //
     // Event that is set when processing a remove device is complete
@@ -4506,6 +4519,21 @@ protected:
     //
     PFN_IO_REPORT_INTERRUPT_ACTIVE     m_IoReportInterruptActive;
     PFN_IO_REPORT_INTERRUPT_INACTIVE   m_IoReportInterruptInactive;
+
+    //
+    // Workitem to invoke AskParentToRemoveAndReenumerate at PASSIVE_LEVEL
+    //
+    FxSystemWorkItem* m_SetDeviceFailedAttemptRestartWorkItem;
+
+    NTSTATUS
+    AllocateWorkItemForSetDeviceFailed(
+        VOID
+        );
+
+    VOID
+    RemoveWorkItemForSetDeviceFailed(
+        VOID
+        );
 #endif
 
 private:
@@ -4574,7 +4602,29 @@ private:
     // power references
     //
     BOOLEAN m_SleepStudyTrackReferences;
+
+    static
+    VOID
+    _WorkItemSetDeviceFailedAttemptRestart(
+        _In_ PVOID Parameter
+        );
+
+    static
+    VOID
+    _WorkItemSetDeviceFailedRestartAlways(
+        _In_ PVOID Parameter
+        );
 #endif
+
+    VOID
+    SetDeviceFailedAttemptRestart(
+        _In_ BOOLEAN ReenumerateAlways
+        );
+
+    VOID
+    InvalidateDeviceState(
+        VOID
+        );
 
     //
     // Non NULL when this device is exporting the power thread interface.  This

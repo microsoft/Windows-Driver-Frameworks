@@ -32,6 +32,10 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfCollectionGetItem), \
     VFWDFEXPORT(WdfCollectionGetFirstItem), \
     VFWDFEXPORT(WdfCollectionGetLastItem), \
+    VFWDFEXPORT(WdfDeviceInitSetCompanionEventCallbacks), \
+    VFWDFEXPORT(WdfCompanionCreate), \
+    VFWDFEXPORT(WdfCompanionWdmGetSecureDeviceHandle), \
+    VFWDFEXPORT(WdfCompanionCreateTaskQueue), \
     VFWDFEXPORT(WdfCxDeviceInitAllocate), \
     VFWDFEXPORT(WdfCxDeviceInitSetRequestAttributes), \
     VFWDFEXPORT(WdfCxDeviceInitSetFileObjectConfig), \
@@ -85,6 +89,7 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfDeviceAllocAndQueryInterfaceProperty), \
     VFWDFEXPORT(WdfDeviceQueryInterfaceProperty), \
     VFWDFEXPORT(WdfDeviceGetDeviceStackIoType), \
+    VFWDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString), \
     VFWDFEXPORT(WdfDeviceQueryPropertyEx), \
     VFWDFEXPORT(WdfDeviceAllocAndQueryPropertyEx), \
     VFWDFEXPORT(WdfDeviceAssignProperty), \
@@ -95,6 +100,9 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfDriverOpenParametersRegistryKey), \
     VFWDFEXPORT(WdfDriverRetrieveVersionString), \
     VFWDFEXPORT(WdfDriverIsVersionAvailable), \
+    VFWDFEXPORT(WdfDriverErrorReportApiMissing), \
+    VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey), \
+    VFWDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString), \
     VFWDFEXPORT(WdfFdoInitOpenRegistryKey), \
     VFWDFEXPORT(WdfFdoInitQueryProperty), \
     VFWDFEXPORT(WdfFdoInitAllocAndQueryProperty), \
@@ -299,7 +307,7 @@ VFWDFEXPORT(WdfCollectionCreate)(
     PWDF_OBJECT_ATTRIBUTES CollectionAttributes,
     _Out_
     WDFCOLLECTION* Collection
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCOLLECTIONCREATE) WdfVersion.Functions.pfnWdfCollectionCreate)(DriverGlobals, CollectionAttributes, Collection);
@@ -313,7 +321,7 @@ VFWDFEXPORT(WdfCollectionGetCount)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFCOLLECTION Collection
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCOLLECTIONGETCOUNT) WdfVersion.Functions.pfnWdfCollectionGetCount)(DriverGlobals, Collection);
@@ -330,7 +338,7 @@ VFWDFEXPORT(WdfCollectionAdd)(
     WDFCOLLECTION Collection,
     _In_
     WDFOBJECT Object
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCOLLECTIONADD) WdfVersion.Functions.pfnWdfCollectionAdd)(DriverGlobals, Collection, Object);
@@ -346,7 +354,7 @@ VFWDFEXPORT(WdfCollectionRemove)(
     WDFCOLLECTION Collection,
     _In_
     WDFOBJECT Item
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFCOLLECTIONREMOVE) WdfVersion.Functions.pfnWdfCollectionRemove)(DriverGlobals, Collection, Item);
@@ -362,7 +370,7 @@ VFWDFEXPORT(WdfCollectionRemoveItem)(
     WDFCOLLECTION Collection,
     _In_
     ULONG Index
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFCOLLECTIONREMOVEITEM) WdfVersion.Functions.pfnWdfCollectionRemoveItem)(DriverGlobals, Collection, Index);
@@ -378,7 +386,7 @@ VFWDFEXPORT(WdfCollectionGetItem)(
     WDFCOLLECTION Collection,
     _In_
     ULONG Index
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCOLLECTIONGETITEM) WdfVersion.Functions.pfnWdfCollectionGetItem)(DriverGlobals, Collection, Index);
@@ -392,7 +400,7 @@ VFWDFEXPORT(WdfCollectionGetFirstItem)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFCOLLECTION Collection
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCOLLECTIONGETFIRSTITEM) WdfVersion.Functions.pfnWdfCollectionGetFirstItem)(DriverGlobals, Collection);
@@ -406,10 +414,80 @@ VFWDFEXPORT(WdfCollectionGetLastItem)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFCOLLECTION Collection
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCOLLECTIONGETLASTITEM) WdfVersion.Functions.pfnWdfCollectionGetLastItem)(DriverGlobals, Collection);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+VOID
+VFWDFEXPORT(WdfDeviceInitSetCompanionEventCallbacks)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit,
+    _In_
+    PWDF_COMPANION_EVENT_CALLBACKS CompanionEventCallbacks
+    )
+{
+    PAGED_CODE_LOCKED();
+    ((PFN_WDFDEVICEINITSETCOMPANIONEVENTCALLBACKS) WdfVersion.Functions.pfnWdfDeviceInitSetCompanionEventCallbacks)(DriverGlobals, DeviceInit, CompanionEventCallbacks);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfCompanionCreate)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _Inout_
+    PWDFDEVICE_INIT* DeviceInit,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES DeviceAttributes,
+    _Out_
+    WDFCOMPANION* Companion
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFCOMPANIONCREATE) WdfVersion.Functions.pfnWdfCompanionCreate)(DriverGlobals, DeviceInit, DeviceAttributes, Companion);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+HANDLE
+VFWDFEXPORT(WdfCompanionWdmGetSecureDeviceHandle)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCOMPANION Companion
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFCOMPANIONWDMGETSECUREDEVICEHANDLE) WdfVersion.Functions.pfnWdfCompanionWdmGetSecureDeviceHandle)(DriverGlobals, Companion);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfCompanionCreateTaskQueue)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFCOMPANION Companion,
+    _In_
+    PWDF_TASK_QUEUE_CONFIG Config,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES QueueAttributes,
+    _Out_opt_
+    WDFTASKQUEUE* Queue
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFCOMPANIONCREATETASKQUEUE) WdfVersion.Functions.pfnWdfCompanionCreateTaskQueue)(DriverGlobals, Companion, Config, QueueAttributes, Queue);
 }
 
 _Must_inspect_result_
@@ -421,7 +499,7 @@ VFWDFEXPORT(WdfCxDeviceInitAllocate)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     PWDFDEVICE_INIT DeviceInit
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCXDEVICEINITALLOCATE) WdfVersion.Functions.pfnWdfCxDeviceInitAllocate)(DriverGlobals, DeviceInit);
@@ -437,7 +515,7 @@ VFWDFEXPORT(WdfCxDeviceInitSetRequestAttributes)(
     PWDFCXDEVICE_INIT CxDeviceInit,
     _In_
     PWDF_OBJECT_ATTRIBUTES RequestAttributes
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFCXDEVICEINITSETREQUESTATTRIBUTES) WdfVersion.Functions.pfnWdfCxDeviceInitSetRequestAttributes)(DriverGlobals, CxDeviceInit, RequestAttributes);
@@ -455,7 +533,7 @@ VFWDFEXPORT(WdfCxDeviceInitSetFileObjectConfig)(
     PWDFCX_FILEOBJECT_CONFIG CxFileObjectConfig,
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES FileObjectAttributes
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFCXDEVICEINITSETFILEOBJECTCONFIG) WdfVersion.Functions.pfnWdfCxDeviceInitSetFileObjectConfig)(DriverGlobals, CxDeviceInit, CxFileObjectConfig, FileObjectAttributes);
@@ -471,7 +549,7 @@ VFWDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks)(
     PWDFCXDEVICE_INIT CxDeviceInit,
     _In_
     PWDFCX_PNPPOWER_EVENT_CALLBACKS CxPnpPowerCallbacks
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFCXDEVICEINITSETPNPPOWEREVENTCALLBACKS) WdfVersion.Functions.pfnWdfCxDeviceInitSetPnpPowerEventCallbacks)(DriverGlobals, CxDeviceInit, CxPnpPowerCallbacks);
@@ -494,7 +572,7 @@ VFWDFEXPORT(WdfCxVerifierKeBugCheck)(
     ULONG_PTR BugCheckParameter3,
     _In_
     ULONG_PTR BugCheckParameter4
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFCXVERIFIERKEBUGCHECK) WdfVersion.Functions.pfnWdfCxVerifierKeBugCheck)(DriverGlobals, Object, BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
@@ -510,7 +588,7 @@ VFWDFEXPORT(WdfDeviceGetDeviceState)(
     WDFDEVICE Device,
     _Out_
     PWDF_DEVICE_STATE DeviceState
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEGETDEVICESTATE) WdfVersion.Functions.pfnWdfDeviceGetDeviceState)(DriverGlobals, Device, DeviceState);
@@ -526,7 +604,7 @@ VFWDFEXPORT(WdfDeviceSetDeviceState)(
     WDFDEVICE Device,
     _In_
     PWDF_DEVICE_STATE DeviceState
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETDEVICESTATE) WdfVersion.Functions.pfnWdfDeviceSetDeviceState)(DriverGlobals, Device, DeviceState);
@@ -545,7 +623,7 @@ VFWDFEXPORT(WdfDeviceWdmDispatchIrp)(
     PIRP Irp,
     _In_
     WDFCONTEXT DispatchContext
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEWDMDISPATCHIRP) WdfVersion.Functions.pfnWdfDeviceWdmDispatchIrp)(DriverGlobals, Device, Irp, DispatchContext);
@@ -566,7 +644,7 @@ VFWDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
     WDFQUEUE Queue,
     _In_
     ULONG Flags
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEWDMDISPATCHIRPTOIOQUEUE) WdfVersion.Functions.pfnWdfDeviceWdmDispatchIrpToIoQueue)(DriverGlobals, Device, Irp, Queue, Flags);
@@ -580,7 +658,7 @@ VFWDFEXPORT(WdfDeviceGetDriver)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETDRIVER) WdfVersion.Functions.pfnWdfDeviceGetDriver)(DriverGlobals, Device);
@@ -594,7 +672,7 @@ VFWDFEXPORT(WdfDeviceGetIoTarget)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETIOTARGET) WdfVersion.Functions.pfnWdfDeviceGetIoTarget)(DriverGlobals, Device);
@@ -611,7 +689,7 @@ VFWDFEXPORT(WdfDeviceAssignS0IdleSettings)(
     WDFDEVICE Device,
     _In_
     PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEASSIGNS0IDLESETTINGS) WdfVersion.Functions.pfnWdfDeviceAssignS0IdleSettings)(DriverGlobals, Device, Settings);
@@ -628,7 +706,7 @@ VFWDFEXPORT(WdfDeviceAssignSxWakeSettings)(
     WDFDEVICE Device,
     _In_
     PWDF_DEVICE_POWER_POLICY_WAKE_SETTINGS Settings
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEASSIGNSXWAKESETTINGS) WdfVersion.Functions.pfnWdfDeviceAssignSxWakeSettings)(DriverGlobals, Device, Settings);
@@ -651,7 +729,7 @@ VFWDFEXPORT(WdfDeviceOpenRegistryKey)(
     PWDF_OBJECT_ATTRIBUTES KeyAttributes,
     _Out_
     WDFKEY* Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEOPENREGISTRYKEY) WdfVersion.Functions.pfnWdfDeviceOpenRegistryKey)(DriverGlobals, Device, DeviceInstanceKeyType, DesiredAccess, KeyAttributes, Key);
@@ -674,7 +752,7 @@ VFWDFEXPORT(WdfDeviceOpenDevicemapKey)(
     PWDF_OBJECT_ATTRIBUTES KeyAttributes,
     _Out_
     WDFKEY* Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEOPENDEVICEMAPKEY) WdfVersion.Functions.pfnWdfDeviceOpenDevicemapKey)(DriverGlobals, Device, KeyName, DesiredAccess, KeyAttributes, Key);
@@ -690,7 +768,7 @@ VFWDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     PWDF_PNPPOWER_EVENT_CALLBACKS PnpPowerEventCallbacks
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETPNPPOWEREVENTCALLBACKS) WdfVersion.Functions.pfnWdfDeviceInitSetPnpPowerEventCallbacks)(DriverGlobals, DeviceInit, PnpPowerEventCallbacks);
@@ -706,7 +784,7 @@ VFWDFEXPORT(WdfDeviceInitSetPowerPolicyEventCallbacks)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     PWDF_POWER_POLICY_EVENT_CALLBACKS PowerPolicyEventCallbacks
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETPOWERPOLICYEVENTCALLBACKS) WdfVersion.Functions.pfnWdfDeviceInitSetPowerPolicyEventCallbacks)(DriverGlobals, DeviceInit, PowerPolicyEventCallbacks);
@@ -722,7 +800,7 @@ VFWDFEXPORT(WdfDeviceInitSetPowerPolicyOwnership)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     BOOLEAN IsPowerPolicyOwner
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETPOWERPOLICYOWNERSHIP) WdfVersion.Functions.pfnWdfDeviceInitSetPowerPolicyOwnership)(DriverGlobals, DeviceInit, IsPowerPolicyOwner);
@@ -738,7 +816,7 @@ VFWDFEXPORT(WdfDeviceInitSetIoType)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     WDF_DEVICE_IO_TYPE IoType
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETIOTYPE) WdfVersion.Functions.pfnWdfDeviceInitSetIoType)(DriverGlobals, DeviceInit, IoType);
@@ -756,7 +834,7 @@ VFWDFEXPORT(WdfDeviceInitSetFileObjectConfig)(
     PWDF_FILEOBJECT_CONFIG FileObjectConfig,
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES FileObjectAttributes
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETFILEOBJECTCONFIG) WdfVersion.Functions.pfnWdfDeviceInitSetFileObjectConfig)(DriverGlobals, DeviceInit, FileObjectConfig, FileObjectAttributes);
@@ -772,7 +850,7 @@ VFWDFEXPORT(WdfDeviceInitSetRequestAttributes)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     PWDF_OBJECT_ATTRIBUTES RequestAttributes
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETREQUESTATTRIBUTES) WdfVersion.Functions.pfnWdfDeviceInitSetRequestAttributes)(DriverGlobals, DeviceInit, RequestAttributes);
@@ -791,7 +869,7 @@ VFWDFEXPORT(WdfDeviceCreate)(
     PWDF_OBJECT_ATTRIBUTES DeviceAttributes,
     _Out_
     WDFDEVICE* Device
-    )    
+    )
 {
     VF_HOOK_PROCESS_INFO hookInfo;
     NTSTATUS status;
@@ -825,7 +903,7 @@ VFWDFEXPORT(WdfDeviceSetStaticStopRemove)(
     WDFDEVICE Device,
     _In_
     BOOLEAN Stoppable
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETSTATICSTOPREMOVE) WdfVersion.Functions.pfnWdfDeviceSetStaticStopRemove)(DriverGlobals, Device, Stoppable);
@@ -844,7 +922,7 @@ VFWDFEXPORT(WdfDeviceCreateDeviceInterface)(
     CONST GUID* InterfaceClassGUID,
     _In_opt_
     PCUNICODE_STRING ReferenceString
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICECREATEDEVICEINTERFACE) WdfVersion.Functions.pfnWdfDeviceCreateDeviceInterface)(DriverGlobals, Device, InterfaceClassGUID, ReferenceString);
@@ -864,7 +942,7 @@ VFWDFEXPORT(WdfDeviceSetDeviceInterfaceState)(
     PCUNICODE_STRING ReferenceString,
     _In_
     BOOLEAN IsInterfaceEnabled
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETDEVICEINTERFACESTATE) WdfVersion.Functions.pfnWdfDeviceSetDeviceInterfaceState)(DriverGlobals, Device, InterfaceClassGUID, ReferenceString, IsInterfaceEnabled);
@@ -885,7 +963,7 @@ VFWDFEXPORT(WdfDeviceRetrieveDeviceInterfaceString)(
     PCUNICODE_STRING ReferenceString,
     _In_
     WDFSTRING String
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICERETRIEVEDEVICEINTERFACESTRING) WdfVersion.Functions.pfnWdfDeviceRetrieveDeviceInterfaceString)(DriverGlobals, Device, InterfaceClassGUID, ReferenceString, String);
@@ -902,7 +980,7 @@ VFWDFEXPORT(WdfDeviceCreateSymbolicLink)(
     WDFDEVICE Device,
     _In_
     PCUNICODE_STRING SymbolicLinkName
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICECREATESYMBOLICLINK) WdfVersion.Functions.pfnWdfDeviceCreateSymbolicLink)(DriverGlobals, Device, SymbolicLinkName);
@@ -925,7 +1003,7 @@ VFWDFEXPORT(WdfDeviceQueryProperty)(
     PVOID PropertyBuffer,
     _Out_
     PULONG ResultLength
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEQUERYPROPERTY) WdfVersion.Functions.pfnWdfDeviceQueryProperty)(DriverGlobals, Device, DeviceProperty, BufferLength, PropertyBuffer, ResultLength);
@@ -949,7 +1027,7 @@ VFWDFEXPORT(WdfDeviceAllocAndQueryProperty)(
     PWDF_OBJECT_ATTRIBUTES PropertyMemoryAttributes,
     _Out_
     WDFMEMORY* PropertyMemory
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEALLOCANDQUERYPROPERTY) WdfVersion.Functions.pfnWdfDeviceAllocAndQueryProperty)(DriverGlobals, Device, DeviceProperty, PoolType, PropertyMemoryAttributes, PropertyMemory);
@@ -965,7 +1043,7 @@ VFWDFEXPORT(WdfDeviceSetPnpCapabilities)(
     WDFDEVICE Device,
     _In_
     PWDF_DEVICE_PNP_CAPABILITIES PnpCapabilities
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETPNPCAPABILITIES) WdfVersion.Functions.pfnWdfDeviceSetPnpCapabilities)(DriverGlobals, Device, PnpCapabilities);
@@ -981,7 +1059,7 @@ VFWDFEXPORT(WdfDeviceSetPowerCapabilities)(
     WDFDEVICE Device,
     _In_
     PWDF_DEVICE_POWER_CAPABILITIES PowerCapabilities
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETPOWERCAPABILITIES) WdfVersion.Functions.pfnWdfDeviceSetPowerCapabilities)(DriverGlobals, Device, PowerCapabilities);
@@ -997,7 +1075,7 @@ VFWDFEXPORT(WdfDeviceSetFailed)(
     WDFDEVICE Device,
     _In_
     WDF_DEVICE_FAILED_ACTION FailedAction
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICESETFAILED) WdfVersion.Functions.pfnWdfDeviceSetFailed)(DriverGlobals, Device, FailedAction);
@@ -1015,7 +1093,7 @@ VFWDFEXPORT(WdfDeviceStopIdleNoTrack)(
     WDFDEVICE Device,
     _In_
     BOOLEAN WaitForD0
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICESTOPIDLENOTRACK) WdfVersion.Functions.pfnWdfDeviceStopIdleNoTrack)(DriverGlobals, Device, WaitForD0);
@@ -1029,7 +1107,7 @@ VFWDFEXPORT(WdfDeviceResumeIdleNoTrack)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICERESUMEIDLENOTRACK) WdfVersion.Functions.pfnWdfDeviceResumeIdleNoTrack)(DriverGlobals, Device);
@@ -1053,7 +1131,7 @@ VFWDFEXPORT(WdfDeviceStopIdleActual)(
     LONG Line,
     _In_z_
     PCCH File
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICESTOPIDLEACTUAL) WdfVersion.Functions.pfnWdfDeviceStopIdleActual)(DriverGlobals, Device, WaitForD0, Tag, Line, File);
@@ -1073,7 +1151,7 @@ VFWDFEXPORT(WdfDeviceResumeIdleActual)(
     LONG Line,
     _In_z_
     PCCH File
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICERESUMEIDLEACTUAL) WdfVersion.Functions.pfnWdfDeviceResumeIdleActual)(DriverGlobals, Device, Tag, Line, File);
@@ -1089,7 +1167,7 @@ VFWDFEXPORT(WdfDeviceGetFileObject)(
     WDFDEVICE Device,
     _In_
     PFILE_OBJECT FileObject
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETFILEOBJECT) WdfVersion.Functions.pfnWdfDeviceGetFileObject)(DriverGlobals, Device, FileObject);
@@ -1103,7 +1181,7 @@ VFWDFEXPORT(WdfDeviceGetDefaultQueue)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETDEFAULTQUEUE) WdfVersion.Functions.pfnWdfDeviceGetDefaultQueue)(DriverGlobals, Device);
@@ -1123,7 +1201,7 @@ VFWDFEXPORT(WdfDeviceConfigureRequestDispatching)(
     _In_
     _Strict_type_match_
     WDF_REQUEST_TYPE RequestType
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICECONFIGUREREQUESTDISPATCHING) WdfVersion.Functions.pfnWdfDeviceConfigureRequestDispatching)(DriverGlobals, Device, Queue, RequestType);
@@ -1146,7 +1224,7 @@ VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
     _In_opt_
     WDFCONTEXT DriverContext
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK) WdfVersion.Functions.pfnWdfDeviceConfigureWdmIrpDispatchCallback)(DriverGlobals, Device, Driver, MajorFunction, EvtDeviceWdmIrpDisptach, DriverContext);
@@ -1160,7 +1238,7 @@ VFWDFEXPORT(WdfDeviceGetSystemPowerAction)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETSYSTEMPOWERACTION) WdfVersion.Functions.pfnWdfDeviceGetSystemPowerAction)(DriverGlobals, Device);
@@ -1176,7 +1254,7 @@ VFWDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     WDF_RELEASE_HARDWARE_ORDER_ON_FAILURE ReleaseHardwareOrderOnFailure
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETRELEASEHARDWAREORDERONFAILURE) WdfVersion.Functions.pfnWdfDeviceInitSetReleaseHardwareOrderOnFailure)(DriverGlobals, DeviceInit, ReleaseHardwareOrderOnFailure);
@@ -1192,7 +1270,7 @@ VFWDFEXPORT(WdfDeviceInitSetIoTypeEx)(
     PWDFDEVICE_INIT DeviceInit,
     _In_
     PWDF_IO_TYPE_CONFIG IoTypeConfig
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITSETIOTYPEEX) WdfVersion.Functions.pfnWdfDeviceInitSetIoTypeEx)(DriverGlobals, DeviceInit, IoTypeConfig);
@@ -1214,7 +1292,7 @@ VFWDFEXPORT(WdfDevicePostEvent)(
     BYTE* Data,
     _In_
     ULONG DataSizeCb
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEPOSTEVENT) WdfVersion.Functions.pfnWdfDevicePostEvent)(DriverGlobals, Device, EventGuid, WdfEventType, Data, DataSizeCb);
@@ -1237,7 +1315,7 @@ VFWDFEXPORT(WdfDeviceMapIoSpace)(
     MEMORY_CACHING_TYPE CacheType,
     _Out_
     PVOID* PseudoBaseAddress
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEMAPIOSPACE) WdfVersion.Functions.pfnWdfDeviceMapIoSpace)(DriverGlobals, Device, PhysicalAddress, NumberOfBytes, CacheType, PseudoBaseAddress);
@@ -1255,7 +1333,7 @@ VFWDFEXPORT(WdfDeviceUnmapIoSpace)(
     PVOID PseudoBaseAddress,
     _In_
     SIZE_T NumberOfBytes
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEUNMAPIOSPACE) WdfVersion.Functions.pfnWdfDeviceUnmapIoSpace)(DriverGlobals, Device, PseudoBaseAddress, NumberOfBytes);
@@ -1271,7 +1349,7 @@ VFWDFEXPORT(WdfDeviceGetHardwareRegisterMappedAddress)(
     WDFDEVICE Device,
     _In_
     PVOID PseudoBaseAddress
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETHARDWAREREGISTERMAPPEDADDRESS) WdfVersion.Functions.pfnWdfDeviceGetHardwareRegisterMappedAddress)(DriverGlobals, Device, PseudoBaseAddress);
@@ -1295,7 +1373,7 @@ VFWDFEXPORT(WdfDeviceReadFromHardware)(
     PVOID Buffer,
     _In_opt_
     ULONG Count
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEREADFROMHARDWARE) WdfVersion.Functions.pfnWdfDeviceReadFromHardware)(DriverGlobals, Device, Type, Size, TargetAddress, Buffer, Count);
@@ -1321,7 +1399,7 @@ VFWDFEXPORT(WdfDeviceWriteToHardware)(
     PVOID Buffer,
     _In_opt_
     ULONG Count
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEWRITETOHARDWARE) WdfVersion.Functions.pfnWdfDeviceWriteToHardware)(DriverGlobals, Device, Type, Size, TargetAddress, Value, Buffer, Count);
@@ -1343,7 +1421,7 @@ VFWDFEXPORT(WdfDeviceAssignInterfaceProperty)(
     ULONG BufferLength,
     _In_reads_bytes_opt_(BufferLength)
     PVOID PropertyBuffer
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEASSIGNINTERFACEPROPERTY) WdfVersion.Functions.pfnWdfDeviceAssignInterfaceProperty)(DriverGlobals, Device, PropertyData, Type, BufferLength, PropertyBuffer);
@@ -1367,7 +1445,7 @@ VFWDFEXPORT(WdfDeviceAllocAndQueryInterfaceProperty)(
     WDFMEMORY* PropertyMemory,
     _Out_
     PDEVPROPTYPE Type
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEALLOCANDQUERYINTERFACEPROPERTY) WdfVersion.Functions.pfnWdfDeviceAllocAndQueryInterfaceProperty)(DriverGlobals, Device, PropertyData, PoolType, PropertyMemoryAttributes, PropertyMemory, Type);
@@ -1391,7 +1469,7 @@ VFWDFEXPORT(WdfDeviceQueryInterfaceProperty)(
     PULONG ResultLength,
     _Out_
     PDEVPROPTYPE Type
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEQUERYINTERFACEPROPERTY) WdfVersion.Functions.pfnWdfDeviceQueryInterfaceProperty)(DriverGlobals, Device, PropertyData, BufferLength, PropertyBuffer, ResultLength, Type);
@@ -1409,10 +1487,26 @@ VFWDFEXPORT(WdfDeviceGetDeviceStackIoType)(
     WDF_DEVICE_IO_TYPE* ReadWriteIoType,
     _Out_
     WDF_DEVICE_IO_TYPE* IoControlIoType
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEGETDEVICESTACKIOTYPE) WdfVersion.Functions.pfnWdfDeviceGetDeviceStackIoType)(DriverGlobals, Device, ReadWriteIoType, IoControlIoType);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    WDFSTRING String
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDEVICERETRIEVEDEVICEDIRECTORYSTRING) WdfVersion.Functions.pfnWdfDeviceRetrieveDeviceDirectoryString)(DriverGlobals, Device, String);
 }
 
 _Must_inspect_result_
@@ -1434,7 +1528,7 @@ VFWDFEXPORT(WdfDeviceQueryPropertyEx)(
     PULONG RequiredSize,
     _Out_
     PDEVPROPTYPE Type
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEQUERYPROPERTYEX) WdfVersion.Functions.pfnWdfDeviceQueryPropertyEx)(DriverGlobals, Device, DeviceProperty, BufferLength, PropertyBuffer, RequiredSize, Type);
@@ -1460,7 +1554,7 @@ VFWDFEXPORT(WdfDeviceAllocAndQueryPropertyEx)(
     WDFMEMORY* PropertyMemory,
     _Out_
     PDEVPROPTYPE Type
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEALLOCANDQUERYPROPERTYEX) WdfVersion.Functions.pfnWdfDeviceAllocAndQueryPropertyEx)(DriverGlobals, Device, DeviceProperty, PoolType, PropertyMemoryAttributes, PropertyMemory, Type);
@@ -1483,7 +1577,7 @@ VFWDFEXPORT(WdfDeviceAssignProperty)(
     ULONG Size,
     _In_opt_
     PVOID Data
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEASSIGNPROPERTY) WdfVersion.Functions.pfnWdfDeviceAssignProperty)(DriverGlobals, Device, DeviceProperty, Type, Size, Data);
@@ -1497,7 +1591,7 @@ VFWDFEXPORT(WdfDeviceGetSelfIoTarget)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEGETSELFIOTARGET) WdfVersion.Functions.pfnWdfDeviceGetSelfIoTarget)(DriverGlobals, Device);
@@ -1511,7 +1605,7 @@ VFWDFEXPORT(WdfDeviceInitAllowSelfIoTarget)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     PWDFDEVICE_INIT DeviceInit
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITALLOWSELFIOTARGET) WdfVersion.Functions.pfnWdfDeviceInitAllowSelfIoTarget)(DriverGlobals, DeviceInit);
@@ -1534,7 +1628,7 @@ VFWDFEXPORT(WdfDriverCreate)(
     PWDF_DRIVER_CONFIG DriverConfig,
     _Out_opt_
     WDFDRIVER* Driver
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDRIVERCREATE) WdfVersion.Functions.pfnWdfDriverCreate)(DriverGlobals, DriverObject, RegistryPath, DriverAttributes, DriverConfig, Driver);
@@ -1548,7 +1642,7 @@ VFWDFEXPORT(WdfDriverGetRegistryPath)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDRIVER Driver
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDRIVERGETREGISTRYPATH) WdfVersion.Functions.pfnWdfDriverGetRegistryPath)(DriverGlobals, Driver);
@@ -1569,7 +1663,7 @@ VFWDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     PWDF_OBJECT_ATTRIBUTES KeyAttributes,
     _Out_
     WDFKEY* Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDRIVEROPENPARAMETERSREGISTRYKEY) WdfVersion.Functions.pfnWdfDriverOpenParametersRegistryKey)(DriverGlobals, Driver, DesiredAccess, KeyAttributes, Key);
@@ -1586,7 +1680,7 @@ VFWDFEXPORT(WdfDriverRetrieveVersionString)(
     WDFDRIVER Driver,
     _In_
     WDFSTRING String
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDRIVERRETRIEVEVERSIONSTRING) WdfVersion.Functions.pfnWdfDriverRetrieveVersionString)(DriverGlobals, Driver, String);
@@ -1603,10 +1697,68 @@ VFWDFEXPORT(WdfDriverIsVersionAvailable)(
     WDFDRIVER Driver,
     _In_
     PWDF_DRIVER_VERSION_AVAILABLE_PARAMS VersionAvailableParams
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDRIVERISVERSIONAVAILABLE) WdfVersion.Functions.pfnWdfDriverIsVersionAvailable)(DriverGlobals, Driver, VersionAvailableParams);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL + 1)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverErrorReportApiMissing)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_opt_
+    PCWSTR FrameworkExtensionName,
+    _In_
+    ULONG ApiIndex,
+    _In_
+    BOOLEAN DoesApiReturnNtstatus
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDRIVERERRORREPORTAPIMISSING) WdfVersion.Functions.pfnWdfDriverErrorReportApiMissing)(DriverGlobals, Driver, FrameworkExtensionName, ApiIndex, DoesApiReturnNtstatus);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    ACCESS_MASK DesiredAccess,
+    _In_opt_
+    PWDF_OBJECT_ATTRIBUTES KeyAttributes,
+    _Out_
+    WDFKEY* Key
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDRIVEROPENPERSISTENTSTATEREGISTRYKEY) WdfVersion.Functions.pfnWdfDriverOpenPersistentStateRegistryKey)(DriverGlobals, Driver, DesiredAccess, KeyAttributes, Key);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+VFWDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDRIVER Driver,
+    _In_
+    WDFSTRING String
+    )
+{
+    PAGED_CODE_LOCKED();
+    return ((PFN_WDFDRIVERRETRIEVEDRIVERDATADIRECTORYSTRING) WdfVersion.Functions.pfnWdfDriverRetrieveDriverDataDirectoryString)(DriverGlobals, Driver, String);
 }
 
 _Must_inspect_result_
@@ -1626,7 +1778,7 @@ VFWDFEXPORT(WdfFdoInitOpenRegistryKey)(
     PWDF_OBJECT_ATTRIBUTES KeyAttributes,
     _Out_
     WDFKEY* Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFDOINITOPENREGISTRYKEY) WdfVersion.Functions.pfnWdfFdoInitOpenRegistryKey)(DriverGlobals, DeviceInit, DeviceInstanceKeyType, DesiredAccess, KeyAttributes, Key);
@@ -1649,7 +1801,7 @@ VFWDFEXPORT(WdfFdoInitQueryProperty)(
     PVOID PropertyBuffer,
     _Out_
     PULONG ResultLength
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFDOINITQUERYPROPERTY) WdfVersion.Functions.pfnWdfFdoInitQueryProperty)(DriverGlobals, DeviceInit, DeviceProperty, BufferLength, PropertyBuffer, ResultLength);
@@ -1673,7 +1825,7 @@ VFWDFEXPORT(WdfFdoInitAllocAndQueryProperty)(
     PWDF_OBJECT_ATTRIBUTES PropertyMemoryAttributes,
     _Out_
     WDFMEMORY* PropertyMemory
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFDOINITALLOCANDQUERYPROPERTY) WdfVersion.Functions.pfnWdfFdoInitAllocAndQueryProperty)(DriverGlobals, DeviceInit, DeviceProperty, PoolType, PropertyMemoryAttributes, PropertyMemory);
@@ -1698,7 +1850,7 @@ VFWDFEXPORT(WdfFdoInitQueryPropertyEx)(
     PULONG ResultLength,
     _Out_
     PDEVPROPTYPE Type
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFDOINITQUERYPROPERTYEX) WdfVersion.Functions.pfnWdfFdoInitQueryPropertyEx)(DriverGlobals, DeviceInit, DeviceProperty, BufferLength, PropertyBuffer, ResultLength, Type);
@@ -1724,7 +1876,7 @@ VFWDFEXPORT(WdfFdoInitAllocAndQueryPropertyEx)(
     WDFMEMORY* PropertyMemory,
     _Out_
     PDEVPROPTYPE Type
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFDOINITALLOCANDQUERYPROPERTYEX) WdfVersion.Functions.pfnWdfFdoInitAllocAndQueryPropertyEx)(DriverGlobals, DeviceInit, DeviceProperty, PoolType, PropertyMemoryAttributes, PropertyMemory, Type);
@@ -1738,7 +1890,7 @@ VFWDFEXPORT(WdfFdoInitSetFilter)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     PWDFDEVICE_INIT DeviceInit
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFFDOINITSETFILTER) WdfVersion.Functions.pfnWdfFdoInitSetFilter)(DriverGlobals, DeviceInit);
@@ -1752,7 +1904,7 @@ VFWDFEXPORT(WdfFileObjectGetFileName)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFFILEOBJECT FileObject
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFILEOBJECTGETFILENAME) WdfVersion.Functions.pfnWdfFileObjectGetFileName)(DriverGlobals, FileObject);
@@ -1766,7 +1918,7 @@ VFWDFEXPORT(WdfFileObjectGetDevice)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFFILEOBJECT FileObject
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFILEOBJECTGETDEVICE) WdfVersion.Functions.pfnWdfFileObjectGetDevice)(DriverGlobals, FileObject);
@@ -1780,7 +1932,7 @@ VFWDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFFILEOBJECT FileObject
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFILEOBJECTGETINITIATORPROCESSID) WdfVersion.Functions.pfnWdfFileObjectGetInitiatorProcessId)(DriverGlobals, FileObject);
@@ -1794,7 +1946,7 @@ VFWDFEXPORT(WdfFileObjectGetRelatedFileObject)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFFILEOBJECT FileObject
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFFILEOBJECTGETRELATEDFILEOBJECT) WdfVersion.Functions.pfnWdfFileObjectGetRelatedFileObject)(DriverGlobals, FileObject);
@@ -1808,7 +1960,7 @@ VFWDFEXPORT(WdfDeviceInitEnableHidInterface)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     PWDFDEVICE_INIT DeviceInit
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFDEVICEINITENABLEHIDINTERFACE) WdfVersion.Functions.pfnWdfDeviceInitEnableHidInterface)(DriverGlobals, DeviceInit);
@@ -1825,7 +1977,7 @@ VFWDFEXPORT(WdfDeviceHidNotifyPresence)(
     WDFDEVICE Device,
     _In_
     BOOLEAN IsPresent
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFDEVICEHIDNOTIFYPRESENCE) WdfVersion.Functions.pfnWdfDeviceHidNotifyPresence)(DriverGlobals, Device, IsPresent);
@@ -1846,7 +1998,7 @@ VFWDFEXPORT(WdfInterruptCreate)(
     PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_
     WDFINTERRUPT* Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFINTERRUPTCREATE) WdfVersion.Functions.pfnWdfInterruptCreate)(DriverGlobals, Device, Configuration, Attributes, Interrupt);
@@ -1859,7 +2011,7 @@ VFWDFEXPORT(WdfInterruptQueueDpcForIsr)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFINTERRUPTQUEUEDPCFORISR) WdfVersion.Functions.pfnWdfInterruptQueueDpcForIsr)(DriverGlobals, Interrupt);
@@ -1872,7 +2024,7 @@ VFWDFEXPORT(WdfInterruptQueueWorkItemForIsr)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFINTERRUPTQUEUEWORKITEMFORISR) WdfVersion.Functions.pfnWdfInterruptQueueWorkItemForIsr)(DriverGlobals, Interrupt);
@@ -1890,7 +2042,7 @@ VFWDFEXPORT(WdfInterruptSynchronize)(
     PFN_WDF_INTERRUPT_SYNCHRONIZE Callback,
     _In_
     WDFCONTEXT Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFINTERRUPTSYNCHRONIZE) WdfVersion.Functions.pfnWdfInterruptSynchronize)(DriverGlobals, Interrupt, Callback, Context);
@@ -1906,7 +2058,7 @@ VFWDFEXPORT(WdfInterruptAcquireLock)(
     _Requires_lock_not_held_(_Curr_)
     _Acquires_lock_(_Curr_)
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTACQUIRELOCK) WdfVersion.Functions.pfnWdfInterruptAcquireLock)(DriverGlobals, Interrupt);
@@ -1922,7 +2074,7 @@ VFWDFEXPORT(WdfInterruptReleaseLock)(
     _Requires_lock_held_(_Curr_)
     _Releases_lock_(_Curr_)
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTRELEASELOCK) WdfVersion.Functions.pfnWdfInterruptReleaseLock)(DriverGlobals, Interrupt);
@@ -1936,7 +2088,7 @@ VFWDFEXPORT(WdfInterruptEnable)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTENABLE) WdfVersion.Functions.pfnWdfInterruptEnable)(DriverGlobals, Interrupt);
@@ -1950,7 +2102,7 @@ VFWDFEXPORT(WdfInterruptDisable)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTDISABLE) WdfVersion.Functions.pfnWdfInterruptDisable)(DriverGlobals, Interrupt);
@@ -1966,7 +2118,7 @@ VFWDFEXPORT(WdfInterruptGetInfo)(
     WDFINTERRUPT Interrupt,
     _Out_
     PWDF_INTERRUPT_INFO Info
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTGETINFO) WdfVersion.Functions.pfnWdfInterruptGetInfo)(DriverGlobals, Interrupt, Info);
@@ -1986,7 +2138,7 @@ VFWDFEXPORT(WdfInterruptSetPolicy)(
     WDF_INTERRUPT_PRIORITY Priority,
     _In_
     KAFFINITY TargetProcessorSet
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTSETPOLICY) WdfVersion.Functions.pfnWdfInterruptSetPolicy)(DriverGlobals, Interrupt, Policy, Priority, TargetProcessorSet);
@@ -2002,7 +2154,7 @@ VFWDFEXPORT(WdfInterruptSetExtendedPolicy)(
     WDFINTERRUPT Interrupt,
     _In_
     PWDF_INTERRUPT_EXTENDED_POLICY PolicyAndGroup
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFINTERRUPTSETEXTENDEDPOLICY) WdfVersion.Functions.pfnWdfInterruptSetExtendedPolicy)(DriverGlobals, Interrupt, PolicyAndGroup);
@@ -2015,7 +2167,7 @@ VFWDFEXPORT(WdfInterruptGetDevice)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFINTERRUPTGETDEVICE) WdfVersion.Functions.pfnWdfInterruptGetDevice)(DriverGlobals, Interrupt);
@@ -2033,7 +2185,7 @@ VFWDFEXPORT(WdfInterruptTryToAcquireLock)(
     _Requires_lock_not_held_(_Curr_)
     _When_(return!=0, _Acquires_lock_(_Curr_))
     WDFINTERRUPT Interrupt
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFINTERRUPTTRYTOACQUIRELOCK) WdfVersion.Functions.pfnWdfInterruptTryToAcquireLock)(DriverGlobals, Interrupt);
@@ -2054,7 +2206,7 @@ VFWDFEXPORT(WdfIoQueueCreate)(
     PWDF_OBJECT_ATTRIBUTES QueueAttributes,
     _Out_opt_
     WDFQUEUE* Queue
-    )    
+    )
 {
     VF_HOOK_PROCESS_INFO hookInfo;
     NTSTATUS status;
@@ -2091,7 +2243,7 @@ VFWDFEXPORT(WdfIoQueueGetState)(
     PULONG QueueRequests,
     _Out_opt_
     PULONG DriverRequests
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOQUEUEGETSTATE) WdfVersion.Functions.pfnWdfIoQueueGetState)(DriverGlobals, Queue, QueueRequests, DriverRequests);
@@ -2105,7 +2257,7 @@ VFWDFEXPORT(WdfIoQueueStart)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUESTART) WdfVersion.Functions.pfnWdfIoQueueStart)(DriverGlobals, Queue);
@@ -2125,7 +2277,7 @@ VFWDFEXPORT(WdfIoQueueStop)(
     _When_(StopComplete != 0, _In_)
     _When_(StopComplete == 0, _In_opt_)
     WDFCONTEXT Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUESTOP) WdfVersion.Functions.pfnWdfIoQueueStop)(DriverGlobals, Queue, StopComplete, Context);
@@ -2139,7 +2291,7 @@ VFWDFEXPORT(WdfIoQueueStopSynchronously)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUESTOPSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoQueueStopSynchronously)(DriverGlobals, Queue);
@@ -2153,7 +2305,7 @@ VFWDFEXPORT(WdfIoQueueGetDevice)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOQUEUEGETDEVICE) WdfVersion.Functions.pfnWdfIoQueueGetDevice)(DriverGlobals, Queue);
@@ -2170,7 +2322,7 @@ VFWDFEXPORT(WdfIoQueueRetrieveNextRequest)(
     WDFQUEUE Queue,
     _Out_
     WDFREQUEST* OutRequest
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     NTSTATUS rtn = ((PFN_WDFIOQUEUERETRIEVENEXTREQUEST) WdfVersion.Functions.pfnWdfIoQueueRetrieveNextRequest)(DriverGlobals, Queue, OutRequest);
@@ -2193,7 +2345,7 @@ VFWDFEXPORT(WdfIoQueueRetrieveRequestByFileObject)(
     WDFFILEOBJECT FileObject,
     _Out_
     WDFREQUEST* OutRequest
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     NTSTATUS rtn = ((PFN_WDFIOQUEUERETRIEVEREQUESTBYFILEOBJECT) WdfVersion.Functions.pfnWdfIoQueueRetrieveRequestByFileObject)(DriverGlobals, Queue, FileObject, OutRequest);
@@ -2220,7 +2372,7 @@ VFWDFEXPORT(WdfIoQueueFindRequest)(
     PWDF_REQUEST_PARAMETERS Parameters,
     _Out_
     WDFREQUEST* OutRequest
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOQUEUEFINDREQUEST) WdfVersion.Functions.pfnWdfIoQueueFindRequest)(DriverGlobals, Queue, FoundRequest, FileObject, Parameters, OutRequest);
@@ -2239,7 +2391,7 @@ VFWDFEXPORT(WdfIoQueueRetrieveFoundRequest)(
     WDFREQUEST FoundRequest,
     _Out_
     WDFREQUEST* OutRequest
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     NTSTATUS rtn = ((PFN_WDFIOQUEUERETRIEVEFOUNDREQUEST) WdfVersion.Functions.pfnWdfIoQueueRetrieveFoundRequest)(DriverGlobals, Queue, FoundRequest, OutRequest);
@@ -2257,7 +2409,7 @@ VFWDFEXPORT(WdfIoQueueDrainSynchronously)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUEDRAINSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoQueueDrainSynchronously)(DriverGlobals, Queue);
@@ -2277,7 +2429,7 @@ VFWDFEXPORT(WdfIoQueueDrain)(
     _When_(DrainComplete != 0, _In_)
     _When_(DrainComplete == 0, _In_opt_)
     WDFCONTEXT Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUEDRAIN) WdfVersion.Functions.pfnWdfIoQueueDrain)(DriverGlobals, Queue, DrainComplete, Context);
@@ -2291,7 +2443,7 @@ VFWDFEXPORT(WdfIoQueuePurgeSynchronously)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUEPURGESYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoQueuePurgeSynchronously)(DriverGlobals, Queue);
@@ -2311,7 +2463,7 @@ VFWDFEXPORT(WdfIoQueuePurge)(
     _When_(PurgeComplete != 0, _In_)
     _When_(PurgeComplete == 0, _In_opt_)
     WDFCONTEXT Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUEPURGE) WdfVersion.Functions.pfnWdfIoQueuePurge)(DriverGlobals, Queue, PurgeComplete, Context);
@@ -2330,7 +2482,7 @@ VFWDFEXPORT(WdfIoQueueReadyNotify)(
     PFN_WDF_IO_QUEUE_STATE QueueReady,
     _In_opt_
     WDFCONTEXT Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOQUEUEREADYNOTIFY) WdfVersion.Functions.pfnWdfIoQueueReadyNotify)(DriverGlobals, Queue, QueueReady, Context);
@@ -2350,7 +2502,7 @@ VFWDFEXPORT(WdfIoQueueStopAndPurge)(
     _When_(StopAndPurgeComplete != 0, _In_)
     _When_(StopAndPurgeComplete == 0, _In_opt_)
     WDFCONTEXT Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUESTOPANDPURGE) WdfVersion.Functions.pfnWdfIoQueueStopAndPurge)(DriverGlobals, Queue, StopAndPurgeComplete, Context);
@@ -2364,7 +2516,7 @@ VFWDFEXPORT(WdfIoQueueStopAndPurgeSynchronously)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOQUEUESTOPANDPURGESYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoQueueStopAndPurgeSynchronously)(DriverGlobals, Queue);
@@ -2383,7 +2535,7 @@ VFWDFEXPORT(WdfIoTargetCreate)(
     PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,
     _Out_
     WDFIOTARGET* IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETCREATE) WdfVersion.Functions.pfnWdfIoTargetCreate)(DriverGlobals, Device, IoTargetAttributes, IoTarget);
@@ -2400,7 +2552,7 @@ VFWDFEXPORT(WdfIoTargetOpen)(
     WDFIOTARGET IoTarget,
     _In_
     PWDF_IO_TARGET_OPEN_PARAMS OpenParams
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETOPEN) WdfVersion.Functions.pfnWdfIoTargetOpen)(DriverGlobals, IoTarget, OpenParams);
@@ -2414,7 +2566,7 @@ VFWDFEXPORT(WdfIoTargetCloseForQueryRemove)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOTARGETCLOSEFORQUERYREMOVE) WdfVersion.Functions.pfnWdfIoTargetCloseForQueryRemove)(DriverGlobals, IoTarget);
@@ -2428,7 +2580,7 @@ VFWDFEXPORT(WdfIoTargetClose)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOTARGETCLOSE) WdfVersion.Functions.pfnWdfIoTargetClose)(DriverGlobals, IoTarget);
@@ -2443,7 +2595,7 @@ VFWDFEXPORT(WdfIoTargetStart)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETSTART) WdfVersion.Functions.pfnWdfIoTargetStart)(DriverGlobals, IoTarget);
@@ -2461,7 +2613,7 @@ VFWDFEXPORT(WdfIoTargetStop)(
     _In_
     _Strict_type_match_
     WDF_IO_TARGET_SENT_IO_ACTION Action
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOTARGETSTOP) WdfVersion.Functions.pfnWdfIoTargetStop)(DriverGlobals, IoTarget, Action);
@@ -2479,7 +2631,7 @@ VFWDFEXPORT(WdfIoTargetPurge)(
     _In_
     _Strict_type_match_
     WDF_IO_TARGET_PURGE_IO_ACTION Action
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFIOTARGETPURGE) WdfVersion.Functions.pfnWdfIoTargetPurge)(DriverGlobals, IoTarget, Action);
@@ -2493,7 +2645,7 @@ VFWDFEXPORT(WdfIoTargetGetState)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETGETSTATE) WdfVersion.Functions.pfnWdfIoTargetGetState)(DriverGlobals, IoTarget);
@@ -2507,7 +2659,7 @@ VFWDFEXPORT(WdfIoTargetGetDevice)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETGETDEVICE) WdfVersion.Functions.pfnWdfIoTargetGetDevice)(DriverGlobals, IoTarget);
@@ -2521,7 +2673,7 @@ VFWDFEXPORT(WdfIoTargetWdmGetTargetFileHandle)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETWDMGETTARGETFILEHANDLE) WdfVersion.Functions.pfnWdfIoTargetWdmGetTargetFileHandle)(DriverGlobals, IoTarget);
@@ -2546,7 +2698,7 @@ VFWDFEXPORT(WdfIoTargetSendReadSynchronously)(
     PWDF_REQUEST_SEND_OPTIONS RequestOptions,
     _Out_opt_
     PULONG_PTR BytesRead
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETSENDREADSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoTargetSendReadSynchronously)(DriverGlobals, IoTarget, Request, OutputBuffer, DeviceOffset, RequestOptions, BytesRead);
@@ -2569,7 +2721,7 @@ VFWDFEXPORT(WdfIoTargetFormatRequestForRead)(
     PWDFMEMORY_OFFSET OutputBufferOffset,
     _In_opt_
     PLONGLONG DeviceOffset
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETFORMATREQUESTFORREAD) WdfVersion.Functions.pfnWdfIoTargetFormatRequestForRead)(DriverGlobals, IoTarget, Request, OutputBuffer, OutputBufferOffset, DeviceOffset);
@@ -2594,7 +2746,7 @@ VFWDFEXPORT(WdfIoTargetSendWriteSynchronously)(
     PWDF_REQUEST_SEND_OPTIONS RequestOptions,
     _Out_opt_
     PULONG_PTR BytesWritten
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETSENDWRITESYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoTargetSendWriteSynchronously)(DriverGlobals, IoTarget, Request, InputBuffer, DeviceOffset, RequestOptions, BytesWritten);
@@ -2617,7 +2769,7 @@ VFWDFEXPORT(WdfIoTargetFormatRequestForWrite)(
     PWDFMEMORY_OFFSET InputBufferOffset,
     _In_opt_
     PLONGLONG DeviceOffset
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETFORMATREQUESTFORWRITE) WdfVersion.Functions.pfnWdfIoTargetFormatRequestForWrite)(DriverGlobals, IoTarget, Request, InputBuffer, InputBufferOffset, DeviceOffset);
@@ -2644,7 +2796,7 @@ VFWDFEXPORT(WdfIoTargetSendIoctlSynchronously)(
     PWDF_REQUEST_SEND_OPTIONS RequestOptions,
     _Out_opt_
     PULONG_PTR BytesReturned
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETSENDIOCTLSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfIoTargetSendIoctlSynchronously)(DriverGlobals, IoTarget, Request, IoctlCode, InputBuffer, OutputBuffer, RequestOptions, BytesReturned);
@@ -2671,7 +2823,7 @@ VFWDFEXPORT(WdfIoTargetFormatRequestForIoctl)(
     WDFMEMORY OutputBuffer,
     _In_opt_
     PWDFMEMORY_OFFSET OutputBufferOffset
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETFORMATREQUESTFORIOCTL) WdfVersion.Functions.pfnWdfIoTargetFormatRequestForIoctl)(DriverGlobals, IoTarget, Request, IoctlCode, InputBuffer, InputBufferOffset, OutputBuffer, OutputBufferOffset);
@@ -2687,7 +2839,7 @@ VFWDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue)(
     WDFIOTARGET IoTarget,
     _In_
     WDFQUEUE Queue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFIOTARGETSELFASSIGNDEFAULTIOQUEUE) WdfVersion.Functions.pfnWdfIoTargetSelfAssignDefaultIoQueue)(DriverGlobals, IoTarget, Queue);
@@ -2715,7 +2867,7 @@ VFWDFEXPORT(WdfMemoryCreate)(
     WDFMEMORY* Memory,
     _Outptr_opt_result_bytebuffer_(BufferSize)
     PVOID* Buffer
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFMEMORYCREATE) WdfVersion.Functions.pfnWdfMemoryCreate)(DriverGlobals, Attributes, PoolType, PoolTag, BufferSize, Memory, Buffer);
@@ -2737,7 +2889,7 @@ VFWDFEXPORT(WdfMemoryCreatePreallocated)(
     size_t BufferSize,
     _Out_
     WDFMEMORY* Memory
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFMEMORYCREATEPREALLOCATED) WdfVersion.Functions.pfnWdfMemoryCreatePreallocated)(DriverGlobals, Attributes, Buffer, BufferSize, Memory);
@@ -2753,7 +2905,7 @@ VFWDFEXPORT(WdfMemoryGetBuffer)(
     WDFMEMORY Memory,
     _Out_opt_
     size_t* BufferSize
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFMEMORYGETBUFFER) WdfVersion.Functions.pfnWdfMemoryGetBuffer)(DriverGlobals, Memory, BufferSize);
@@ -2773,7 +2925,7 @@ VFWDFEXPORT(WdfMemoryAssignBuffer)(
     _In_
     _When_(BufferSize == 0, __drv_reportError(BufferSize cannot be zero))
     size_t BufferSize
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFMEMORYASSIGNBUFFER) WdfVersion.Functions.pfnWdfMemoryAssignBuffer)(DriverGlobals, Memory, Buffer, BufferSize);
@@ -2795,7 +2947,7 @@ VFWDFEXPORT(WdfMemoryCopyToBuffer)(
     _In_
     _When_(NumBytesToCopyTo == 0, __drv_reportError(NumBytesToCopyTo cannot be zero))
     size_t NumBytesToCopyTo
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFMEMORYCOPYTOBUFFER) WdfVersion.Functions.pfnWdfMemoryCopyToBuffer)(DriverGlobals, SourceMemory, SourceOffset, Buffer, NumBytesToCopyTo);
@@ -2817,7 +2969,7 @@ VFWDFEXPORT(WdfMemoryCopyFromBuffer)(
     _In_
     _When_(NumBytesToCopyFrom == 0, __drv_reportError(NumBytesToCopyFrom cannot be zero))
     size_t NumBytesToCopyFrom
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFMEMORYCOPYFROMBUFFER) WdfVersion.Functions.pfnWdfMemoryCopyFromBuffer)(DriverGlobals, DestinationMemory, DestinationOffset, Buffer, NumBytesToCopyFrom);
@@ -2834,7 +2986,7 @@ VFWDFEXPORT(WdfObjectGetTypedContextWorker)(
     WDFOBJECT Handle,
     _In_
     PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFOBJECTGETTYPEDCONTEXTWORKER) WdfVersion.Functions.pfnWdfObjectGetTypedContextWorker)(DriverGlobals, Handle, TypeInfo);
@@ -2853,7 +3005,7 @@ VFWDFEXPORT(WdfObjectAllocateContext)(
     PWDF_OBJECT_ATTRIBUTES ContextAttributes,
     _Outptr_opt_
     PVOID* Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFOBJECTALLOCATECONTEXT) WdfVersion.Functions.pfnWdfObjectAllocateContext)(DriverGlobals, Handle, ContextAttributes, Context);
@@ -2868,7 +3020,7 @@ VFWDFEXPORT(WdfObjectContextGetObject)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     PVOID ContextPointer
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFOBJECTCONTEXTGETOBJECT) WdfVersion.Functions.pfnWdfObjectContextGetObject)(DriverGlobals, ContextPointer);
@@ -2888,7 +3040,7 @@ VFWDFEXPORT(WdfObjectReferenceActual)(
     LONG Line,
     _In_z_
     PCCH File
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFOBJECTREFERENCEACTUAL) WdfVersion.Functions.pfnWdfObjectReferenceActual)(DriverGlobals, Handle, Tag, Line, File);
@@ -2908,7 +3060,7 @@ VFWDFEXPORT(WdfObjectDereferenceActual)(
     LONG Line,
     _In_z_
     PCCH File
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFOBJECTDEREFERENCEACTUAL) WdfVersion.Functions.pfnWdfObjectDereferenceActual)(DriverGlobals, Handle, Tag, Line, File);
@@ -2925,7 +3077,7 @@ VFWDFEXPORT(WdfObjectCreate)(
     PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_
     WDFOBJECT* Object
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFOBJECTCREATE) WdfVersion.Functions.pfnWdfObjectCreate)(DriverGlobals, Attributes, Object);
@@ -2939,7 +3091,7 @@ VFWDFEXPORT(WdfObjectDelete)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFOBJECT Object
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFOBJECTDELETE) WdfVersion.Functions.pfnWdfObjectDelete)(DriverGlobals, Object);
@@ -2960,7 +3112,7 @@ VFWDFEXPORT(WdfObjectQuery)(
     ULONG QueryBufferLength,
     _Out_writes_bytes_(QueryBufferLength)
     PVOID QueryBuffer
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFOBJECTQUERY) WdfVersion.Functions.pfnWdfObjectQuery)(DriverGlobals, Object, Guid, QueryBufferLength, QueryBuffer);
@@ -2983,7 +3135,7 @@ VFWDFEXPORT(WdfRegistryOpenKey)(
     PWDF_OBJECT_ATTRIBUTES KeyAttributes,
     _Out_
     WDFKEY* Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYOPENKEY) WdfVersion.Functions.pfnWdfRegistryOpenKey)(DriverGlobals, ParentKey, KeyName, DesiredAccess, KeyAttributes, Key);
@@ -3010,7 +3162,7 @@ VFWDFEXPORT(WdfRegistryCreateKey)(
     PWDF_OBJECT_ATTRIBUTES KeyAttributes,
     _Out_
     WDFKEY* Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYCREATEKEY) WdfVersion.Functions.pfnWdfRegistryCreateKey)(DriverGlobals, ParentKey, KeyName, DesiredAccess, CreateOptions, CreateDisposition, KeyAttributes, Key);
@@ -3024,7 +3176,7 @@ VFWDFEXPORT(WdfRegistryClose)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFKEY Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREGISTRYCLOSE) WdfVersion.Functions.pfnWdfRegistryClose)(DriverGlobals, Key);
@@ -3038,7 +3190,7 @@ VFWDFEXPORT(WdfRegistryWdmGetHandle)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFKEY Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYWDMGETHANDLE) WdfVersion.Functions.pfnWdfRegistryWdmGetHandle)(DriverGlobals, Key);
@@ -3053,7 +3205,7 @@ VFWDFEXPORT(WdfRegistryRemoveKey)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFKEY Key
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYREMOVEKEY) WdfVersion.Functions.pfnWdfRegistryRemoveKey)(DriverGlobals, Key);
@@ -3070,7 +3222,7 @@ VFWDFEXPORT(WdfRegistryRemoveValue)(
     WDFKEY Key,
     _In_
     PCUNICODE_STRING ValueName
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYREMOVEVALUE) WdfVersion.Functions.pfnWdfRegistryRemoveValue)(DriverGlobals, Key, ValueName);
@@ -3095,7 +3247,7 @@ VFWDFEXPORT(WdfRegistryQueryValue)(
     PULONG ValueLengthQueried,
     _Out_opt_
     PULONG ValueType
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYQUERYVALUE) WdfVersion.Functions.pfnWdfRegistryQueryValue)(DriverGlobals, Key, ValueName, ValueLength, Value, ValueLengthQueried, ValueType);
@@ -3121,7 +3273,7 @@ VFWDFEXPORT(WdfRegistryQueryMemory)(
     WDFMEMORY* Memory,
     _Out_opt_
     PULONG ValueType
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYQUERYMEMORY) WdfVersion.Functions.pfnWdfRegistryQueryMemory)(DriverGlobals, Key, ValueName, PoolType, MemoryAttributes, Memory, ValueType);
@@ -3142,7 +3294,7 @@ VFWDFEXPORT(WdfRegistryQueryMultiString)(
     PWDF_OBJECT_ATTRIBUTES StringsAttributes,
     _In_
     WDFCOLLECTION Collection
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYQUERYMULTISTRING) WdfVersion.Functions.pfnWdfRegistryQueryMultiString)(DriverGlobals, Key, ValueName, StringsAttributes, Collection);
@@ -3163,7 +3315,7 @@ VFWDFEXPORT(WdfRegistryQueryUnicodeString)(
     PUSHORT ValueByteLength,
     _Inout_opt_
     PUNICODE_STRING Value
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYQUERYUNICODESTRING) WdfVersion.Functions.pfnWdfRegistryQueryUnicodeString)(DriverGlobals, Key, ValueName, ValueByteLength, Value);
@@ -3182,7 +3334,7 @@ VFWDFEXPORT(WdfRegistryQueryString)(
     PCUNICODE_STRING ValueName,
     _In_
     WDFSTRING String
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYQUERYSTRING) WdfVersion.Functions.pfnWdfRegistryQueryString)(DriverGlobals, Key, ValueName, String);
@@ -3201,7 +3353,7 @@ VFWDFEXPORT(WdfRegistryQueryULong)(
     PCUNICODE_STRING ValueName,
     _Out_
     PULONG Value
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYQUERYULONG) WdfVersion.Functions.pfnWdfRegistryQueryULong)(DriverGlobals, Key, ValueName, Value);
@@ -3224,7 +3376,7 @@ VFWDFEXPORT(WdfRegistryAssignValue)(
     ULONG ValueLength,
     _In_reads_( ValueLength)
     PVOID Value
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYASSIGNVALUE) WdfVersion.Functions.pfnWdfRegistryAssignValue)(DriverGlobals, Key, ValueName, ValueType, ValueLength, Value);
@@ -3247,7 +3399,7 @@ VFWDFEXPORT(WdfRegistryAssignMemory)(
     WDFMEMORY Memory,
     _In_opt_
     PWDFMEMORY_OFFSET MemoryOffsets
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYASSIGNMEMORY) WdfVersion.Functions.pfnWdfRegistryAssignMemory)(DriverGlobals, Key, ValueName, ValueType, Memory, MemoryOffsets);
@@ -3266,7 +3418,7 @@ VFWDFEXPORT(WdfRegistryAssignMultiString)(
     PCUNICODE_STRING ValueName,
     _In_
     WDFCOLLECTION StringsCollection
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYASSIGNMULTISTRING) WdfVersion.Functions.pfnWdfRegistryAssignMultiString)(DriverGlobals, Key, ValueName, StringsCollection);
@@ -3285,7 +3437,7 @@ VFWDFEXPORT(WdfRegistryAssignUnicodeString)(
     PCUNICODE_STRING ValueName,
     _In_
     PCUNICODE_STRING Value
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYASSIGNUNICODESTRING) WdfVersion.Functions.pfnWdfRegistryAssignUnicodeString)(DriverGlobals, Key, ValueName, Value);
@@ -3304,7 +3456,7 @@ VFWDFEXPORT(WdfRegistryAssignString)(
     PCUNICODE_STRING ValueName,
     _In_
     WDFSTRING String
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYASSIGNSTRING) WdfVersion.Functions.pfnWdfRegistryAssignString)(DriverGlobals, Key, ValueName, String);
@@ -3323,7 +3475,7 @@ VFWDFEXPORT(WdfRegistryAssignULong)(
     PCUNICODE_STRING ValueName,
     _In_
     ULONG Value
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREGISTRYASSIGNULONG) WdfVersion.Functions.pfnWdfRegistryAssignULong)(DriverGlobals, Key, ValueName, Value);
@@ -3342,7 +3494,7 @@ VFWDFEXPORT(WdfRequestCreate)(
     WDFIOTARGET IoTarget,
     _Out_
     WDFREQUEST* Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTCREATE) WdfVersion.Functions.pfnWdfRequestCreate)(DriverGlobals, RequestAttributes, IoTarget, Request);
@@ -3356,7 +3508,7 @@ VFWDFEXPORT(WdfRequestGetRequestorProcessId)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETREQUESTORPROCESSID) WdfVersion.Functions.pfnWdfRequestGetRequestorProcessId)(DriverGlobals, Request);
@@ -3372,7 +3524,7 @@ VFWDFEXPORT(WdfRequestReuse)(
     WDFREQUEST Request,
     _In_
     PWDF_REQUEST_REUSE_PARAMS ReuseParams
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTREUSE) WdfVersion.Functions.pfnWdfRequestReuse)(DriverGlobals, Request, ReuseParams);
@@ -3389,7 +3541,7 @@ VFWDFEXPORT(WdfRequestChangeTarget)(
     WDFREQUEST Request,
     _In_
     WDFIOTARGET IoTarget
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTCHANGETARGET) WdfVersion.Functions.pfnWdfRequestChangeTarget)(DriverGlobals, Request, IoTarget);
@@ -3403,7 +3555,7 @@ VFWDFEXPORT(WdfRequestFormatRequestUsingCurrentType)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTFORMATREQUESTUSINGCURRENTTYPE) WdfVersion.Functions.pfnWdfRequestFormatRequestUsingCurrentType)(DriverGlobals, Request);
@@ -3422,7 +3574,7 @@ VFWDFEXPORT(WdfRequestSend)(
     WDFIOTARGET Target,
     _In_opt_
     PWDF_REQUEST_SEND_OPTIONS Options
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTSEND) WdfVersion.Functions.pfnWdfRequestSend)(DriverGlobals, Request, Target, Options);
@@ -3437,7 +3589,7 @@ VFWDFEXPORT(WdfRequestGetStatus)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETSTATUS) WdfVersion.Functions.pfnWdfRequestGetStatus)(DriverGlobals, Request);
@@ -3453,7 +3605,7 @@ VFWDFEXPORT(WdfRequestMarkCancelable)(
     WDFREQUEST Request,
     _In_
     PFN_WDF_REQUEST_CANCEL EvtRequestCancel
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTMARKCANCELABLE) WdfVersion.Functions.pfnWdfRequestMarkCancelable)(DriverGlobals, Request, EvtRequestCancel);
@@ -3470,7 +3622,7 @@ VFWDFEXPORT(WdfRequestMarkCancelableEx)(
     WDFREQUEST Request,
     _In_
     PFN_WDF_REQUEST_CANCEL EvtRequestCancel
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTMARKCANCELABLEEX) WdfVersion.Functions.pfnWdfRequestMarkCancelableEx)(DriverGlobals, Request, EvtRequestCancel);
@@ -3485,7 +3637,7 @@ VFWDFEXPORT(WdfRequestUnmarkCancelable)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTUNMARKCANCELABLE) WdfVersion.Functions.pfnWdfRequestUnmarkCancelable)(DriverGlobals, Request);
@@ -3500,7 +3652,7 @@ VFWDFEXPORT(WdfRequestIsCanceled)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTISCANCELED) WdfVersion.Functions.pfnWdfRequestIsCanceled)(DriverGlobals, Request);
@@ -3514,7 +3666,7 @@ VFWDFEXPORT(WdfRequestCancelSentRequest)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTCANCELSENTREQUEST) WdfVersion.Functions.pfnWdfRequestCancelSentRequest)(DriverGlobals, Request);
@@ -3529,7 +3681,7 @@ VFWDFEXPORT(WdfRequestIsFrom32BitProcess)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTISFROM32BITPROCESS) WdfVersion.Functions.pfnWdfRequestIsFrom32BitProcess)(DriverGlobals, Request);
@@ -3547,7 +3699,7 @@ VFWDFEXPORT(WdfRequestSetCompletionRoutine)(
     PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,
     _In_opt_ __drv_aliasesMem
     WDFCONTEXT CompletionContext
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTSETCOMPLETIONROUTINE) WdfVersion.Functions.pfnWdfRequestSetCompletionRoutine)(DriverGlobals, Request, CompletionRoutine, CompletionContext);
@@ -3563,7 +3715,7 @@ VFWDFEXPORT(WdfRequestGetCompletionParams)(
     WDFREQUEST Request,
     _Out_
     PWDF_REQUEST_COMPLETION_PARAMS Params
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTGETCOMPLETIONPARAMS) WdfVersion.Functions.pfnWdfRequestGetCompletionParams)(DriverGlobals, Request, Params);
@@ -3578,7 +3730,7 @@ VFWDFEXPORT(WdfRequestAllocateTimer)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTALLOCATETIMER) WdfVersion.Functions.pfnWdfRequestAllocateTimer)(DriverGlobals, Request);
@@ -3594,7 +3746,7 @@ VFWDFEXPORT(WdfRequestComplete)(
     WDFREQUEST Request,
     _In_
     NTSTATUS Status
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     PerfIoComplete(Request);
@@ -3613,7 +3765,7 @@ VFWDFEXPORT(WdfRequestCompleteWithInformation)(
     NTSTATUS Status,
     _In_
     ULONG_PTR Information
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     PerfIoComplete(Request);
@@ -3630,7 +3782,7 @@ VFWDFEXPORT(WdfRequestGetParameters)(
     WDFREQUEST Request,
     _Out_
     PWDF_REQUEST_PARAMETERS Parameters
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTGETPARAMETERS) WdfVersion.Functions.pfnWdfRequestGetParameters)(DriverGlobals, Request, Parameters);
@@ -3647,7 +3799,7 @@ VFWDFEXPORT(WdfRequestRetrieveInputMemory)(
     WDFREQUEST Request,
     _Out_
     WDFMEMORY* Memory
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTRETRIEVEINPUTMEMORY) WdfVersion.Functions.pfnWdfRequestRetrieveInputMemory)(DriverGlobals, Request, Memory);
@@ -3664,7 +3816,7 @@ VFWDFEXPORT(WdfRequestRetrieveOutputMemory)(
     WDFREQUEST Request,
     _Out_
     WDFMEMORY* Memory
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTRETRIEVEOUTPUTMEMORY) WdfVersion.Functions.pfnWdfRequestRetrieveOutputMemory)(DriverGlobals, Request, Memory);
@@ -3685,7 +3837,7 @@ VFWDFEXPORT(WdfRequestRetrieveInputBuffer)(
     PVOID* Buffer,
     _Out_opt_
     size_t* Length
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTRETRIEVEINPUTBUFFER) WdfVersion.Functions.pfnWdfRequestRetrieveInputBuffer)(DriverGlobals, Request, MinimumRequiredLength, Buffer, Length);
@@ -3706,7 +3858,7 @@ VFWDFEXPORT(WdfRequestRetrieveOutputBuffer)(
     PVOID* Buffer,
     _Out_opt_
     size_t* Length
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTRETRIEVEOUTPUTBUFFER) WdfVersion.Functions.pfnWdfRequestRetrieveOutputBuffer)(DriverGlobals, Request, MinimumRequiredSize, Buffer, Length);
@@ -3722,7 +3874,7 @@ VFWDFEXPORT(WdfRequestSetInformation)(
     WDFREQUEST Request,
     _In_
     ULONG_PTR Information
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTSETINFORMATION) WdfVersion.Functions.pfnWdfRequestSetInformation)(DriverGlobals, Request, Information);
@@ -3736,7 +3888,7 @@ VFWDFEXPORT(WdfRequestGetInformation)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETINFORMATION) WdfVersion.Functions.pfnWdfRequestGetInformation)(DriverGlobals, Request);
@@ -3750,7 +3902,7 @@ VFWDFEXPORT(WdfRequestGetFileObject)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETFILEOBJECT) WdfVersion.Functions.pfnWdfRequestGetFileObject)(DriverGlobals, Request);
@@ -3764,7 +3916,7 @@ VFWDFEXPORT(WdfRequestGetRequestorMode)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETREQUESTORMODE) WdfVersion.Functions.pfnWdfRequestGetRequestorMode)(DriverGlobals, Request);
@@ -3781,7 +3933,7 @@ VFWDFEXPORT(WdfRequestForwardToIoQueue)(
     WDFREQUEST Request,
     _In_
     WDFQUEUE DestinationQueue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTFORWARDTOIOQUEUE) WdfVersion.Functions.pfnWdfRequestForwardToIoQueue)(DriverGlobals, Request, DestinationQueue);
@@ -3795,7 +3947,7 @@ VFWDFEXPORT(WdfRequestGetIoQueue)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETIOQUEUE) WdfVersion.Functions.pfnWdfRequestGetIoQueue)(DriverGlobals, Request);
@@ -3810,7 +3962,7 @@ VFWDFEXPORT(WdfRequestRequeue)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTREQUEUE) WdfVersion.Functions.pfnWdfRequestRequeue)(DriverGlobals, Request);
@@ -3826,7 +3978,7 @@ VFWDFEXPORT(WdfRequestStopAcknowledge)(
     WDFREQUEST Request,
     _In_
     BOOLEAN Requeue
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTSTOPACKNOWLEDGE) WdfVersion.Functions.pfnWdfRequestStopAcknowledge)(DriverGlobals, Request, Requeue);
@@ -3847,7 +3999,7 @@ VFWDFEXPORT(WdfRequestImpersonate)(
     PFN_WDF_REQUEST_IMPERSONATE EvtRequestImpersonate,
     _In_opt_
     PVOID Context
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTIMPERSONATE) WdfVersion.Functions.pfnWdfRequestImpersonate)(DriverGlobals, Request, ImpersonationLevel, EvtRequestImpersonate, Context);
@@ -3861,7 +4013,7 @@ VFWDFEXPORT(WdfRequestIsFromUserModeDriver)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTISFROMUSERMODEDRIVER) WdfVersion.Functions.pfnWdfRequestIsFromUserModeDriver)(DriverGlobals, Request);
@@ -3877,7 +4029,7 @@ VFWDFEXPORT(WdfRequestSetUserModeDriverInitiatedIo)(
     WDFREQUEST Request,
     _In_
     BOOLEAN IsUserModeDriverInitiated
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTSETUSERMODEDRIVERINITIATEDIO) WdfVersion.Functions.pfnWdfRequestSetUserModeDriverInitiatedIo)(DriverGlobals, Request, IsUserModeDriverInitiated);
@@ -3891,7 +4043,7 @@ VFWDFEXPORT(WdfRequestGetUserModeDriverInitiatedIo)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETUSERMODEDRIVERINITIATEDIO) WdfVersion.Functions.pfnWdfRequestGetUserModeDriverInitiatedIo)(DriverGlobals, Request);
@@ -3907,7 +4059,7 @@ VFWDFEXPORT(WdfRequestSetActivityId)(
     WDFREQUEST Request,
     _In_
     LPGUID ActivityId
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFREQUESTSETACTIVITYID) WdfVersion.Functions.pfnWdfRequestSetActivityId)(DriverGlobals, Request, ActivityId);
@@ -3923,7 +4075,7 @@ VFWDFEXPORT(WdfRequestRetrieveActivityId)(
     WDFREQUEST Request,
     _Out_
     LPGUID ActivityId
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTRETRIEVEACTIVITYID) WdfVersion.Functions.pfnWdfRequestRetrieveActivityId)(DriverGlobals, Request, ActivityId);
@@ -3937,7 +4089,7 @@ VFWDFEXPORT(WdfRequestGetEffectiveIoType)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFREQUESTGETEFFECTIVEIOTYPE) WdfVersion.Functions.pfnWdfRequestGetEffectiveIoType)(DriverGlobals, Request);
@@ -3951,7 +4103,7 @@ VFWDFEXPORT(WdfCmResourceListGetCount)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFCMRESLIST List
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCMRESOURCELISTGETCOUNT) WdfVersion.Functions.pfnWdfCmResourceListGetCount)(DriverGlobals, List);
@@ -3967,7 +4119,7 @@ VFWDFEXPORT(WdfCmResourceListGetDescriptor)(
     WDFCMRESLIST List,
     _In_
     ULONG Index
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFCMRESOURCELISTGETDESCRIPTOR) WdfVersion.Functions.pfnWdfCmResourceListGetDescriptor)(DriverGlobals, List, Index);
@@ -3986,7 +4138,7 @@ VFWDFEXPORT(WdfStringCreate)(
     PWDF_OBJECT_ATTRIBUTES StringAttributes,
     _Out_
     WDFSTRING* String
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFSTRINGCREATE) WdfVersion.Functions.pfnWdfStringCreate)(DriverGlobals, UnicodeString, StringAttributes, String);
@@ -4002,7 +4154,7 @@ VFWDFEXPORT(WdfStringGetUnicodeString)(
     WDFSTRING String,
     _Out_
     PUNICODE_STRING UnicodeString
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFSTRINGGETUNICODESTRING) WdfVersion.Functions.pfnWdfStringGetUnicodeString)(DriverGlobals, String, UnicodeString);
@@ -4018,7 +4170,7 @@ VFWDFEXPORT(WdfObjectAcquireLock)(
     _Requires_lock_not_held_(_Curr_)
     _Acquires_lock_(_Curr_)
     WDFOBJECT Object
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFOBJECTACQUIRELOCK) WdfVersion.Functions.pfnWdfObjectAcquireLock)(DriverGlobals, Object);
@@ -4034,7 +4186,7 @@ VFWDFEXPORT(WdfObjectReleaseLock)(
     _Requires_lock_held_(_Curr_)
     _Releases_lock_(_Curr_)
     WDFOBJECT Object
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFOBJECTRELEASELOCK) WdfVersion.Functions.pfnWdfObjectReleaseLock)(DriverGlobals, Object);
@@ -4051,7 +4203,7 @@ VFWDFEXPORT(WdfWaitLockCreate)(
     PWDF_OBJECT_ATTRIBUTES LockAttributes,
     _Out_
     WDFWAITLOCK* Lock
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFWAITLOCKCREATE) WdfVersion.Functions.pfnWdfWaitLockCreate)(DriverGlobals, LockAttributes, Lock);
@@ -4073,7 +4225,7 @@ VFWDFEXPORT(WdfWaitLockAcquire)(
     WDFWAITLOCK Lock,
     _In_opt_
     PLONGLONG Timeout
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFWAITLOCKACQUIRE) WdfVersion.Functions.pfnWdfWaitLockAcquire)(DriverGlobals, Lock, Timeout);
@@ -4089,7 +4241,7 @@ VFWDFEXPORT(WdfWaitLockRelease)(
     _Requires_lock_held_(_Curr_)
     _Releases_lock_(_Curr_)
     WDFWAITLOCK Lock
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFWAITLOCKRELEASE) WdfVersion.Functions.pfnWdfWaitLockRelease)(DriverGlobals, Lock);
@@ -4106,7 +4258,7 @@ VFWDFEXPORT(WdfSpinLockCreate)(
     PWDF_OBJECT_ATTRIBUTES SpinLockAttributes,
     _Out_
     WDFSPINLOCK* SpinLock
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFSPINLOCKCREATE) WdfVersion.Functions.pfnWdfSpinLockCreate)(DriverGlobals, SpinLockAttributes, SpinLock);
@@ -4124,7 +4276,7 @@ VFWDFEXPORT(WdfSpinLockAcquire)(
     _Acquires_lock_(_Curr_)
     _IRQL_saves_
     WDFSPINLOCK SpinLock
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFSPINLOCKACQUIRE) WdfVersion.Functions.pfnWdfSpinLockAcquire)(DriverGlobals, SpinLock);
@@ -4142,7 +4294,7 @@ VFWDFEXPORT(WdfSpinLockRelease)(
     _Releases_lock_(_Curr_)
     _IRQL_restores_
     WDFSPINLOCK SpinLock
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFSPINLOCKRELEASE) WdfVersion.Functions.pfnWdfSpinLockRelease)(DriverGlobals, SpinLock);
@@ -4161,7 +4313,7 @@ VFWDFEXPORT(WdfTimerCreate)(
     PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_
     WDFTIMER* Timer
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFTIMERCREATE) WdfVersion.Functions.pfnWdfTimerCreate)(DriverGlobals, Config, Attributes, Timer);
@@ -4177,7 +4329,7 @@ VFWDFEXPORT(WdfTimerStart)(
     WDFTIMER Timer,
     _In_
     LONGLONG DueTime
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFTIMERSTART) WdfVersion.Functions.pfnWdfTimerStart)(DriverGlobals, Timer, DueTime);
@@ -4194,7 +4346,7 @@ VFWDFEXPORT(WdfTimerStop)(
     WDFTIMER Timer,
     _In_
     BOOLEAN Wait
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFTIMERSTOP) WdfVersion.Functions.pfnWdfTimerStop)(DriverGlobals, Timer, Wait);
@@ -4208,7 +4360,7 @@ VFWDFEXPORT(WdfTimerGetParentObject)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFTIMER Timer
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFTIMERGETPARENTOBJECT) WdfVersion.Functions.pfnWdfTimerGetParentObject)(DriverGlobals, Timer);
@@ -4227,7 +4379,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceCreate)(
     PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_
     WDFUSBDEVICE* UsbDevice
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICECREATE) WdfVersion.Functions.pfnWdfUsbTargetDeviceCreate)(DriverGlobals, Device, Attributes, UsbDevice);
@@ -4248,7 +4400,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceCreateWithParameters)(
     PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_
     WDFUSBDEVICE* UsbDevice
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICECREATEWITHPARAMETERS) WdfVersion.Functions.pfnWdfUsbTargetDeviceCreateWithParameters)(DriverGlobals, Device, Config, Attributes, UsbDevice);
@@ -4265,7 +4417,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceRetrieveInformation)(
     WDFUSBDEVICE UsbDevice,
     _Out_
     PWDF_USB_DEVICE_INFORMATION Information
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICERETRIEVEINFORMATION) WdfVersion.Functions.pfnWdfUsbTargetDeviceRetrieveInformation)(DriverGlobals, UsbDevice, Information);
@@ -4281,7 +4433,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceGetDeviceDescriptor)(
     WDFUSBDEVICE UsbDevice,
     _Out_
     PUSB_DEVICE_DESCRIPTOR UsbDeviceDescriptor
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFUSBTARGETDEVICEGETDEVICEDESCRIPTOR) WdfVersion.Functions.pfnWdfUsbTargetDeviceGetDeviceDescriptor)(DriverGlobals, UsbDevice, UsbDeviceDescriptor);
@@ -4300,7 +4452,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceRetrieveConfigDescriptor)(
     PVOID ConfigDescriptor,
     _Inout_
     PUSHORT ConfigDescriptorLength
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
 #pragma prefast(suppress: __WARNING_HIGH_PRIORITY_OVERFLOW_POSTCONDITION, "This is a verifier DDI hook routine and all it does is call original routine.")
@@ -4328,7 +4480,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceQueryString)(
     UCHAR StringIndex,
     _In_opt_
     USHORT LangID
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEQUERYSTRING) WdfVersion.Functions.pfnWdfUsbTargetDeviceQueryString)(DriverGlobals, UsbDevice, Request, RequestOptions, String, NumCharacters, StringIndex, LangID);
@@ -4353,7 +4505,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceAllocAndQueryString)(
     UCHAR StringIndex,
     _In_opt_
     USHORT LangID
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEALLOCANDQUERYSTRING) WdfVersion.Functions.pfnWdfUsbTargetDeviceAllocAndQueryString)(DriverGlobals, UsbDevice, StringMemoryAttributes, StringMemory, NumCharacters, StringIndex, LangID);
@@ -4378,7 +4530,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceFormatRequestForString)(
     UCHAR StringIndex,
     _In_opt_
     USHORT LangID
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORSTRING) WdfVersion.Functions.pfnWdfUsbTargetDeviceFormatRequestForString)(DriverGlobals, UsbDevice, Request, Memory, Offset, StringIndex, LangID);
@@ -4392,7 +4544,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceGetNumInterfaces)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBDEVICE UsbDevice
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEGETNUMINTERFACES) WdfVersion.Functions.pfnWdfUsbTargetDeviceGetNumInterfaces)(DriverGlobals, UsbDevice);
@@ -4411,7 +4563,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceSelectConfig)(
     PWDF_OBJECT_ATTRIBUTES PipeAttributes,
     _Inout_
     PWDF_USB_DEVICE_SELECT_CONFIG_PARAMS Params
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICESELECTCONFIG) WdfVersion.Functions.pfnWdfUsbTargetDeviceSelectConfig)(DriverGlobals, UsbDevice, PipeAttributes, Params);
@@ -4436,7 +4588,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceSendControlTransferSynchronously)(
     PWDF_MEMORY_DESCRIPTOR MemoryDescriptor,
     _Out_opt_
     PULONG BytesTransferred
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICESENDCONTROLTRANSFERSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfUsbTargetDeviceSendControlTransferSynchronously)(DriverGlobals, UsbDevice, Request, RequestOptions, SetupPacket, MemoryDescriptor, BytesTransferred);
@@ -4459,7 +4611,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceFormatRequestForControlTransfer)(
     WDFMEMORY TransferMemory,
     _In_opt_
     PWDFMEMORY_OFFSET TransferOffset
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEFORMATREQUESTFORCONTROLTRANSFER) WdfVersion.Functions.pfnWdfUsbTargetDeviceFormatRequestForControlTransfer)(DriverGlobals, UsbDevice, Request, SetupPacket, TransferMemory, TransferOffset);
@@ -4474,7 +4626,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceResetPortSynchronously)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBDEVICE UsbDevice
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICERESETPORTSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfUsbTargetDeviceResetPortSynchronously)(DriverGlobals, UsbDevice);
@@ -4500,7 +4652,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceQueryUsbCapability)(
     _Out_opt_
     _When_(ResultLength != NULL,_Deref_out_range_(<=,CapabilityBufferLength))
     PULONG ResultLength
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEQUERYUSBCAPABILITY) WdfVersion.Functions.pfnWdfUsbTargetDeviceQueryUsbCapability)(DriverGlobals, UsbDevice, CapabilityType, CapabilityBufferLength, CapabilityBuffer, ResultLength);
@@ -4516,7 +4668,7 @@ VFWDFEXPORT(WdfUsbTargetPipeGetInformation)(
     WDFUSBPIPE Pipe,
     _Out_
     PWDF_USB_PIPE_INFORMATION PipeInformation
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFUSBTARGETPIPEGETINFORMATION) WdfVersion.Functions.pfnWdfUsbTargetPipeGetInformation)(DriverGlobals, Pipe, PipeInformation);
@@ -4530,7 +4682,7 @@ VFWDFEXPORT(WdfUsbTargetPipeIsInEndpoint)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBPIPE Pipe
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEISINENDPOINT) WdfVersion.Functions.pfnWdfUsbTargetPipeIsInEndpoint)(DriverGlobals, Pipe);
@@ -4544,7 +4696,7 @@ VFWDFEXPORT(WdfUsbTargetPipeIsOutEndpoint)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBPIPE Pipe
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEISOUTENDPOINT) WdfVersion.Functions.pfnWdfUsbTargetPipeIsOutEndpoint)(DriverGlobals, Pipe);
@@ -4558,7 +4710,7 @@ VFWDFEXPORT(WdfUsbTargetPipeGetType)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBPIPE Pipe
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEGETTYPE) WdfVersion.Functions.pfnWdfUsbTargetPipeGetType)(DriverGlobals, Pipe);
@@ -4572,7 +4724,7 @@ VFWDFEXPORT(WdfUsbTargetPipeSetNoMaximumPacketSizeCheck)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBPIPE Pipe
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFUSBTARGETPIPESETNOMAXIMUMPACKETSIZECHECK) WdfVersion.Functions.pfnWdfUsbTargetPipeSetNoMaximumPacketSizeCheck)(DriverGlobals, Pipe);
@@ -4595,7 +4747,7 @@ VFWDFEXPORT(WdfUsbTargetPipeWriteSynchronously)(
     PWDF_MEMORY_DESCRIPTOR MemoryDescriptor,
     _Out_opt_
     PULONG BytesWritten
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEWRITESYNCHRONOUSLY) WdfVersion.Functions.pfnWdfUsbTargetPipeWriteSynchronously)(DriverGlobals, Pipe, Request, RequestOptions, MemoryDescriptor, BytesWritten);
@@ -4616,7 +4768,7 @@ VFWDFEXPORT(WdfUsbTargetPipeFormatRequestForWrite)(
     WDFMEMORY WriteMemory,
     _In_opt_
     PWDFMEMORY_OFFSET WriteOffset
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEFORMATREQUESTFORWRITE) WdfVersion.Functions.pfnWdfUsbTargetPipeFormatRequestForWrite)(DriverGlobals, Pipe, Request, WriteMemory, WriteOffset);
@@ -4639,7 +4791,7 @@ VFWDFEXPORT(WdfUsbTargetPipeReadSynchronously)(
     PWDF_MEMORY_DESCRIPTOR MemoryDescriptor,
     _Out_opt_
     PULONG BytesRead
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEREADSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfUsbTargetPipeReadSynchronously)(DriverGlobals, Pipe, Request, RequestOptions, MemoryDescriptor, BytesRead);
@@ -4660,7 +4812,7 @@ VFWDFEXPORT(WdfUsbTargetPipeFormatRequestForRead)(
     WDFMEMORY ReadMemory,
     _In_opt_
     PWDFMEMORY_OFFSET ReadOffset
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEFORMATREQUESTFORREAD) WdfVersion.Functions.pfnWdfUsbTargetPipeFormatRequestForRead)(DriverGlobals, Pipe, Request, ReadMemory, ReadOffset);
@@ -4677,7 +4829,7 @@ VFWDFEXPORT(WdfUsbTargetPipeConfigContinuousReader)(
     WDFUSBPIPE Pipe,
     _In_
     PWDF_USB_CONTINUOUS_READER_CONFIG Config
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPECONFIGCONTINUOUSREADER) WdfVersion.Functions.pfnWdfUsbTargetPipeConfigContinuousReader)(DriverGlobals, Pipe, Config);
@@ -4696,7 +4848,7 @@ VFWDFEXPORT(WdfUsbTargetPipeAbortSynchronously)(
     WDFREQUEST Request,
     _In_opt_
     PWDF_REQUEST_SEND_OPTIONS RequestOptions
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEABORTSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfUsbTargetPipeAbortSynchronously)(DriverGlobals, Pipe, Request, RequestOptions);
@@ -4713,7 +4865,7 @@ VFWDFEXPORT(WdfUsbTargetPipeFormatRequestForAbort)(
     WDFUSBPIPE Pipe,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEFORMATREQUESTFORABORT) WdfVersion.Functions.pfnWdfUsbTargetPipeFormatRequestForAbort)(DriverGlobals, Pipe, Request);
@@ -4732,7 +4884,7 @@ VFWDFEXPORT(WdfUsbTargetPipeResetSynchronously)(
     WDFREQUEST Request,
     _In_opt_
     PWDF_REQUEST_SEND_OPTIONS RequestOptions
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPERESETSYNCHRONOUSLY) WdfVersion.Functions.pfnWdfUsbTargetPipeResetSynchronously)(DriverGlobals, Pipe, Request, RequestOptions);
@@ -4749,7 +4901,7 @@ VFWDFEXPORT(WdfUsbTargetPipeFormatRequestForReset)(
     WDFUSBPIPE Pipe,
     _In_
     WDFREQUEST Request
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETPIPEFORMATREQUESTFORRESET) WdfVersion.Functions.pfnWdfUsbTargetPipeFormatRequestForReset)(DriverGlobals, Pipe, Request);
@@ -4763,7 +4915,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetInterfaceNumber)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBINTERFACE UsbInterface
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACEGETINTERFACENUMBER) WdfVersion.Functions.pfnWdfUsbInterfaceGetInterfaceNumber)(DriverGlobals, UsbInterface);
@@ -4779,7 +4931,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetNumEndpoints)(
     WDFUSBINTERFACE UsbInterface,
     _In_
     UCHAR SettingIndex
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACEGETNUMENDPOINTS) WdfVersion.Functions.pfnWdfUsbInterfaceGetNumEndpoints)(DriverGlobals, UsbInterface, SettingIndex);
@@ -4797,7 +4949,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetDescriptor)(
     UCHAR SettingIndex,
     _Out_
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFUSBINTERFACEGETDESCRIPTOR) WdfVersion.Functions.pfnWdfUsbInterfaceGetDescriptor)(DriverGlobals, UsbInterface, SettingIndex, InterfaceDescriptor);
@@ -4811,7 +4963,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetNumSettings)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBINTERFACE UsbInterface
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACEGETNUMSETTINGS) WdfVersion.Functions.pfnWdfUsbInterfaceGetNumSettings)(DriverGlobals, UsbInterface);
@@ -4830,7 +4982,7 @@ VFWDFEXPORT(WdfUsbInterfaceSelectSetting)(
     PWDF_OBJECT_ATTRIBUTES PipesAttributes,
     _In_
     PWDF_USB_INTERFACE_SELECT_SETTING_PARAMS Params
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACESELECTSETTING) WdfVersion.Functions.pfnWdfUsbInterfaceSelectSetting)(DriverGlobals, UsbInterface, PipesAttributes, Params);
@@ -4850,7 +5002,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetEndpointInformation)(
     UCHAR EndpointIndex,
     _Out_
     PWDF_USB_PIPE_INFORMATION EndpointInfo
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFUSBINTERFACEGETENDPOINTINFORMATION) WdfVersion.Functions.pfnWdfUsbInterfaceGetEndpointInformation)(DriverGlobals, UsbInterface, SettingIndex, EndpointIndex, EndpointInfo);
@@ -4866,7 +5018,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceGetInterface)(
     WDFUSBDEVICE UsbDevice,
     _In_
     UCHAR InterfaceIndex
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBTARGETDEVICEGETINTERFACE) WdfVersion.Functions.pfnWdfUsbTargetDeviceGetInterface)(DriverGlobals, UsbDevice, InterfaceIndex);
@@ -4880,7 +5032,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBINTERFACE Interface
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACEGETCONFIGUREDSETTINGINDEX) WdfVersion.Functions.pfnWdfUsbInterfaceGetConfiguredSettingIndex)(DriverGlobals, Interface);
@@ -4894,7 +5046,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBINTERFACE UsbInterface
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACEGETNUMCONFIGUREDPIPES) WdfVersion.Functions.pfnWdfUsbInterfaceGetNumConfiguredPipes)(DriverGlobals, UsbInterface);
@@ -4912,7 +5064,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetConfiguredPipe)(
     UCHAR PipeIndex,
     _Out_opt_
     PWDF_USB_PIPE_INFORMATION PipeInfo
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFUSBINTERFACEGETCONFIGUREDPIPE) WdfVersion.Functions.pfnWdfUsbInterfaceGetConfiguredPipe)(DriverGlobals, UsbInterface, PipeIndex, PipeInfo);
@@ -4923,7 +5075,7 @@ VOID
 VFWDFEXPORT(WdfVerifierDbgBreakPoint)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFVERIFIERDBGBREAKPOINT) WdfVersion.Functions.pfnWdfVerifierDbgBreakPoint)(DriverGlobals);
@@ -4944,7 +5096,7 @@ VFWDFEXPORT(WdfVerifierKeBugCheck)(
     ULONG_PTR BugCheckParameter3,
     _In_
     ULONG_PTR BugCheckParameter4
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFVERIFIERKEBUGCHECK) WdfVersion.Functions.pfnWdfVerifierKeBugCheck)(DriverGlobals, BugCheckCode, BugCheckParameter1, BugCheckParameter2, BugCheckParameter3, BugCheckParameter4);
@@ -4955,7 +5107,7 @@ PVOID
 VFWDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFGETTRIAGEINFO) WdfVersion.Functions.pfnWdfGetTriageInfo)(DriverGlobals);
@@ -4974,7 +5126,7 @@ VFWDFEXPORT(WdfWorkItemCreate)(
     PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_
     WDFWORKITEM* WorkItem
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFWORKITEMCREATE) WdfVersion.Functions.pfnWdfWorkItemCreate)(DriverGlobals, Config, Attributes, WorkItem);
@@ -4988,7 +5140,7 @@ VFWDFEXPORT(WdfWorkItemEnqueue)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFWORKITEM WorkItem
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFWORKITEMENQUEUE) WdfVersion.Functions.pfnWdfWorkItemEnqueue)(DriverGlobals, WorkItem);
@@ -5002,7 +5154,7 @@ VFWDFEXPORT(WdfWorkItemGetParentObject)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFWORKITEM WorkItem
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     return ((PFN_WDFWORKITEMGETPARENTOBJECT) WdfVersion.Functions.pfnWdfWorkItemGetParentObject)(DriverGlobals, WorkItem);
@@ -5016,7 +5168,7 @@ VFWDFEXPORT(WdfWorkItemFlush)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFWORKITEM WorkItem
-    )    
+    )
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFWORKITEMFLUSH) WdfVersion.Functions.pfnWdfWorkItemFlush)(DriverGlobals, WorkItem);

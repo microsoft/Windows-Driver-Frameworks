@@ -38,8 +38,8 @@ extern "C" {
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 //
-// Undef METHOD_FROM_CTL_CODE so that it is prevented from being used 
-// inadvertently in mode-agnostic code. Irp->GetParameterIoctlCodeBufferMethod 
+// Undef METHOD_FROM_CTL_CODE so that it is prevented from being used
+// inadvertently in mode-agnostic code. Irp->GetParameterIoctlCodeBufferMethod
 // should be used instead.
 //
 #ifdef METHOD_FROM_CTL_CODE
@@ -95,6 +95,7 @@ extern const WDFFUNC *WdfFunctions;
 #include "wdfiotarget.h"
 #include "wdfcontrol.h"
 #include "wdfcx.h"
+#include "wdfcxbase.h"
 #include "wdfio.h"
 #include "wdfqueryinterface.h"
 #include "wdfworkitem.h"
@@ -113,6 +114,17 @@ extern const WDFFUNC *WdfFunctions;
 #include "wdfhid.h"
 #endif
 
+//
+// Companion headers
+//
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+#include "wdfcompanion.h"
+#endif
+
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+#include "wdfcompaniontarget.h"
+#endif
+
 #pragma warning(disable:4200)  // suppress nameless struct/union warning
 #pragma warning(disable:4201)  // suppress nameless struct/union warning
 #pragma warning(disable:4214)  // suppress bit field types other than int warning
@@ -129,10 +141,10 @@ WDF_EXTERN_C_END
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 #define KMDF_ONLY_CODE_PATH_ASSERT()  FX_VERIFY(INTERNAL, TRAPMSG("Not implemented"));
-#define UMDF_ONLY_CODE_PATH_ASSERT()  
+#define UMDF_ONLY_CODE_PATH_ASSERT()
 #else
 #define KMDF_ONLY_CODE_PATH_ASSERT()
-#define UMDF_ONLY_CODE_PATH_ASSERT()  ASSERTMSG("Not implemented for KMDF", FALSE);  
+#define UMDF_ONLY_CODE_PATH_ASSERT()  ASSERTMSG("Not implemented for KMDF", FALSE);
 #endif
 
 //
@@ -215,6 +227,9 @@ typedef enum _TRACE_INFORMATION_CLASS {
 #include "FxPool.h"
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+// Internal companion Library object to interact with non-PnP WudfRd
+#include "WudfRdNonPnP.hpp"
+#include "FxCompanionLibrary.hpp"
 #include "FxGlobalsKm.h"
 #include "FxPerfTraceKm.hpp"
 #include "DriverFrameworks-KernelMode-KmEvents.h"
@@ -361,6 +376,17 @@ typedef enum _TRACE_INFORMATION_CLASS {
 #include "FxIoTarget.hpp"
 #include "FxIoTargetRemote.hpp"
 #include "FxIoTargetSelf.hpp"
+
+// Companion target for interaction with device companions
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+#include "FxCompanionTarget.hpp"
+#endif
+
+// Companion object representing device companion
+#if FX_CORE_MODE==FX_CORE_USER_MODE
+#include "FxCompanion.hpp"
+#include "FxTaskQueue.hpp"
+#endif
 
 #include "FxUsbDevice.hpp"
 #include "FxUsbInterface.hpp"

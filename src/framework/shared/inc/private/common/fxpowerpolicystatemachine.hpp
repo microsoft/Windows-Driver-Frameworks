@@ -77,12 +77,12 @@ enum FxPowerPolicyEvent {
     // should not be in the queue, if a similar event is already enqueued.
     //
     PowerPolSingularEventMask           = PwrPolS0IdlePolicyChanged |
-    // 
-    // A device could have multiple wake interrupts that could each fire 
+    //
+    // A device could have multiple wake interrupts that could each fire
     // this event.
     //
-                                          PwrPolWakeInterruptFired, 
-                                                                    
+                                          PwrPolWakeInterruptFired,
+
 
     PwrPolNull                          = 0xFFFFFFFF,
 };
@@ -307,7 +307,7 @@ class IdleTimeoutManagement {
 
 private:
     //
-    // This member is used to control whether or not the idle timeout is 
+    // This member is used to control whether or not the idle timeout is
     // determined by the power manager when running on Windows 8 and above.
     // The value of this member is some combination of the flags defined below.
     //
@@ -319,16 +319,16 @@ private:
     //    IdleTimeoutStatusFrozen - This flag implies that the decision on
     //        whether the power manager determines the idle timeout is "frozen"
     //        and can no longer be changed. The decision is frozen during start
-    //        IRP completion processing, just before WDF registers with the 
+    //        IRP completion processing, just before WDF registers with the
     //        power manager.
     //
     //    IdleTimeoutSystemManaged - This flag implies that the power manager
-    //        determines the idle timeout on Windows 8 and above. If this flag 
-    //        is not set, the idle timeout specified by the client driver is 
+    //        determines the idle timeout on Windows 8 and above. If this flag
+    //        is not set, the idle timeout specified by the client driver is
     //        used.
     //
-    //    IdleTimeoutPoxSettingsSpecified - This flag implies that the client 
-    //        driver has already specified the settings that need to be used 
+    //    IdleTimeoutPoxSettingsSpecified - This flag implies that the client
+    //        driver has already specified the settings that need to be used
     //        when registering with the power framework. This flag is used to
     //        track that the settings are not specified more than once.
     //
@@ -353,13 +353,13 @@ private:
         IdleTimeoutStatusFlagAlreadySet,
 
         //
-        // It is too late to set the flag. The flags have already been frozen. 
+        // It is too late to set the flag. The flags have already been frozen.
         // Flags are frozen the first time a device is started.
         //
         IdleTimeoutStatusFlagsAlreadyFrozen,
 
         //
-        // Flags are being set by multiple threads in parallel. This is not 
+        // Flags are being set by multiple threads in parallel. This is not
         // supported.
         //
         IdleTimeoutStatusFlagsUnexpected
@@ -377,46 +377,46 @@ private:
         __in IdleTimeoutStatusFlag Flag
         );
 
-    CfxDevice * 
+    CfxDevice *
     GetDevice(
         VOID
         );
 
 public:
     IdleTimeoutManagement(
-        VOID    
+        VOID
         ) : m_IdleTimeoutStatus(0),
             m_PoxSettings(NULL)
     {
     }
-    
+
     ~IdleTimeoutManagement(
-        VOID    
+        VOID
         )
     {
         BYTE * buffer = NULL;
         ULONG poxSettingsOffset;
 
         if (NULL != m_PoxSettings) {
-        
+
             buffer = (BYTE*) m_PoxSettings;
 
             //
-            // In the function FxPkgPnp::AssignPowerFrameworkSettings, we had 
-            // allocated a buffer which we need to free now. Note that 
+            // In the function FxPkgPnp::AssignPowerFrameworkSettings, we had
+            // allocated a buffer which we need to free now. Note that
             // m_PoxSettings does not necessarily point to the beginning of the
-            // buffer. It points to the POX_SETTINGS structure in the buffer, 
-            // which may or may not be in the beginning. If it is not in the 
+            // buffer. It points to the POX_SETTINGS structure in the buffer,
+            // which may or may not be in the beginning. If it is not in the
             // beginning, figure out where the beginning of the buffer is.
             //
             if (m_PoxSettings->Component != NULL) {
                 //
-                // The computation below won't overflow because we already 
-                // performed this computation successfully using safeint 
+                // The computation below won't overflow because we already
+                // performed this computation successfully using safeint
                 // functions in FxPkgPnp::AssignPowerFrameworkSettings.
                 //
-                poxSettingsOffset = 
-                        (sizeof(*(m_PoxSettings->Component->IdleStates)) * 
+                poxSettingsOffset =
+                        (sizeof(*(m_PoxSettings->Component->IdleStates)) *
                                 (m_PoxSettings->Component->IdleStateCount)) +
                         (sizeof(*(m_PoxSettings->Component)));
             }
@@ -435,7 +435,7 @@ public:
             MxMemory::MxFreePool(buffer);
         }
     }
-    
+
     static
     BOOLEAN
     _SystemManagedIdleTimeoutAvailable(
@@ -486,6 +486,8 @@ struct IdlePolicySettings : PolicySettings {
         UsbSSCapable = FALSE;
         PowerUpIdleDeviceOnSystemWake = FALSE;
         UsbSSCapabilityKnown = FALSE;
+        D3ColdCapabilityKnown = FALSE;
+        D3ColdSupported = FALSE;
     }
 
     //
@@ -496,9 +498,9 @@ struct IdlePolicySettings : PolicySettings {
     //
     // This member is meaningful only if the WakeFromS0Capable member (above) is
     // TRUE. The WakeFromS0Capable member indicates whether or not wake-from-S0
-    // is currently enabled. If wake-from-S0 is currently enabled, the 
+    // is currently enabled. If wake-from-S0 is currently enabled, the
     // UsbSSCapable member indicates whether the wake-from-S0 support is generic
-    // or USB SS specific. If wake-from-S0 is not enabled, the UsbSSCapable 
+    // or USB SS specific. If wake-from-S0 is not enabled, the UsbSSCapable
     // member is ignored.
     //
     BOOLEAN UsbSSCapable;
@@ -507,7 +509,7 @@ struct IdlePolicySettings : PolicySettings {
     // TRUE if we know whether the device supports generic wake or USB SS wake.
     // This value is initialized to FALSE and remains FALSE until the first time
     // that the driver specifies S0-idle settings with an idle capability value
-    // of IdleCanWakeFromS0 or IdleUsbSelectiveSuspend. When the driver 
+    // of IdleCanWakeFromS0 or IdleUsbSelectiveSuspend. When the driver
     // specifies one of these idle capabilities, this value is set to TRUE and
     // remains TRUE for the lifetime of the device.
     //
@@ -520,7 +522,20 @@ struct IdlePolicySettings : PolicySettings {
     BOOLEAN PowerUpIdleDeviceOnSystemWake;
 
     //
-    // Member to manage interactions with the power manager for S0-idle support 
+    // FALSE if WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS.ExcludeD3Cold = WdfUseDefault.
+    // TRUE otherwise
+    //
+    BOOLEAN D3ColdCapabilityKnown;
+
+    //
+    // This member is meaningful only if D3ColdCapabilityKnown = TRUE.
+    // TRUE if WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS.ExcludeD3Cold = WdfFalse.
+    // FALSE if ExcludeD3Cold = WdfTrue
+    //
+    BOOLEAN D3ColdSupported;
+
+    //
+    // Member to manage interactions with the power manager for S0-idle support
     // on Win8 and above
     //
     IdleTimeoutManagement m_TimeoutMgmt;
@@ -653,8 +668,8 @@ public:
     BYTE m_IdealDxStateForSx;
 
     //
-    // Track power requests to assert if someone other than this driver sent it 
-    // and to determine if this driver has received the requested irp (to catch 
+    // Track power requests to assert if someone other than this driver sent it
+    // and to determine if this driver has received the requested irp (to catch
     // someone above completing irp w/o sending to this driver)
     //
     BOOLEAN m_RequestedPowerUpIrp;
@@ -665,7 +680,7 @@ public:
     // Tracks wake event being dropped
     //
     BOOLEAN m_WakeCompletionEventDropped;
-    
+
     BOOLEAN m_PowerFailed;
 
     //

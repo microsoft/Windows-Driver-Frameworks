@@ -153,17 +153,14 @@ WDF_LIBRARY_REGISTER_CLIENT(
     clientInfo = (PCLIENT_INFO)*Context;
     *Context = NULL;
 
-    ASSERT(Info->Version.Major == WdfLibraryInfo.Version.Major);
+    status = WdfBindClientHelper(Info,
+                                WdfLibraryInfo.Version.Major,
+                                WdfLibraryInfo.Version.Minor);
 
-    //
-    // NOTE: If the currently loaded  library < drivers minor version fail the load
-    // instead of binding to a lower minor version. The reason for that if there
-    // is a newer API or new contract change made the driver shouldn't be using older
-    // API than it was compiled with.
-    //
+    if (!NT_SUCCESS(status)) {
 
-    if (Info->Version.Minor > WdfLibraryInfo.Version.Minor) {
-        status = StringCchPrintfW(insertString,
+        NTSTATUS status2;
+        status2 = StringCchPrintfW(insertString,
                                      RTL_NUMBER_OF(insertString),
                                      L"Driver Version: %d.%d Umdf Lib. Version: %d.%d",
                                      Info->Version.Major,
@@ -171,7 +168,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
                                      WdfLibraryInfo.Version.Major,
                                      WdfLibraryInfo.Version.Minor);
         if (!NT_SUCCESS(status)) {
-            __Print(("ERROR: RtlStringCchPrintfW failed with Status 0x%x\n", status));
+            __Print(("ERROR: RtlStringCchPrintfW failed with Status 0x%x\n", status2));
             return status;
         }
         rawData[0] = Info->Version.Major;
@@ -189,11 +186,8 @@ WDF_LIBRARY_REGISTER_CLIENT(
 
 
 
-        //
-        // this looks like the best status to return
-        //
-        return STATUS_OBJECT_TYPE_MISMATCH;
 
+        return status;
     }
 
     status = FxLibraryCommonRegisterClient(Info, WdfDriverGlobals, clientInfo);
@@ -210,7 +204,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
         pFxDriverGlobals = GetFxDriverGlobals(*WdfDriverGlobals);
         pFxDriverGlobals->WdfBindInfo = Info;
     }
-       
+
     return status;
 }
 

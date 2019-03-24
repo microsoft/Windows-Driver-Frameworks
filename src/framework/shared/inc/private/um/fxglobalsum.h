@@ -31,6 +31,7 @@ extern "C" {
 #include "FxGlobals.h"
 
 extern IUMDFPlatform *g_IUMDFPlatform;
+extern IUMDFPlatformModule *g_IUMDFPlatformModule;
 extern IWudfHost2 *g_IWudfHost2;
 
 _Must_inspect_result_
@@ -149,7 +150,7 @@ GetActivationList(
     VOID
     )
 {
-    return g_IUMDFPlatform->GetActivationListHead();
+    return g_IUMDFPlatformModule->GetActivationListHead();
 }
 
 //

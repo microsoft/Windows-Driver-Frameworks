@@ -101,9 +101,18 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
 
     PdoKey = NULL;
 
+    ConfigRegistryPath = NULL;
+
     DevInstanceID = NULL;
 
     DriverID = 0;
+
+    //
+    // Companion related member initilaization
+    //
+    Companion = NULL;
+
+    RtlZeroMemory(&CompanionInit.CompanionEventCallbacks, sizeof(CompanionInit.CompanionEventCallbacks));
 #endif
 }
 

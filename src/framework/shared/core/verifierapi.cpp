@@ -25,6 +25,10 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
+extern "C" {
+#include "VerifierAPI.tmh"
+}
+
 //
 // extern "C" all APIs
 //
@@ -70,6 +74,11 @@ Return Value:
 
     if (pFxDriverGlobals->FxVerifierDbgBreakOnError) {
         DbgBreakPoint();
+    }
+    else {
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGDRIVER,
+            "DbgBreakOnError registry value wasn't set, ignoring WdfVerifierDbgBreakPoint");
     }
 }
 

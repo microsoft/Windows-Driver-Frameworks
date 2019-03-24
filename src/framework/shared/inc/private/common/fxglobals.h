@@ -123,25 +123,25 @@ struct FxObjectDebugLeakDetection{
     // Verifier check to identify object leaks.
     //
     BOOLEAN         Enabled;
-    
+
     //
-    // This value represents the threshold for generating a break. This value is 
+    // This value represents the threshold for generating a break. This value is
     // read from the registry.
-    // 
+    //
     LONG             Limit;
 
     //
     // LimitScaled represents the total object count
-    // allowed and scaled based on the number of devices allocated by the driver. 
+    // allowed and scaled based on the number of devices allocated by the driver.
     //
     volatile LONG    LimitScaled;
 
-    // 
-    // ObjectCnt represents the total count off objects 
+    //
+    // ObjectCnt represents the total count off objects
     //
     volatile LONG    ObjectCnt;
 
-    // 
+    //
     // DeviceCnt represents the total count devices under the driver
     //
     volatile LONG    DeviceCnt;
@@ -370,6 +370,15 @@ public:
         VOID
         );
 
+    _Must_inspect_result_
+    BOOLEAN
+    IsCompanion(
+        VOID
+        )
+    {
+        return IsDriverCompanion;
+    }
+
 public:
     //
     // Link list of driver FxDriverGlobals on this WDF Version.
@@ -503,7 +512,7 @@ public:
     // Verifier check to identify object leaks.
     //
     FxObjectDebugLeakDetection *FxVerifyLeakDetection;
-    
+
     //
     // Tag tracking has been enabled
     //
@@ -591,6 +600,11 @@ public:
 #endif
 
     PFX_TELEMETRY_CONTEXT TelemetryContext;
+
+    //
+    // Indicates if this is driver companion
+    //
+    BOOLEAN IsDriverCompanion;
 
     //
     // The public version of WDF_DRIVER_GLOBALS
@@ -754,6 +768,8 @@ enum FxMachineSleepStates {
     FxMachineSleepStatesMax,
 };
 
+class FxCompanionLibrary;
+
 //
 // Private Globals for the entire DLL
 
@@ -818,6 +834,8 @@ struct FxLibraryGlobalsType {
     PFN_IO_REPORT_INTERRUPT_INACTIVE IoReportInterruptInactive;
 
     PFN_VF_CHECK_NX_POOL_TYPE VfCheckNxPoolType;
+
+    PFN_VF_IS_RULE_CLASS_ENABLED VfIsRuleClassEnabled;
 
 #endif
 
@@ -914,6 +932,10 @@ struct FxLibraryGlobalsType {
     //
     WMI_WDF_NOTIFY_ROUTINES DummyPerfTraceRoutines;
 
+    //
+    // Companion library used to manage device companions
+    //
+    FxCompanionLibrary* CompanionLibrary;
 #endif
 
     //
@@ -1115,12 +1137,12 @@ FxRandom(
 
 Routine Description:
 
-    Simple threadsafe random number generator to use at DISPATCH_LEVEL 
+    Simple threadsafe random number generator to use at DISPATCH_LEVEL
     (in kernel mode) because the system provided function RtlRandomEx
     can be called at only passive-level.
-    
+
     This function requires the user to provide a variable used to seed
-    the generator, and it must be valid and initialized to some number. 
+    the generator, and it must be valid and initialized to some number.
 
 Return Value:
 
@@ -1162,4 +1184,3 @@ IsOsVersionGreaterThanOrEqualTo(
 }
 #endif
 #endif // _FXGLOBALS_H
-

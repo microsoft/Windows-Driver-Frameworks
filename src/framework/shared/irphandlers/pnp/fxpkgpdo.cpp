@@ -1594,6 +1594,7 @@ FxPkgPdo::RegisterCallbacks(
 }
 
 _Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
 FxPkgPdo::AskParentToRemoveAndReenumerate(
     VOID
@@ -1679,6 +1680,8 @@ Return Value:
 
   --*/
 {
+    Mx::MxAssert(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
+
     ((FxPkgPdo*) Context)->AskParentToRemoveAndReenumerate();
 }
 

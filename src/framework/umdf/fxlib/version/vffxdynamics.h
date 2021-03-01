@@ -720,7 +720,7 @@ VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     UCHAR MajorFunction,
     _In_
-    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDispatch,
     _In_opt_
     WDFCONTEXT DriverContext
     );

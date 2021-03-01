@@ -311,6 +311,7 @@ extern WDFVERSION WdfVersion;
     VFWDFEXPORT(WdfPdoAddEjectionRelationsPhysicalDevice), \
     VFWDFEXPORT(WdfPdoRemoveEjectionRelationsPhysicalDevice), \
     VFWDFEXPORT(WdfPdoClearEjectionRelationsDevices), \
+    VFWDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent), \
     VFWDFEXPORT(WdfDeviceAddQueryInterface), \
     VFWDFEXPORT(WdfRegistryOpenKey), \
     VFWDFEXPORT(WdfRegistryCreateKey), \
@@ -2404,13 +2405,13 @@ VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     UCHAR MajorFunction,
     _In_
-    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDispatch,
     _In_opt_
     WDFCONTEXT DriverContext
     )
 {
     PAGED_CODE_LOCKED();
-    return ((PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK) WdfVersion.Functions.pfnWdfDeviceConfigureWdmIrpDispatchCallback)(DriverGlobals, Device, Driver, MajorFunction, EvtDeviceWdmIrpDisptach, DriverContext);
+    return ((PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK) WdfVersion.Functions.pfnWdfDeviceConfigureWdmIrpDispatchCallback)(DriverGlobals, Device, Driver, MajorFunction, EvtDeviceWdmIrpDispatch, DriverContext);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -5585,6 +5586,20 @@ VFWDFEXPORT(WdfPdoClearEjectionRelationsDevices)(
 {
     PAGED_CODE_LOCKED();
     ((PFN_WDFPDOCLEAREJECTIONRELATIONSDEVICES) WdfVersion.Functions.pfnWdfPdoClearEjectionRelationsDevices)(DriverGlobals, Device);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+VOID
+VFWDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit
+    )
+{
+    PAGED_CODE_LOCKED();
+    ((PFN_WDFPDOINITREMOVEPOWERDEPENDENCYONPARENT) WdfVersion.Functions.pfnWdfPdoInitRemovePowerDependencyOnParent)(DriverGlobals, DeviceInit);
 }
 
 _Must_inspect_result_

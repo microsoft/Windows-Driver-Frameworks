@@ -140,9 +140,8 @@ Returns:
     m_DefaultTarget = NULL;
     m_SelfTarget = NULL;
 
-    m_BusEnumRetries = 0;
-
     //
+    // Override the setting in FxPkgPnp.
     // Since we will always have a valid PDO when we are the FDO, we can do
     // any device interface related activity at any time
     //
@@ -150,9 +149,7 @@ Returns:
 
     m_Filter = FALSE;
 
-    RtlZeroMemory(&m_BusInformation, sizeof(m_BusInformation));
- 
-    RtlZeroMemory(&m_SurpriseRemoveAndReenumerateSelfInterface, 
+    RtlZeroMemory(&m_SurpriseRemoveAndReenumerateSelfInterface,
         sizeof(m_SurpriseRemoveAndReenumerateSelfInterface));
 }
 
@@ -197,18 +194,18 @@ FxPkgFdo::_Create(
     __in CfxDevice * Device,
     __deref_out FxPkgFdo ** PkgFdo
     )
-{   
+{
     NTSTATUS status;
     FxPkgFdo * fxPkgFdo;
     FxEventQueue *eventQueue;
-    
+
     fxPkgFdo = new(DriverGlobals) FxPkgFdo(DriverGlobals, Device);
 
     if (NULL == fxPkgFdo) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(DriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
                             "Memory allocation failed: %!STATUS!", status);
-        return status;        
+        return status;
     }
 
     //
@@ -239,7 +236,7 @@ exit:
     if (!NT_SUCCESS(status)) {
         fxPkgFdo->DeleteFromFailedCreate();
     }
-    
+
     return status;
 }
 
@@ -331,7 +328,7 @@ Return Value:
 
     Irp->CopyCurrentIrpStackLocationToNext();
     status = Irp->CallDriver(
-        ((FxPkgFdo*)This)->m_Device->GetAttachedDevice()); 
+        ((FxPkgFdo*)This)->m_Device->GetAttachedDevice());
 
     Mx::MxReleaseRemoveLock(device->GetRemoveLock(),
                             pIrp
@@ -539,7 +536,7 @@ Returns:
     // Remlock is released in _PnpPassDown and  CompletePnpRequest. If this
     // irp is racing with remove on another thread, it's possible for the device
     // to get deleted right after the lock is released and before anything
-    // after this point is executed. So make sure to not touch any memory in 
+    // after this point is executed. So make sure to not touch any memory in
     // the return path.
     //
 
@@ -641,7 +638,7 @@ FxPkgFdo::HandleQueryCapabilitiesCompletion(
 
         //
         // Re-add SOME capibilties that the bus driver may have accidentally
-        // stomped.  
+        // stomped.
 
 
 
@@ -779,7 +776,7 @@ FxPkgFdo::HandleQueryPnpDeviceStateCompletion(
     DoTraceLevelMessage(
         GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p returning PNP_DEVICE_STATE 0x%d IRP 0x%p",
-        m_Device->GetHandle(), 
+        m_Device->GetHandle(),
         m_Device->GetDeviceObject(),
         pnpDeviceState,
         Irp->GetIrp());
@@ -858,7 +855,7 @@ Returns:
     }
 
     status = FxChildList::_CreateAndInit(&m_DefaultDeviceList,
-                                         pFxDriverGlobals, 
+                                         pFxDriverGlobals,
                                          ListAttributes,
                                          totalDescriptionSize,
                                          m_Device,
@@ -1025,7 +1022,7 @@ Return Value:
 
                     //
                     // Completion routine will free the resource list
-                    // allocations.  
+                    // allocations.
                     //
                     setFilteredCompletion = TRUE;
                 }
@@ -1048,21 +1045,21 @@ Return Value:
         // The completion of the start irp will move the state machine into a new
         // state.
         //
-        // After calling IoSetCompletionRoutineEx the driver must call 
+        // After calling IoSetCompletionRoutineEx the driver must call
         // IoCallDriver, otherwise a memory leak would occur. So call this API
         // as close to IoCallDriver as possible to avoid failure paths.
-        // 
+        //
         if (setFilteredCompletion) {
             ASSERT(pContext != NULL);
             irp.SetCompletionRoutineEx(
                 m_Device->GetDeviceObject(),
-                _PnpFilteredStartDeviceCompletionRoutine, 
+                _PnpFilteredStartDeviceCompletionRoutine,
                 pContext);
         }
         else {
             irp.SetCompletionRoutineEx(
                 m_Device->GetDeviceObject(),
-                _PnpStartDeviceCompletionRoutine, 
+                _PnpStartDeviceCompletionRoutine,
                 this);
         }
 
@@ -1326,7 +1323,7 @@ FxPkgFdo::QueryForReenumerationInterface(
     pInterface->Version = 1;
 
     //
-    // Since there are some stacks that are not PnP re-entrant 
+    // Since there are some stacks that are not PnP re-entrant
 
     // we specify that the QI goes only to our attached device and
     // not to the top of the stack as a normal QI irp would.  For the
@@ -1346,7 +1343,7 @@ FxPkgFdo::QueryForReenumerationInterface(
 
     //
     // Failure to get this interface is not fatal.
-    // Note that an implicit reference has been taken on the interface. We 
+    // Note that an implicit reference has been taken on the interface. We
     // must release the reference when we are done with the interface.
     //
     status = STATUS_SUCCESS;
@@ -1371,7 +1368,7 @@ FxPkgFdo::ReleaseReenumerationInterface(
 
 Routine Description:
 
-    Releases the implicit reference taken on REENUMERATE_SELF interface. 
+    Releases the implicit reference taken on REENUMERATE_SELF interface.
     NOOP for PDO.
 
 Arguments:
@@ -1391,7 +1388,7 @@ Return Value:
 
     pInterface = &m_SurpriseRemoveAndReenumerateSelfInterface;
 
-    pInterface->SurpriseRemoveAndReenumerateSelf = NULL; 
+    pInterface->SurpriseRemoveAndReenumerateSelf = NULL;
 
     if (pInterface->InterfaceDereference != NULL) {
         pInterface->InterfaceDereference(pInterface->Context);
@@ -1555,11 +1552,11 @@ FxPkgFdo::PostCreateDeviceInitialize(
         if (!NT_SUCCESS(status)) {
             return status;
         }
-    } 
+    }
 
 #endif
 
-    status = m_Device->AllocateTarget(&m_DefaultTarget, 
+    status = m_Device->AllocateTarget(&m_DefaultTarget,
                                       FALSE /*SelfTarget=FALSE*/);
     if (NT_SUCCESS(status)) {
         //
@@ -1569,7 +1566,7 @@ FxPkgFdo::PostCreateDeviceInitialize(
     }
 
     if (m_Device->m_SelfIoTargetNeeded) {
-        status = m_Device->AllocateTarget((FxIoTarget**)&m_SelfTarget, 
+        status = m_Device->AllocateTarget((FxIoTarget**)&m_SelfTarget,
                                           TRUE /*SelfTarget*/);
         if (NT_SUCCESS(status)) {
             //

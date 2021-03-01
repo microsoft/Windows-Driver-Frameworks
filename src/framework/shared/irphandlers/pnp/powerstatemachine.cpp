@@ -1690,14 +1690,14 @@ Return Value:
 --*/
 {
     NTSTATUS status;
-    BOOLEAN parentOn;
+    BOOLEAN waitForParentOn;
 
-    status = This->PowerCheckParentOverload(&parentOn);
+    status = This->PowerCheckParentOverload(&waitForParentOn);
 
     if (!NT_SUCCESS(status)) {
         return WdfDevStatePowerUpFailed;
     }
-    else if (parentOn) {
+    else if (waitForParentOn == FALSE) {
         return WdfDevStatePowerWaking;
     }
     else {
@@ -1725,14 +1725,14 @@ Return Value:
 --*/
 {
     NTSTATUS status;
-    BOOLEAN parentOn;
+    BOOLEAN waitForParentOn;
 
-    status = This->PowerCheckParentOverload(&parentOn);
+    status = This->PowerCheckParentOverload(&waitForParentOn);
 
     if (!NT_SUCCESS(status)) {
         return WdfDevStatePowerUpFailedNP;
     }
-    else if (parentOn) {
+    else if (waitForParentOn == FALSE) {
         return WdfDevStatePowerWakingNP;
     }
     else {
@@ -2571,7 +2571,7 @@ FxPkgPnp::PowerStartingChild(
 /*++
 
 Routine Description:
-    Get the parent into a D0 state
+    Get the parent into a D0 state if necessary
 
 Arguments:
     This - instance of the state machine
@@ -2582,23 +2582,26 @@ Return Value:
   --*/
 {
     NTSTATUS status;
-    BOOLEAN parentOn;
+    BOOLEAN waitForParentOn;
 
-    status = This->PowerCheckParentOverload(&parentOn);
+    status = This->PowerCheckParentOverload(&waitForParentOn);
 
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
             "PowerReference on parent WDFDEVICE %p for child WDFDEVICE %p "
-            "failed, %!STATUS!", This->m_Device->m_ParentDevice->m_Device->GetHandle(),
-                This->m_Device->GetHandle(),
+            "failed, %!STATUS!",
+            This->m_Device->m_ParentDevice->m_Device->GetHandle(),
+            This->m_Device->GetHandle(),
             status);
 
         return WdfDevStatePowerInitialPowerUpFailed;
     }
-    else if (parentOn) {
+    else if (waitForParentOn == FALSE) {
         //
-        // Parent is powered on, start the power up sequence
+        // We don't need to wait for the parent (it is either already on, or we
+        // don't have a power dependency on the parent). Proceed with the power
+        // up sequence.
         //
         return WdfDevStatePowerD0Starting;
     }
@@ -3196,14 +3199,14 @@ Return Value:
 
 {
     NTSTATUS status;
-    BOOLEAN parentOn;
+    BOOLEAN waitForParentOn;
 
-    status = This->PowerCheckParentOverload(&parentOn);
+    status = This->PowerCheckParentOverload(&waitForParentOn);
 
     if (!NT_SUCCESS(status)) {
         return WdfDevStatePowerUpFailed;
     }
-    else if (parentOn) {
+    else if (waitForParentOn == FALSE) {
         return WdfDevStatePowerDxDisablingWakeAtBus;
     }
     else {
@@ -3229,14 +3232,14 @@ Return Value:
   --*/
 {
     NTSTATUS status;
-    BOOLEAN parentOn;
+    BOOLEAN waitForParentOn;
 
-    status = This->PowerCheckParentOverload(&parentOn);
+    status = This->PowerCheckParentOverload(&waitForParentOn);
 
     if (!NT_SUCCESS(status)) {
         return WdfDevStatePowerUpFailedNP;
     }
-    else if (parentOn) {
+    else if (waitForParentOn == FALSE) {
         return WdfDevStatePowerDxDisablingWakeAtBusNP;
     }
     else {

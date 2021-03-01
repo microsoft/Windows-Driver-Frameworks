@@ -38,7 +38,7 @@ extern "C" {
 // Global triage Info for dbgeng and 0x9F work
 //
 extern WDF_TRIAGE_INFO g_WdfTriageInfo;
-    
+
 
 VOID
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
@@ -72,14 +72,14 @@ Return Value:
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
 
-    if (pFxDriverGlobals->FxVerifierDbgBreakOnError) {
-        DbgBreakPoint();
-    }
-    else {
-        DoTraceLevelMessage(
-            pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGDRIVER,
-            "DbgBreakOnError registry value wasn't set, ignoring WdfVerifierDbgBreakPoint");
-    }
+    DoTraceLevelMessage(
+        pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGDRIVER,
+        "WDF driver (!wdflogdump %s) called WdfVerifierDbgBreakPoint "
+        "and verifier setting is %!bool!",
+        pFxDriverGlobals->Public.DriverName,
+        pFxDriverGlobals->FxVerifierDbgBreakOnError);
+
+    FxVerifierDbgBreakPoint(pFxDriverGlobals);
 }
 
 
@@ -138,13 +138,9 @@ Return Value:
 {
     DDI_ENTRY_IMPERSONATION_OK();
 
-    //
-    // Indicate to the BugCheck callback filter which IFR to dump.
-    //
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
-    pFxDriverGlobals->FxForceLogsInMiniDump = TRUE;
 
     FxVerifierDriverReportedBugcheck(pFxDriverGlobals,
                                     BugCheckCode,
@@ -176,8 +172,8 @@ WDFEXPORT(WdfCxVerifierKeBugCheck)(
 
 Routine Description:
 
-    Common Driver Frameworks KeBugCheckEx() function. Cx should use this 
-    function rather than the system one or WdfVerifierKeBugCheck. This routine 
+    Common Driver Frameworks KeBugCheckEx() function. Cx should use this
+    function rather than the system one or WdfVerifierKeBugCheck. This routine
     will indicate to the bugcheck callbacks that the IFR data for this driver or its
     client driver needs to be copied to the minidump file.
 
@@ -232,11 +228,6 @@ Return Value:
 
     UNREFERENCED_PARAMETER(pObject);
 
-    //
-    // Indicate to the BugCheck callback filter which IFR to dump.
-    //
-    pFxDriverGlobals->FxForceLogsInMiniDump = TRUE;
-
     FxVerifierDriverReportedBugcheck(pFxDriverGlobals,
                             BugCheckCode,
                             BugCheckParameter1,
@@ -251,13 +242,13 @@ WDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
     )
-    
+
 /*++
 
 Routine Description:
 
     Returns a pointer to the WDF triage info for dbgeng and 0x9F work.
-    
+
 Arguments:
 
     DriverGlobals -

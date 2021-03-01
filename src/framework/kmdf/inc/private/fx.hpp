@@ -56,6 +56,7 @@ extern "C" {
 #include "wdf121.h"
 #include "wdf123.h"
 #include "wdf125.h"
+#include "wdf127.h"
 }
 
 #define KMDF_ONLY_CODE_PATH_ASSERT()

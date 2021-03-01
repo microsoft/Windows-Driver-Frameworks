@@ -41,7 +41,7 @@ Routine Description:
     Gets source of wake if OS supports this.
 
 Arguments:
-    Irp 
+    Irp
 
 Return Value:
     None
@@ -109,16 +109,16 @@ Routine Description:
 Arguemnts:
 
     CurrentIrql - The current IRQL
-    
-    CallerSpecifiedProcessingOnDifferentThread - Whether or not caller of 
-        PowerPolicyProcessEvent specified that the event be processed on a 
+
+    CallerSpecifiedProcessingOnDifferentThread - Whether or not caller of
+        PowerPolicyProcessEvent specified that the event be processed on a
         different thread.
 
 Returns:
-    TRUE if the power policy state machine should process the event on a 
+    TRUE if the power policy state machine should process the event on a
        different thread.
-       
-    FALSE if the power policy state machine should process the event on the 
+
+    FALSE if the power policy state machine should process the event on the
        same thread
 
 --*/
@@ -146,7 +146,7 @@ FxUsbIdleInfo::Initialize(
     MxDeviceObject attachedDevObj;
 
     attachedDevObj.SetObject(((FxPkgPnp*)m_CallbackInfo.IdleContext)->GetDevice()->GetAttachedDevice());
-    
+
     pIrp = FxIrp::AllocateIrp(attachedDevObj.GetStackSize());
 
     if (pIrp == NULL) {
@@ -169,16 +169,16 @@ FxPkgPnp::PowerPolicySubmitUsbIdleNotification(
     // This will be set to TRUE if USBSS completion event gets dropped.
     //
     m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_EventDropped = FALSE;
-    
+
     usbIdleIrp = &m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_IdleIrp;
 
     usbIdleIrp->Reuse();
 
     usbIdleIrp->SetCompletionRoutineEx(
         m_Device->GetDeviceObject(),
-        _PowerPolicyUsbSelectiveSuspendCompletionRoutine, 
+        _PowerPolicyUsbSelectiveSuspendCompletionRoutine,
         this);
-    
+
     usbIdleIrp->SetMajorFunction(IRP_MJ_INTERNAL_DEVICE_CONTROL);
     usbIdleIrp->SetParameterIoctlCode(
         IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION);

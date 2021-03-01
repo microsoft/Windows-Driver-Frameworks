@@ -22,6 +22,61 @@ Revision History:
 #ifndef _FXREGKEY_H_
 #define _FXREGKEY_H_
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class FxRegKey : public FxPagedObject {
 
 public:
@@ -259,6 +314,38 @@ public:
         __in ULONG DataLength
         );
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 private:
 
     static
@@ -286,7 +373,7 @@ private:
     BOOLEAN m_CanCloseHandle;
 
 public:
-    
+
     VOID
     __inline
     SetCanCloseHandle(

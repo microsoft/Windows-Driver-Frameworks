@@ -39,6 +39,12 @@ Revision History:
 
 #include "fxobjectpch.hpp"
 
+#if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+#include "FeatureStagingSupport.h"
+#endif
+
+#include <FeatureStaging-WDF.h>
+
 // Tracing support
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -95,6 +101,12 @@ VOID
 FxVerifierQueryTrackPower(
     __in HANDLE Key,
     __out FxTrackPowerOption* TrackPower
+    );
+
+VOID
+FxVerifierQueryStateSeparationDetection(
+    _In_ HANDLE Key,
+    _Out_ FxStateSeparationDetectionOption* StateSeparationDetection
     );
 
 VOID
@@ -200,7 +212,7 @@ Return Value:
     }
 
     if (pInfo == NULL) {
-        
+
         ULONG length = sizeof(FxObjectDebugInfo) * FxObjectsInfoCount;
 
         //
@@ -213,7 +225,7 @@ Return Value:
         if (pInfo == NULL) {
             return STATUS_MEMORY_NOT_ALLOCATED;
         }
-        
+
         RtlZeroMemory(pInfo, length);
     }
 
@@ -296,7 +308,7 @@ Return Value:
     if (*Info == NULL) {
         *Info = pInfo;
     }
-    
+
     return STATUS_SUCCESS;
 }
 
@@ -329,6 +341,7 @@ FxDriverGlobalsInitializeDebugExtension(
     InitializeListHead(&pExtension->AllocatedTagTrackersListHead);
 
     pExtension->TrackPower = FxTrackPowerNone;
+    pExtension->StateSeparationDetection = FxStateSeparationDetectionNone;
 
     FxDriverGlobals->DebugExtension = pExtension;
 
@@ -338,6 +351,7 @@ FxDriverGlobalsInitializeDebugExtension(
                                                         FxDriverGlobals
                                                         );
         FxVerifierQueryTrackPower(Key, &pExtension->TrackPower);
+        FxVerifierQueryStateSeparationDetection(Key, &pExtension->StateSeparationDetection);
     }
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
@@ -503,15 +517,14 @@ FxLibraryGlobalsQueryRegistrySettings(
 {
     FxAutoRegKey hWdf;
     NTSTATUS status = STATUS_SUCCESS;
-    DECLARE_CONST_UNICODE_STRING(path, WDF_REGISTRY_BASE_PATH);
+    DECLARE_CONST_UNICODE_STRING(path,            WDF_REGISTRY_BASE_PATH);
     DECLARE_CONST_UNICODE_STRING(ifrDisabledName, WDF_GLOBAL_VALUE_IFRDISABLED);
-    DECLARE_CONST_UNICODE_STRING(ssDisabledName, WDF_GLOBAL_VALUE_SLEEPSTUDY_DISABLED);
-#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-    POWER_PLATFORM_INFORMATION platformInfo = {0};
-#endif
+    DECLARE_CONST_UNICODE_STRING(ssDisabledName,  WDF_GLOBAL_VALUE_SLEEPSTUDY_DISABLED);
+
 
     ULONG ifrDisabled = 0;
     ULONG ssDisabled = 0;
+
 
     status = FxRegKey::_OpenKey(NULL, &path, &hWdf.m_Key, KEY_READ);
     if (!NT_SUCCESS(status)) {
@@ -519,10 +532,8 @@ FxLibraryGlobalsQueryRegistrySettings(
     }
 
     status = FxRegKey::_QueryULong(hWdf.m_Key, &ifrDisabledName, &ifrDisabled);
-    if (NT_SUCCESS(status)) {
-        if (ifrDisabled == 1) {
-            FxLibraryGlobals.IfrDisabled = TRUE;
-        }
+    if ((NT_SUCCESS(status)) && (ifrDisabled == 1)) {
+        FxLibraryGlobals.IfrDisabled = TRUE;
     }
 
     FxLibraryGlobals.SleepStudyDisabled = FALSE;
@@ -530,6 +541,14 @@ FxLibraryGlobalsQueryRegistrySettings(
     if ((NT_SUCCESS(status)) && (ssDisabled == 1)) {
         FxLibraryGlobals.SleepStudyDisabled = TRUE;
     }
+
+
+
+
+
+
+
+
 
 exit:
     return;
@@ -578,6 +597,38 @@ FxLibraryGlobalsCommission(
     // Logging Sleep Study Blockers is enabled by default
     //
     FxLibraryGlobals.SleepStudyDisabled = FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //
     // Query global WDF settings (both KMDF and UMDF).
@@ -1344,7 +1395,7 @@ Return Value:
     //
     FxVerifierReadObjectDebugInfo(Key,
                                   FxDriverGlobals,
-                                  &pInfo, 
+                                  &pInfo,
                                   L"TrackHandles",
                                   FxObjectDebugTrackReferences,
                                   NULL);
@@ -1394,7 +1445,7 @@ Return Value:
     if (!NT_SUCCESS(status) || NULL == pInfo) {
         MxMemory::MxFreePool(FxDriverGlobals->FxVerifyLeakDetection);
         FxDriverGlobals->FxVerifyLeakDetection = NULL;
-    } 
+    }
 
     return pInfo;
 }
@@ -1420,16 +1471,16 @@ Arguments:
     Key - Registry key to query the value for
 
     FxDriverGlobals - globals
-    
+
     Info - optional preallocated debug info structure.
 
     KeyName - Key to read from
 
     DebugFlag - flag to set in the debug info structure.
 
-    DefaultSettings - settings to use in the event the registery key is not 
+    DefaultSettings - settings to use in the event the registery key is not
         present or malformed.
-    
+
 Return Value:
     NT_SUCCESS if the registry key was read and memory was allocated.
 
@@ -1532,6 +1583,25 @@ FxVerifierQueryTrackPower(
         *TrackPower = FxTrackPowerNone;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 VOID
 FxOverrideDefaultVerifierSettings(
@@ -1661,7 +1731,7 @@ Arguments:
         paramTable[i].DefaultLength = sizeof(ULONG); \
         i++; \
         ASSERT(i < sizeof(paramTable) / sizeof(paramTable[0]));
-    
+
     verboseValue = 0;
     ADD_TABLE_ENTRY("VerboseOn", verboseValue, zero);
 
@@ -1705,7 +1775,7 @@ Arguments:
 
     dsfValue = 0;
     ADD_TABLE_ENTRY("DsfOn", dsfValue, zero);
-    
+
     removeLockOptionFlags = 0;
     ADD_TABLE_ENTRY("RemoveLockOptionFlags", removeLockOptionFlags, zero);
 

@@ -749,7 +749,9 @@ WDFEXPORT(WdfDeviceGetDeviceState)(
 
     FxPointerNotNull(pFxDriverGlobals, DeviceState);
 
-    if (DeviceState->Size != sizeof(WDF_DEVICE_STATE)) {
+    if ((DeviceState->Size != sizeof(WDF_DEVICE_STATE_V1_27)) &&
+        (DeviceState->Size != sizeof(WDF_DEVICE_STATE))) {
+
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
             "WDFDEVICE 0x%p DeviceState Size %d, expected %d",
@@ -787,6 +789,7 @@ WDFEXPORT(WdfDeviceSetDeviceState)(
         OFFSET_AND_NAME(WDF_DEVICE_STATE, NotDisableable),
         OFFSET_AND_NAME(WDF_DEVICE_STATE, Removed),
         OFFSET_AND_NAME(WDF_DEVICE_STATE, ResourcesChanged),
+        OFFSET_AND_NAME(WDF_DEVICE_STATE, AssignedToGuest),
     };
 
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
@@ -797,7 +800,9 @@ WDFEXPORT(WdfDeviceSetDeviceState)(
 
     FxPointerNotNull(pFxDriverGlobals, DeviceState);
 
-    if (DeviceState->Size != sizeof(WDF_DEVICE_STATE)) {
+    if ((DeviceState->Size != sizeof(WDF_DEVICE_STATE_V1_27)) &&
+        (DeviceState->Size != sizeof(WDF_DEVICE_STATE))) {
+
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
             "WDFDEVICE 0x%p, DeviceState Size %d, expected %d",
@@ -815,6 +820,14 @@ WDFEXPORT(WdfDeviceSetDeviceState)(
         //
         if (offsets[i].Offset + sizeof(WDF_TRI_STATE) > sizeof(*DeviceState)) {
             return;
+        }
+
+        //
+        // If the device state passed in by the driver is an older version that
+        // does not contain this field, stop validating.
+        //
+        if (offsets[i].Offset + sizeof(WDF_TRI_STATE) > DeviceState->Size) {
+            break;
         }
 
         value = *(WDF_TRI_STATE*) WDF_PTR_ADD_OFFSET(DeviceState,
@@ -939,6 +952,20 @@ WDFEXPORT(WdfDeviceCreate)(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
                 "Client called WdfDeviceInitAllowSelfTarget. Self "
                 "IO Targets are supported only for FDOs, %!STATUS!", status);
+            return status;
+        }
+    }
+
+    if (((*DeviceInit)->Pdo.NoPowerDependencyOnParent != FALSE) &&
+        ((*DeviceInit)->Pdo.EventCallbacks.Size != 0)) {
+        if (((*DeviceInit)->Pdo.EventCallbacks.EvtDeviceEnableWakeAtBus) ||
+            ((*DeviceInit)->Pdo.EventCallbacks.EvtDeviceDisableWakeAtBus)) {
+            status = STATUS_INVALID_DEVICE_REQUEST;
+            DoTraceLevelMessage(
+                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                "Illegal to specify EvtDeviceEnableWakeAtBus/EvtDeviceDisableWakeAtBus "
+                "for PDOs that don't have a power dependency on the parent, %!STATUS!",
+                status);
             return status;
         }
     }

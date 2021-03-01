@@ -298,5 +298,3 @@ FxRegKey::_QueryQuadWord(
 
     return STATUS_UNSUCCESSFUL;
 }
-
-

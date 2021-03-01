@@ -401,6 +401,35 @@ FxPkgPnp::ReadRegistryS0Idle(
     }
 }
 
+VOID
+FxPkgPnp::ReadRegistryPofxDirectredTransition(
+    _In_    PCUNICODE_STRING ValueName,
+    _Inout_ BOOLEAN *Enabled
+    )
+{
+    NTSTATUS status;
+    FxAutoRegKey hKey;
+
+    status = m_Device->OpenSettingsKey(&hKey.m_Key, STANDARD_RIGHTS_READ);
+
+    //
+    // Modify the value of Enabled only if success
+    //
+    if (NT_SUCCESS(status)) {
+        ULONG value;
+
+        status = FxRegKey::_QueryULong(
+            hKey.m_Key, ValueName, &value);
+
+        if (NT_SUCCESS(status)) {
+            //
+            // Normalize the ULONG value into a BOOLEAN
+            //
+            *Enabled = (value == FALSE) ? FALSE : TRUE;
+        }
+    }
+}
+
 NTSTATUS
 FxPkgPnp::UpdateWmiInstanceForSxWake(
     __in FxWmiInstanceAction Action
@@ -668,6 +697,8 @@ Return Value:
     WNF_STATE_NAME wnfStateName = WNF_PO_DRIPS_DEVICE_CONSTRAINTS_REGISTERED;
     PSLEEP_STUDY_INTERFACE sleepStudy = NULL;
 
+
+
     if ((IsPowerPolicyOwner() == FALSE) ||
         FxLibraryGlobals.SleepStudyDisabled == TRUE) {
         //
@@ -677,6 +708,17 @@ Return Value:
         status = STATUS_NOT_SUPPORTED;
         goto Done;
     }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -999,7 +1041,7 @@ Return Value:
     friendlyName.Length = 0;
     friendlyName.MaximumLength = sizeof(powerRefFriendlyName) +
                                  pdoFriendlyName.Length +
-                                 sizeof(GetDriverGlobals()->Public.DriverName);
+                                 sizeof(WCHAR) * WDF_DRIVER_GLOBALS_NAME_LEN;
 
     friendlyName.Buffer = (WCHAR*) MxMemory::MxAllocatePoolWithTag(
                 NonPagedPool,
@@ -1094,4 +1136,33 @@ Done:
         MxMemory::MxFreePool(friendlyName.Buffer);
     }
     return status;
+}
+
+VOID
+FxPkgPnp::ReadRegistrySleepstudyEnabled(
+    __in  PCUNICODE_STRING ValueName,
+    __out BOOLEAN *Enabled
+    )
+{
+    NTSTATUS status;
+    FxAutoRegKey hKey;
+
+    status = m_Device->OpenSettingsKey(&hKey.m_Key, STANDARD_RIGHTS_READ);
+
+    //
+    // Modify the value of Enabled only if success
+    //
+    if (NT_SUCCESS(status)) {
+        ULONG value;
+
+        status = FxRegKey::_QueryULong(
+            hKey.m_Key, ValueName, &value);
+
+        if (NT_SUCCESS(status)) {
+            //
+            // Normalize the ULONG value into a BOOLEAN
+            //
+            *Enabled = (value == FALSE) ? FALSE : TRUE;
+        }
+    }
 }

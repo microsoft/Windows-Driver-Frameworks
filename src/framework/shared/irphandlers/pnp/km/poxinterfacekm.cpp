@@ -21,12 +21,12 @@ FxPoxInterface::StateCallback(
 {
     PPOX_SETTINGS poxSettings = NULL;
     FxPoxInterface * pThis = NULL;
-    
+
     pThis = (FxPoxInterface*) Context;
 
     DoTraceLevelMessage(
-        pThis->m_PkgPnp->GetDriverGlobals(), 
-        TRACE_LEVEL_VERBOSE, 
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_VERBOSE,
         TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p PO_FX_COMPONENT_IDLE_STATE_CALLBACK "
         "invoked.",
@@ -35,27 +35,27 @@ FxPoxInterface::StateCallback(
         );
 
     //
-    // If the client driver has specified power framework settings, retrieve 
+    // If the client driver has specified power framework settings, retrieve
     // them.
     //
     poxSettings = pThis->GetPowerFrameworkSettings();
-                    
+
     //
     // If the client driver has specified an F-state change callback, invoke it.
     //
-    if ((NULL != poxSettings) && 
+    if ((NULL != poxSettings) &&
         (NULL != poxSettings->ComponentIdleStateCallback)) {
-        
+
         DoTraceLevelMessage(
-            pThis->m_PkgPnp->GetDriverGlobals(), 
-            TRACE_LEVEL_VERBOSE, 
+            pThis->m_PkgPnp->GetDriverGlobals(),
+            TRACE_LEVEL_VERBOSE,
             TRACINGPNP,
             "WDFDEVICE 0x%p !devobj 0x%p Invoking client driver's "
             "PO_FX_COMPONENT_IDLE_STATE_CALLBACK.",
             pThis->m_PkgPnp->GetDevice()->GetHandle(),
             pThis->m_PkgPnp->GetDevice()->GetDeviceObject()
             );
-            
+
         poxSettings->ComponentIdleStateCallback(
                        poxSettings->PoFxDeviceContext,
                        Component,
@@ -73,12 +73,12 @@ FxPoxInterface::ComponentActiveCallback(
 {
     PPOX_SETTINGS poxSettings = NULL;
     FxPoxInterface * pThis = NULL;
-    
+
     pThis = (FxPoxInterface*) Context;
 
     DoTraceLevelMessage(
-        pThis->m_PkgPnp->GetDriverGlobals(), 
-        TRACE_LEVEL_VERBOSE, 
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_VERBOSE,
         TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p PO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK "
         "invoked.",
@@ -87,27 +87,27 @@ FxPoxInterface::ComponentActiveCallback(
         );
 
     //
-    // If the client driver has specified power framework settings, retrieve 
+    // If the client driver has specified power framework settings, retrieve
     // them.
     //
     poxSettings = pThis->GetPowerFrameworkSettings();
-                    
+
     //
     // If the client driver has specified a component-active callback, invoke it
     //
-    if ((NULL != poxSettings) && 
+    if ((NULL != poxSettings) &&
         (NULL != poxSettings->ComponentActiveConditionCallback)) {
-        
+
         DoTraceLevelMessage(
-            pThis->m_PkgPnp->GetDriverGlobals(), 
-            TRACE_LEVEL_VERBOSE, 
+            pThis->m_PkgPnp->GetDriverGlobals(),
+            TRACE_LEVEL_VERBOSE,
             TRACINGPNP,
             "WDFDEVICE 0x%p !devobj 0x%p Invoking client driver's "
             "PO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK.",
             pThis->m_PkgPnp->GetDevice()->GetHandle(),
             pThis->m_PkgPnp->GetDevice()->GetDeviceObject()
             );
-            
+
         poxSettings->ComponentActiveConditionCallback(
                            poxSettings->PoFxDeviceContext,
                            Component
@@ -118,7 +118,7 @@ FxPoxInterface::ComponentActiveCallback(
         //
         DO_NOTHING();
     }
-    
+
     return;
 }
 
@@ -130,12 +130,12 @@ FxPoxInterface::ComponentIdleCallback(
 {
     PPOX_SETTINGS poxSettings = NULL;
     FxPoxInterface * pThis = NULL;
-    
+
     pThis = (FxPoxInterface*) Context;
 
     DoTraceLevelMessage(
-        pThis->m_PkgPnp->GetDriverGlobals(), 
-        TRACE_LEVEL_VERBOSE, 
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_VERBOSE,
         TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p PO_FX_COMPONENT_IDLE_CONDITION_CALLBACK "
         "invoked.",
@@ -144,27 +144,27 @@ FxPoxInterface::ComponentIdleCallback(
         );
 
     //
-    // If the client driver has specified power framework settings, retrieve 
+    // If the client driver has specified power framework settings, retrieve
     // them.
     //
     poxSettings = pThis->GetPowerFrameworkSettings();
-                    
+
     //
     // If the client driver has specified a component-idle callback, invoke it
     //
-    if ((NULL != poxSettings) && 
+    if ((NULL != poxSettings) &&
         (NULL != poxSettings->ComponentIdleConditionCallback)) {
-        
+
         DoTraceLevelMessage(
-            pThis->m_PkgPnp->GetDriverGlobals(), 
-            TRACE_LEVEL_VERBOSE, 
+            pThis->m_PkgPnp->GetDriverGlobals(),
+            TRACE_LEVEL_VERBOSE,
             TRACINGPNP,
             "WDFDEVICE 0x%p !devobj 0x%p Invoking client driver's "
             "PO_FX_COMPONENT_IDLE_CONDITION_CALLBACK.",
             pThis->m_PkgPnp->GetDevice()->GetHandle(),
             pThis->m_PkgPnp->GetDevice()->GetDeviceObject()
             );
-            
+
         poxSettings->ComponentIdleConditionCallback(
                            poxSettings->PoFxDeviceContext,
                            Component
@@ -172,7 +172,7 @@ FxPoxInterface::ComponentIdleCallback(
     } else {
         //
         // We're being notified that we're idle, but there is no action that we
-        // need to take here. We power down the device only when we get the 
+        // need to take here. We power down the device only when we get the
         // device-power-not-required event.
         //
         PoFxCompleteIdleCondition(pThis->m_PoHandle, Component);
@@ -186,7 +186,7 @@ FxPoxInterface::PowerRequiredCallback(
     )
 {
     FxPoxInterface * pThis = NULL;
-    
+
     pThis = (FxPoxInterface*) Context;
     pThis->PowerRequiredCallbackWorker(TRUE /* InvokedFromPoxCallback */);
     return;
@@ -198,7 +198,7 @@ FxPoxInterface::PowerNotRequiredCallback(
     )
 {
     FxPoxInterface * pThis = NULL;
-    
+
     pThis = (FxPoxInterface*) Context;
     pThis->PowerNotRequiredCallbackWorker(TRUE /* InvokedFromPoxCallback */);
     PoFxCompleteDevicePowerNotRequired(pThis->m_PoHandle);
@@ -221,12 +221,12 @@ FxPoxInterface::PowerControlCallback(
     NTSTATUS status;
     PPOX_SETTINGS poxSettings = NULL;
     FxPoxInterface * pThis = NULL;
-    
+
     pThis = (FxPoxInterface*) Context;
 
     DoTraceLevelMessage(
-        pThis->m_PkgPnp->GetDriverGlobals(), 
-        TRACE_LEVEL_VERBOSE, 
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_VERBOSE,
         TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p PO_FX_POWER_CONTROL_CALLBACK invoked.",
         pThis->m_PkgPnp->GetDevice()->GetHandle(),
@@ -234,15 +234,15 @@ FxPoxInterface::PowerControlCallback(
         );
 
     //
-    // If the client driver has specified power framework settings, retrieve 
+    // If the client driver has specified power framework settings, retrieve
     // them.
     //
     poxSettings = pThis->GetPowerFrameworkSettings();
-                    
+
     //
     // The client driver must have specified a power control callback
     //
-    ASSERT((NULL != poxSettings) && 
+    ASSERT((NULL != poxSettings) &&
            (NULL != poxSettings->PowerControlCallback));
 
     //
@@ -255,10 +255,10 @@ FxPoxInterface::PowerControlCallback(
                                                OutBuffer,
                                                OutBufferSize,
                                                BytesReturned);
-    
+
     DoTraceLevelMessage(
-        pThis->m_PkgPnp->GetDriverGlobals(), 
-        TRACE_LEVEL_VERBOSE, 
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_VERBOSE,
         TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p Client driver's "
         "PO_FX_POWER_CONTROL_CALLBACK returned %!STATUS!.",
@@ -275,31 +275,55 @@ FxPoxInterface::PoxRegisterDevice(
     VOID
     )
 {
-    
+
     NTSTATUS status;
-    PO_FX_DEVICE poxDevice;
+    PO_FX_DEVICE_V3 poxDevice;
     PO_FX_COMPONENT_IDLE_STATE idleState;
-    PPOX_SETTINGS poxSettings = NULL; 
+    PPOX_SETTINGS poxSettings = NULL;
+    BOOLEAN directedTransitions;
+    BOOLEAN dfxChildrenOptional;
 
     RtlZeroMemory(&poxDevice, sizeof(poxDevice));
     RtlZeroMemory(&idleState, sizeof(idleState));
 
-    poxDevice.Version = PO_FX_VERSION_V1;
+    poxDevice.Version = PO_FX_VERSION_V3;
 
     //
     // Specify callbacks and context
     //
-    poxDevice.ComponentIdleStateCallback = 
+    poxDevice.ComponentIdleStateCallback =
                     FxPoxInterface::StateCallback;
-    poxDevice.ComponentActiveConditionCallback = 
+    poxDevice.ComponentActiveConditionCallback =
                     FxPoxInterface::ComponentActiveCallback;
-    poxDevice.ComponentIdleConditionCallback = 
+    poxDevice.ComponentIdleConditionCallback =
                     FxPoxInterface::ComponentIdleCallback;
-    poxDevice.DevicePowerRequiredCallback = 
+    poxDevice.DevicePowerRequiredCallback =
                     FxPoxInterface::PowerRequiredCallback;
-    poxDevice.DevicePowerNotRequiredCallback = 
+    poxDevice.DevicePowerNotRequiredCallback =
                     FxPoxInterface::PowerNotRequiredCallback;
     poxDevice.DeviceContext = this;
+
+    //
+    // If the device is opted into directed power transitions, then register
+    // directed power up/down callbacks with PoFx.
+    //
+    directedTransitions = m_PkgPnp->m_PowerPolicyMachine.m_Owner->
+        m_IdleSettings.m_TimeoutMgmt.GetDirectedPowerTransitionSupport();
+
+    if (FALSE != directedTransitions) {
+        poxDevice.DirectedPowerUpCallback =
+            FxPoxInterface::DirectedPowerUpCallback;
+
+        poxDevice.DirectedPowerDownCallback =
+            FxPoxInterface::DirectedPowerDownCallback;
+
+        dfxChildrenOptional = m_PkgPnp->m_PowerPolicyMachine.m_Owner->
+            m_IdleSettings.m_TimeoutMgmt.GetDirectedPowerTransitionChildrenOptional();
+
+        if (dfxChildrenOptional) {
+            poxDevice.Flags = PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL;
+        }
+    }
 
     //
     // We register as a single component device
@@ -307,34 +331,34 @@ FxPoxInterface::PoxRegisterDevice(
     poxDevice.ComponentCount = 1;
 
     //
-    // If the client driver has specified power framework settings, retrieve 
+    // If the client driver has specified power framework settings, retrieve
     // them.
     //
     poxSettings = GetPowerFrameworkSettings();
-    
+
     //
     // We specify a power control callback only if the client driver supplies us
     // a power control callback
     //
-    poxDevice.PowerControlCallback = 
+    poxDevice.PowerControlCallback =
         ((NULL == poxSettings) || (NULL == poxSettings->PowerControlCallback)) ?
-            NULL : 
+            NULL :
             FxPoxInterface::PowerControlCallback;
 
     //
-    // If the client driver has specified any settings for component 0, use 
+    // If the client driver has specified any settings for component 0, use
     // them. Otherwise use the default settings.
     //
     if ((NULL == poxSettings) || (NULL == poxSettings->Component)) {
         //
         // Default settings
         //
-        
+
         //
         // We only support F0
         //
         poxDevice.Components[0].IdleStateCount = 1;
-        
+
         //
         // Transition latency should be 0 for F0
         //
@@ -357,24 +381,38 @@ FxPoxInterface::PoxRegisterDevice(
     }
     else {
         //
-        // Client driver's settings
+        // Copy the component information and all the idle state information
+        // from the client driver's settings.
         //
-        RtlCopyMemory(&(poxDevice.Components[0]), 
-                      poxSettings->Component, 
-                      sizeof(poxDevice.Components[0]));
+        // N.B. The components fields need to be copied over individually due
+        //      to the difference in the component structure version. The
+        //      poxDevice (PO_FX_DEVICE_V3) refers to v2 version of the
+        //      component structure (PO_FX_COMPONENT_V2) while the POX_SETTINGS
+        //      refers to the v1 version (PO_FX_COMPONENT_V1).
+        //
+        RtlCopyMemory(&poxDevice.Components[0].Id,
+                      &poxSettings->Component->Id,
+                      sizeof(GUID));
+
+        poxDevice.Components[0].IdleStateCount =
+            poxSettings->Component->IdleStateCount;
+
+        poxDevice.Components[0].DeepestWakeableIdleState =
+            poxSettings->Component->DeepestWakeableIdleState;
+
+        poxDevice.Components[0].IdleStates =
+            poxSettings->Component->IdleStates;
     }
-    
-    //
-    // Register with the power framework
-    //
+
     status = PoFxRegisterDevice(
-                m_PkgPnp->GetDevice()->GetPhysicalDevice(),
-                &poxDevice,
-                &(m_PoHandle)
-                );
+        m_PkgPnp->GetDevice()->GetPhysicalDevice(),
+        (PPO_FX_DEVICE)&poxDevice,
+        &(m_PoHandle)
+        );
+
     if (FALSE == NT_SUCCESS(status)) {
         DoTraceLevelMessage(
-            m_PkgPnp->GetDriverGlobals(), 
+            m_PkgPnp->GetDriverGlobals(),
             TRACE_LEVEL_ERROR, TRACINGPNP,
             "WDFDEVICE 0x%p !devobj 0x%p FxPox::PoxRegisterDevice failed. "
             "%!STATUS!.",
@@ -404,7 +442,7 @@ VOID
 FxPoxInterface::PoxUnregisterDevice(
     VOID
     )
-{          
+{
     PoFxUnregisterDevice(m_PoHandle);
 }
 
@@ -418,7 +456,7 @@ FxPoxInterface::PoxActivateComponent(
     // We only support single component and don't
     // need to set any flags
     //
-    PoFxActivateComponent(m_PoHandle, 
+    PoFxActivateComponent(m_PoHandle,
                           0, //component
                           0  //flags
                           );
@@ -429,13 +467,13 @@ VOID
 FxPoxInterface::PoxIdleComponent(
     VOID
     )
-{    
+{
     //
     // We only support single component and don't
     // need to set any flags
     //
-    PoFxIdleComponent(m_PoHandle, 
-                      0, //component 
+    PoFxIdleComponent(m_PoHandle,
+                      0, //component
                       0  //flags
                       );
 }
@@ -456,5 +494,110 @@ FxPoxInterface::PoxSetDeviceIdleTimeout(
     )
 {
     PoFxSetDeviceIdleTimeout(m_PoHandle, IdleTimeout);
+}
+
+
+VOID
+FxPoxInterface::DirectedPowerDownCallback(
+    __in PVOID Context,
+    __in ULONG Flags
+    )
+{
+    FxPoxInterface * pThis = NULL;
+
+    UNREFERENCED_PARAMETER(Flags);
+
+    pThis = (FxPoxInterface*) Context;
+
+    DoTraceLevelMessage(
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_INFORMATION,
+        TRACINGPNP,
+        "WDFDEVICE 0x%p !devobj 0x%p PO_FX_DIRECTED_POWER_DOWN_CALLBACK "
+        "invoked.",
+        pThis->m_PkgPnp->GetDevice()->GetHandle(),
+        pThis->m_PkgPnp->GetDevice()->GetDeviceObject()
+        );
+
+    //
+    // The following guarantees will hold once a directed power down is
+    // initiated by PoFx:
+    //
+    // 1. PoFx will not issue runtime-D3 callbacks (like active/idle/DPR/DPNR)
+    //    until the device is powered back up in a directed manner.
+    //
+    // 2. No system state transitions (S-IRPs) will be issued to the device
+    //    stack until the device is powered back up in a directed manner.
+    //
+    // 3. PnP manager will not issue removal IRPs (orderly or surprise removal)
+    //    until the device is powered back up in a directed manner.
+    //
+    // 4. Once PoFx initiates directed power down, it will not issue a
+    //    directed power up request until the device completes the directed
+    //    power down request.
+    //
+    // Note a directed power down invocation must be completed back to PoFx
+    // by invoking the PoFxCompleteDirectedPowerDown() completion routine.
+    //
+    pThis->DirectedPowerDownCallbackWorker(TRUE /* InvokedFromPoxCallback */);
+    return;
+}
+
+
+VOID
+FxPoxInterface::DirectedPowerUpCallback(
+    __in PVOID Context,
+    __in ULONG Flags
+    )
+{
+    FxPoxInterface * pThis = NULL;
+
+    UNREFERENCED_PARAMETER(Flags);
+
+    pThis = (FxPoxInterface*) Context;
+
+    DoTraceLevelMessage(
+        pThis->m_PkgPnp->GetDriverGlobals(),
+        TRACE_LEVEL_INFORMATION,
+        TRACINGPNP,
+        "WDFDEVICE 0x%p !devobj 0x%p PO_FX_DIRECTED_POWER_UP_CALLBACK "
+        "invoked.",
+        pThis->m_PkgPnp->GetDevice()->GetHandle(),
+        pThis->m_PkgPnp->GetDevice()->GetDeviceObject()
+        );
+
+    //
+    // Refer to the directed power down routine above for the guarantees that
+    // hold until directed power up is completed.
+    //
+    // Note a directed power up invocation is completed by having the device
+    // report itself as powered ON [PoFxReportDevicePoweredOn()] which
+    // implicitly completes the power up request.
+    //
+    pThis->DirectedPowerUpCallbackWorker(TRUE /* InvokedFromPoxCallback */);
+    return;
+}
+
+
+VOID
+FxPoxInterface::PoxCompleteDirectedPowerDownTransition(
+    VOID
+    )
+{
+    PoFxCompleteDirectedPowerDown(m_PoHandle);
+}
+
+
+VOID
+FxPoxInterface::PoxCompleteDirectedPowerUpTransition(
+    VOID
+    )
+{
+    //
+    // For directed power up transitions, the completion is implicit as a
+    // result of the device reporting itself as powered on (i.e. calling
+    // PoFxReportDevicePoweredOn). Thus no further action is required here.
+    //
+    return;
 }
 

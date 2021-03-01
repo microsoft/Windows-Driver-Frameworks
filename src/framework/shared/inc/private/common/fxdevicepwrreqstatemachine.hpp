@@ -12,14 +12,18 @@
 const UCHAR FxDevicePwrRequirementEventQueueDepth = 8;
 
 enum FxDevicePwrRequirementEvents {
-    DprEventInvalid                 = 0x00,
-    DprEventRegisteredWithPox       = 0x01,
-    DprEventUnregisteredWithPox     = 0x02,
-    DprEventPoxRequiresPower        = 0x04,
-    DprEventPoxDoesNotRequirePower  = 0x08,
-    DprEventDeviceGoingToDx         = 0x10,
-    DprEventDeviceReturnedToD0      = 0x20,
-    DprEventNull                    = 0xFF,
+    DprEventInvalid                     = 0x0000,
+    DprEventRegisteredWithPox           = 0x0001,
+    DprEventUnregisteredWithPox         = 0x0002,
+    DprEventPoxRequiresPower            = 0x0004,
+    DprEventPoxDoesNotRequirePower      = 0x0008,
+    DprEventDeviceGoingToDx             = 0x0010,
+    DprEventDeviceReturnedToD0          = 0x0020,
+    DprEventDeviceDirectedPoweredDown   = 0x0040,
+    DprEventDeviceDirectedPoweredUp     = 0x0080,
+    DprEventPoxDirectedPowerDown        = 0x0100,
+    DprEventPoxDirectedPowerUp          = 0x0200,
+    DprEventNull                        = 0xFFFF,
 };
 
 enum FxDevicePwrRequirementStates {
@@ -31,6 +35,13 @@ enum FxDevicePwrRequirementStates {
     DprDevicePowerRequiredDx,
     DprReportingDevicePowerAvailable,
     DprWaitingForDevicePowerRequiredD0,
+    DprDirectedPowerDownInitiate,
+    DprDirectedPowerDownComplete,
+    DprDirectedPowerUpInitiate,
+    DprDirectedPowerUpComplete,
+    DprDirectedPowerDownFailedWaitingForUp,
+    DprDirectedPowerDownFailedUpArrived,
+    DprDirectedPowerUpFailedComplete,
     DprMax
 };
 
@@ -110,7 +121,7 @@ private:
     ProcessEventInner(
         __inout FxPostProcessInfo* Info
         );
-    
+
     static
     FxDevicePwrRequirementStates
     PowerNotRequiredD0(
@@ -129,6 +140,42 @@ private:
         __in FxDevicePwrRequirementMachine* This
         );
 
+    static
+    FxDevicePwrRequirementStates
+    DirectedPowerDownInitiate(
+        _In_ FxDevicePwrRequirementMachine* This
+        );
+
+    static
+    FxDevicePwrRequirementStates
+    DirectedPowerDownComplete(
+        _In_ FxDevicePwrRequirementMachine* This
+        );
+
+    static
+    FxDevicePwrRequirementStates
+    DirectedPowerUpInitiate(
+        _In_ FxDevicePwrRequirementMachine* This
+        );
+
+    static
+    FxDevicePwrRequirementStates
+    DirectedPowerUpComplete(
+        _In_ FxDevicePwrRequirementMachine* This
+        );
+
+    static
+    FxDevicePwrRequirementStates
+    DirectedPowerDownFailedUpArrived(
+        _In_ FxDevicePwrRequirementMachine* This
+        );
+
+    static
+    FxDevicePwrRequirementStates
+    DirectedPowerUpFailedComplete(
+        _In_ FxDevicePwrRequirementMachine* This
+        );
+
 protected:
     FxPoxInterface* m_PoxInterface;
 
@@ -141,13 +188,16 @@ protected:
     FxDevicePwrRequirementMachineStateHistory m_States;
 
     static const FxDevicePwrRequirementStateTable m_StateTable[];
-    
+
     static const FxDevicePwrRequirementTargetState m_UnregisteredStates[];
     static const FxDevicePwrRequirementTargetState m_DevicePowerRequiredD0States[];
     static const FxDevicePwrRequirementTargetState m_DevicePowerNotRequiredD0States[];
     static const FxDevicePwrRequirementTargetState m_DevicePowerNotRequiredDxStates[];
     static const FxDevicePwrRequirementTargetState m_DevicePowerRequiredDxStates[];
     static const FxDevicePwrRequirementTargetState m_WaitingForDevicePowerRequiredD0States[];
+    static const FxDevicePwrRequirementTargetState m_DirectedPowerDownCompleteStates[];
+    static const FxDevicePwrRequirementTargetState m_DirectedPowerUpCompleteStates[];
+    static const FxDevicePwrRequirementTargetState m_DirectedPowerDownFailedWaitingForUpStates[];
 };
 
 #endif // _FXDEVICEPWRREQUIRESTATEMACHINE_H_

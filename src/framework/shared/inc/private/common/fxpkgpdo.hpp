@@ -68,6 +68,15 @@ public:
     //
     BOOLEAN m_AllowForwardRequestToParent;
 
+    //
+    // Indicates that the parent cannot be powered down unless this PDO has been
+    // powered down.
+    //
+    // Note: This is only meaningful if the parent is the power-policy-owner of
+    // its stack.
+    //
+    BOOLEAN m_HasPowerDependencyOnParent;
+
 protected:
     //
     // Pointer to a null terminated string which is the device ID.  This is
@@ -210,6 +219,14 @@ public:
         return m_AllowForwardRequestToParent;
     }
 
+    __inline
+    BOOLEAN
+    HasPowerDependencyOnParent(
+        VOID
+        )
+    {
+        return m_HasPowerDependencyOnParent;
+    }
 
 private:
     _Must_inspect_result_
@@ -463,7 +480,7 @@ private:
     _Must_inspect_result_
     NTSTATUS
     PowerCheckParentOverload(
-        __in BOOLEAN* ParentOn
+        __out BOOLEAN* WaitForParentOn
         );
 
     virtual

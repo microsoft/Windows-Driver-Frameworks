@@ -1221,13 +1221,13 @@ VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     UCHAR MajorFunction,
     _In_
-    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDispatch,
     _In_opt_
     WDFCONTEXT DriverContext
     )
 {
     PAGED_CODE_LOCKED();
-    return ((PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK) WdfVersion.Functions.pfnWdfDeviceConfigureWdmIrpDispatchCallback)(DriverGlobals, Device, Driver, MajorFunction, EvtDeviceWdmIrpDisptach, DriverContext);
+    return ((PFN_WDFDEVICECONFIGUREWDMIRPDISPATCHCALLBACK) WdfVersion.Functions.pfnWdfDeviceConfigureWdmIrpDispatchCallback)(DriverGlobals, Device, Driver, MajorFunction, EvtDeviceWdmIrpDispatch, DriverContext);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)

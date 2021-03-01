@@ -475,6 +475,7 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFCOMPANIONTARGETWDMGETCOMPANIONPROCESS              pfnWdfCompanionTargetWdmGetCompanionProcess;
     PFN_WDFDRIVEROPENPERSISTENTSTATEREGISTRYKEY               pfnWdfDriverOpenPersistentStateRegistryKey;
     PFN_WDFDRIVERERRORREPORTAPIMISSING                        pfnWdfDriverErrorReportApiMissing;
+    PFN_WDFPDOINITREMOVEPOWERDEPENDENCYONPARENT               pfnWdfPdoInitRemovePowerDependencyOnParent;
 
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
 
@@ -2038,7 +2039,7 @@ WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     UCHAR MajorFunction,
     _In_
-    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDispatch,
     _In_opt_
     WDFCONTEXT DriverContext
     );
@@ -4479,6 +4480,16 @@ WDFEXPORT(WdfPdoClearEjectionRelationsDevices)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+VOID
+WDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit
     );
 
 _Must_inspect_result_
@@ -7178,6 +7189,7 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfCompanionTargetWdmGetCompanionProcess),
         WDFEXPORT(WdfDriverOpenPersistentStateRegistryKey),
         WDFEXPORT(WdfDriverErrorReportApiMissing),
+        WDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent),
     },
     sizeof(WDFSTRUCTURES)/sizeof(size_t),
     {

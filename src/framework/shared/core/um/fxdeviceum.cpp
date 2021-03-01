@@ -108,7 +108,7 @@ FxDevice::FdoInitialize(
 
     m_PhysicalDevice.SetObject((MdDeviceObject)DeviceInit->Fdo.PhysicalDevice);
 
-    // 
+    //
     // The PDO is known because it was used to bring up this FDO.
     //
     m_PdoKnown = TRUE;
@@ -408,7 +408,7 @@ FxDevice::CreateDevice(
 
         //
         // Initialize the remove lock and the event for use with the remove lock
-        // The event is initiatalized via IWudfDevice so the host can close the 
+        // The event is initiatalized via IWudfDevice so the host can close the
         // handle before destroying the allocated "WDM extension"
         // In the KMDF implementation the "WDM device extension" is allocated by
         // IoCreateDevice and destroyed when the WDM device object is deleted.
@@ -477,10 +477,10 @@ FxDevice::CreateDevice(
 
         //
         // Note: In case of UMDF the StackSize of the MdDeviceObject must
-        // be incremented prior to calling AttachDevice. It is because at the 
+        // be incremented prior to calling AttachDevice. It is because at the
         // time of attaching the device the CWudfDevStack caches the stack
-        // size of devnode. 
-        // This is unlike KMDF where it must be done after AttachDevice. 
+        // size of devnode.
+        // This is unlike KMDF where it must be done after AttachDevice.
         // Though the UMDF design can be modified to match KMDF solution, it
         // seems simpler to adjust the stack size of UMDF prior to AttachDevice
         //
@@ -822,6 +822,25 @@ FxDevice::PoFxDevicePowerNotRequired (
          m_PoxInterface.PowerNotRequiredCallbackInvoked();
 }
 
+void
+FxDevice::PoFxDeviceDirectedPowerDown (
+    _In_ MdDeviceObject DeviceObject
+    )
+{
+    GetFxDevice(DeviceObject)->m_PkgPnp->m_PowerPolicyMachine.m_Owner->
+         m_PoxInterface.DirectedPowerDownCallbackInvoked();
+}
+
+void
+FxDevice::PoFxDeviceDirectedPowerUp (
+    _In_ MdDeviceObject DeviceObject
+    )
+{
+    GetFxDevice(DeviceObject)->m_PkgPnp->m_PowerPolicyMachine.m_Owner->
+         m_PoxInterface.DirectedPowerUpCallbackInvoked();
+}
+
+
 NTSTATUS
 FxDevice::NtStatusFromHr (
     _In_ IWudfDeviceStack * DevStack,
@@ -1020,7 +1039,7 @@ FxDevice::_OpenDeviceRegistryKey(
 {
     NTSTATUS status;
     HRESULT hr;
-    
+
     UMINT::WDF_PROPERTY_STORE_ROOT root;
     UMINT::WDF_PROPERTY_STORE_RETRIEVE_FLAGS flags = UMINT::WdfPropertyStoreNormal;
     PWSTR subpath = NULL;
@@ -1030,7 +1049,7 @@ FxDevice::_OpenDeviceRegistryKey(
 
     #define WDF_REGKEY_DEVICE_SUBKEY 256
     #define WDF_REGKEY_DRIVER_SUBKEY 256
-    
+
     root.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
 
     if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
@@ -1073,7 +1092,7 @@ FxDevice::_OpenDeviceRegistryKey(
         // Legacy keys must always be opened volatile for UMDF
         //
         flags = UMINT::WdfPropertyStoreCreateVolatile;
-        
+
         subpath = NULL;
         root.Qualifier.LegacyHardwareKey.LegacyMapName = DriverName;
     }
@@ -1085,7 +1104,7 @@ FxDevice::_OpenDeviceRegistryKey(
                                                                (PHKEY)DevInstRegKey,
                                                                NULL);
     status = FxDevice::NtStatusFromHr(DeviceStack, hr);
-    
+
     return status;
 }
 
@@ -1100,7 +1119,7 @@ FxDevice::_GetDeviceProperty(
 {
     HRESULT hr;
     NTSTATUS status;
-    
+
     DEVPROPTYPE propType;
     const DEVPROPKEY *propKey = NULL;
 
@@ -1112,15 +1131,15 @@ FxDevice::_GetDeviceProperty(
     ULONG guidChLen = 2 + 4 + 32 + 1;
     ULONG guidCbLen = guidChLen * sizeof(WCHAR);
     BOOLEAN convertGuidToString = FALSE;
-    
+
     PVOID buffer = PropertyBuffer;
     ULONG bufferLen = BufferLength;
     ULONG resultLen = 0;
-    
+
     UMINT::WDF_PROPERTY_STORE_ROOT rootSpecifier;
     rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
     rootSpecifier.RootClass = UMINT::WdfPropertyStoreRootClassHardwareKey;
-    rootSpecifier.Qualifier.HardwareKey.ServiceName = NULL;   
+    rootSpecifier.Qualifier.HardwareKey.ServiceName = NULL;
 
     //
     // Map DEVICE_REGISTRY_PROPERTY enums to DEVPROPKEYs
@@ -1454,7 +1473,7 @@ FxDevice::_OpenKey(
     }
 
     _Analysis_assume_(DeviceInit != NULL || Device != NULL);
-    
+
     if (DeviceInit != NULL) {
         deviceStack = DeviceInit->DevStack;
         driverName = DeviceInit->ConfigRegistryPath;
@@ -1482,7 +1501,7 @@ FxDevice::_OpenKey(
                                         driverName,
                                         DeviceInstanceKeyType,
                                         DesiredAccess,
-                                        &hKey);       
+                                        &hKey);
         if (NT_SUCCESS(status)) {
             pKey->SetHandle(hKey);
             *Key = keyHandle;

@@ -1708,11 +1708,12 @@ Return Value:
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
             "Failing QueryRemoveDevice due to open special file counts "
-            "(paging %d, hiber %d, dump %d, boot %d)",
+            "(paging %d, hiber %d, dump %d, boot %d, guest assigned %d)",
             This->GetUsageCount(WdfSpecialFilePaging),
             This->GetUsageCount(WdfSpecialFileHibernation),
             This->GetUsageCount(WdfSpecialFileDump),
-            This->GetUsageCount(WdfSpecialFileBoot));
+            This->GetUsageCount(WdfSpecialFileBoot),
+            This->GetUsageCount(WdfSpecialFileGuestAssigned));
 
         status = STATUS_DEVICE_NOT_READY;
     }
@@ -1954,11 +1955,12 @@ Return Value:
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
             "Failing QueryStopDevice due to open special file counts (paging %d,"
-            " hiber %d, dump %d, boot %d)",
+            " hiber %d, dump %d, boot %d, guest assigned %d)",
             This->GetUsageCount(WdfSpecialFilePaging),
             This->GetUsageCount(WdfSpecialFileHibernation),
             This->GetUsageCount(WdfSpecialFileDump),
-            This->GetUsageCount(WdfSpecialFileBoot));
+            This->GetUsageCount(WdfSpecialFileBoot),
+            This->GetUsageCount(WdfSpecialFileGuestAssigned));
 
         status = STATUS_DEVICE_NOT_READY;
     }
@@ -2030,8 +2032,8 @@ Return Value:
     //
     // Mark the device as removed.
     //
-    m_PnpStateAndCaps.Value &= ~FxPnpStateRemovedMask;
-    m_PnpStateAndCaps.Value |= FxPnpStateRemovedTrue;
+    m_PnpState.Value &= ~FxPnpStateRemovedMask;
+    m_PnpState.Value |= FxPnpStateRemovedTrue;
 
     //
     // Now call the driver and tell it to cleanup all its software state.
@@ -3532,12 +3534,12 @@ Return Value:
     // a need to set these values, the driver can set them in
     // EvtDevicePrepareHardware.
     //
-    m_PnpStateAndCaps.Value &= ~(FxPnpStateRemovedMask |
-                                 FxPnpStateFailedMask |
-                                 FxPnpStateResourcesChangedMask);
-    m_PnpStateAndCaps.Value |= (FxPnpStateRemovedUseDefault |
-                                FxPnpStateFailedUseDefault |
-                                FxPnpStateResourcesChangedUseDefault);
+    m_PnpState.Value &= ~(FxPnpStateRemovedMask |
+                          FxPnpStateFailedMask |
+                          FxPnpStateResourcesChangedMask);
+    m_PnpState.Value |= (FxPnpStateRemovedUseDefault |
+                         FxPnpStateFailedUseDefault |
+                         FxPnpStateResourcesChangedUseDefault);
 
     //
     // This will parse the resources and setup all the WDFINTERRUPT handles
@@ -3946,10 +3948,10 @@ Returns:
     // states and the start succeeds, we would endlessly report that our
     // resources have changed and be restarted over and over.
     //
-    m_PnpStateAndCaps.Value &= ~(FxPnpStateFailedMask |
-                                 FxPnpStateResourcesChangedMask);
-    m_PnpStateAndCaps.Value |= (FxPnpStateFailedUseDefault |
-                                FxPnpStateResourcesChangedUseDefault);
+    m_PnpState.Value &= ~(FxPnpStateFailedMask |
+                          FxPnpStateResourcesChangedMask);
+    m_PnpState.Value |= (FxPnpStateFailedUseDefault |
+                         FxPnpStateResourcesChangedUseDefault);
 
     irp.SetIrp(m_PendingPnPIrp);
     pResourcesRaw = irp.GetParameterAllocatedResources();

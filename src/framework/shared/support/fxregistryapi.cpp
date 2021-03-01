@@ -142,6 +142,12 @@ WDFEXPORT(WdfRegistryOpenKey)(
         status = pKey->Open(parentHandle, KeyName, DesiredAccess);
 
         if (NT_SUCCESS(status)) {
+
+            if ((DesiredAccess & (GENERIC_ALL | GENERIC_WRITE | DELETE | KEY_WRITE)) != 0) {
+
+                pKey->VerifyStateSeparationRegistryPolicy();
+            }
+
             *Key = keyHandle;
         }
         else {
@@ -188,9 +194,10 @@ WDFEXPORT(WdfRegistryCreateKey)(
     NTSTATUS status;
     WDFKEY keyHandle;
     HANDLE parentHandle;
+    ULONG localDisposition;
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
-
+    
     if (ParentKey != NULL) {
         FxRegKey* pParent;
 
@@ -259,9 +266,17 @@ WDFEXPORT(WdfRegistryCreateKey)(
                               KeyName,
                               DesiredAccess,
                               CreateOptions,
-                              CreateDisposition);
+                              &localDisposition);
 
         if (NT_SUCCESS(status)) {
+            
+            pKey->VerifyStateSeparationRegistryPolicy();
+
+            if (CreateDisposition != NULL) {
+                
+                *CreateDisposition = localDisposition;
+            }
+            
             *Key = keyHandle;
         }
         else {
@@ -275,7 +290,7 @@ WDFEXPORT(WdfRegistryCreateKey)(
         pKey->DeleteFromFailedCreate();
         pKey = NULL;
     }
-
+    
     return status;
 }
 
@@ -359,6 +374,21 @@ WDFEXPORT(WdfRegistryRemoveKey)(
         return status;
     }
 
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    //
+    // DeleteKey isn't implemented for user mode so there's nothing to verify.
+    //
+
+#else
+    //
+    // DeleteKey is implemented for kernel mode; verify the access conforms to
+    // registry policy.
+    //
+    
+    pKey->VerifyStateSeparationRegistryPolicy();
+
+#endif
+    
     status = pKey->DeleteKey();
     if (NT_SUCCESS(status)) {
         //
@@ -408,6 +438,11 @@ WDFEXPORT(WdfRegistryRemoveValue)(
 
     status = ZwDeleteValueKey(pKey->GetHandle(), (PUNICODE_STRING) ValueName);
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     return status;
 }
 
@@ -1177,11 +1212,16 @@ WDFEXPORT(WdfRegistryAssignValue)(
 
     status = pKey->SetValue(ValueName, ValueType, Value, ValueLength);
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                             "WDFKEY %p SetValue, %!STATUS!", Key, status);
     }
-
+    
     return status;
 }
 
@@ -1270,11 +1310,16 @@ WDFEXPORT(WdfRegistryAssignMemory)(
 
     status = pKey->SetValue(ValueName, ValueType, pBuffer, length);
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                             "WDFKEY handle %p SetValue, %!STATUS!", Key, status);
     }
-
+    
     return status;
 }
 
@@ -1318,6 +1363,11 @@ WDFEXPORT(WdfRegistryAssignULong)(
 
     status = pKey->SetValue(ValueName, REG_DWORD, &Value, sizeof(Value));
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                             "WDFKEY %p SetValue, %!STATUS!",
@@ -1404,12 +1454,17 @@ WDFEXPORT(WdfRegistryAssignUnicodeString)(
 
     FxPoolFree(tempValueBuf);
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage( pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                              "WDFKEY %p set value failed, %!STATUS!",
                              Key, status);
     }
-
+    
     return status;
 }
 
@@ -1463,12 +1518,17 @@ WDFEXPORT(WdfRegistryAssignString)(
                             pString->Buffer(),
                             pString->ByteLength(TRUE));
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                             "WDFKEY handle %p SetValue, %!STATUS!",
                             Key, status);
     }
-
+    
     return status;
 }
 
@@ -1558,12 +1618,17 @@ WDFEXPORT(WdfRegistryAssignMultiString)(
 
     status = pKey->SetValue(ValueName, REG_MULTI_SZ, pValue, length);
 
+    if (NT_SUCCESS(status)) {
+        
+        pKey->VerifyStateSeparationRegistryPolicy();
+    }
+    
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage( pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
                              "WDFKEY %p SetValue, %!STATUS!",
                              Key, status);
     }
-
+    
     FxPoolFree(pValue);
 
     return status;

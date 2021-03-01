@@ -26,6 +26,8 @@ Notes:
 
 #pragma once
 
+#include <telemetry\MicrosoftTelemetryAssertKM.h>
+
 #include "fxldr.h"
 
 #if defined(__cplusplus)

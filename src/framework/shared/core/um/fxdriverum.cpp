@@ -231,7 +231,6 @@ FxDriver::AddDevice(
     pDevice = NULL;
     init.CreatedOnStack = TRUE;
     init.InitType = FxDeviceInitTypeFdo;
-    init.Fdo.PhysicalDevice = NULL;
 
     //
     // Capture the input parameters

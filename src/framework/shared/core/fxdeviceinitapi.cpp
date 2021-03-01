@@ -2615,7 +2615,38 @@ WDFEXPORT(WdfPdoInitAllowForwardingRequestToParent)(
     return ;
 }
 
+__drv_maxIRQL(PASSIVE_LEVEL)
+VOID
+WDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent)(
+    __in
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    __in
+    PWDFDEVICE_INIT DeviceInit
+    )
+{
+    DDI_ENTRY();
 
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    NTSTATUS status;
+
+    FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
+    pFxDriverGlobals = DeviceInit->DriverGlobals;
+
+    status = FxVerifierCheckIrqlLevel(pFxDriverGlobals, PASSIVE_LEVEL);
+    if (!NT_SUCCESS(status)) {
+        return;
+    }
+
+    if (DeviceInit->IsNotPdoInit()) {
+        DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+                            "Not a PWDFDEVICE_INIT for a PDO, %!STATUS!",
+                            status);
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return;
+    }
+
+    DeviceInit->Pdo.NoPowerDependencyOnParent = TRUE;
+}
 
 //
 // END PDO specific functions

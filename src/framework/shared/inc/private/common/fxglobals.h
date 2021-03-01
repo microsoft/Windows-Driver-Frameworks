@@ -94,6 +94,12 @@ typedef enum WaitSignalFlags {
 } WaitSignalFlags;
 
 
+
+
+
+
+
+
 struct FxObjectDebugInfo {
     //
     // FX_OBJECT_TYPES enum value
@@ -181,6 +187,11 @@ struct FxDriverGlobalsDebugExtension {
     // and optionally capture stack frames.
     //
     FxTrackPowerOption TrackPower;
+
+
+
+
+
 };
 
 //
@@ -947,6 +958,42 @@ struct FxLibraryGlobalsType {
     // Registry setting to disable sleep study
     //
     BOOLEAN SleepStudyDisabled;
+
+    //
+    // PoFx's Directed power management (DFx) feature auto opt-in setting.
+    // Note this only applies to drivers that opt into WDF system-managed idle
+    // timeout policy.
+    //
+    BOOLEAN WdfDirectedPowerTransitionEnabled;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
 extern FxLibraryGlobalsType FxLibraryGlobals;

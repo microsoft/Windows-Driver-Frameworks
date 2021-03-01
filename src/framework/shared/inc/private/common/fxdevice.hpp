@@ -2088,6 +2088,18 @@ public:
         );
 
     static
+    void
+    PoFxDeviceDirectedPowerDown (
+        _In_ MdDeviceObject DeviceObject
+        );
+
+    static
+    void
+    PoFxDeviceDirectedPowerUp (
+        _In_ MdDeviceObject DeviceObject
+        );
+
+    static
     BOOL
     TransportQueryId (
         _In_    IWudfDevice *   DeviceObject,

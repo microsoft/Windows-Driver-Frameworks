@@ -51,14 +51,14 @@ public:
     {
     //    SAFE_RELEASE(m_Device);
     }
-    
-    static 
-    NTSTATUS 
+
+    static
+    NTSTATUS
     _CreateAndInitialize(
         _In_ PFX_DRIVER_GLOBALS DriverGlobals,
         _In_ FxDevice* Device,
         _Out_ FxMessageDispatch ** ppWudfDispatcher
-       ); 
+       );
 
     //
     // IUnknown
@@ -71,13 +71,13 @@ public:
         _Out_ LPVOID*   ppvObject
         );
 
-    ULONG 
+    ULONG
     __stdcall
     AddRef();
-    
-    ULONG 
+
+    ULONG
     __stdcall
-    Release(); 
+    Release();
 
     //
     // IFxMessageDispatch
@@ -87,42 +87,42 @@ public:
     DispatchPnP(
         _In_ IWudfIrp *  pIrp
         );
-    
+
     virtual void __stdcall
     CreateFile(
         _In_ IWudfIoIrp *  pCreateIrp
         );
-    
+
     virtual void __stdcall
     DeviceControl(
         _In_ IWudfIoIrp * pIrp,
         _In_opt_ IUnknown * pFxContext
         );
-    
+
     virtual void __stdcall
     ReadFile(
         _In_ IWudfIoIrp * pIrp,
         _In_opt_ IUnknown * pFxContext
         );
-    
+
     virtual void __stdcall
     WriteFile(
         _In_ IWudfIoIrp * pIrp,
         _In_opt_ IUnknown * pFxContext
         );
-    
+
     virtual void __stdcall
     CleanupFile(
         _In_ IWudfIoIrp * pIrp,
         _In_ IUnknown * pFxContext
         );
-    
+
     virtual void __stdcall
     CloseFile(
         _In_ IWudfIoIrp * pIrp,
         _In_ IUnknown * pFxContext
         );
-    
+
     virtual
     VOID
     __stdcall
@@ -131,25 +131,25 @@ public:
         _Out_ UMINT::WDF_DEVICE_IO_TYPE *RWPreference,
         _Out_ UMINT::WDF_DEVICE_IO_TYPE *IoctlPreference
         );
-     
+
     virtual void __stdcall
     FlushBuffers(
         _In_ IWudfIoIrp * pIrp,
         _In_opt_ IUnknown * pFxContext
         );
-    
+
     virtual void __stdcall
     QueryInformationFile(
         _In_ IWudfIoIrp * pIrp,
         _In_opt_ IUnknown * pFxContext
         );
-    
+
     virtual void __stdcall
     SetInformationFile(
         _In_ IWudfIoIrp * pIrp,
         _In_opt_ IUnknown * pFxContext
         );
-    
+
     virtual NTSTATUS __stdcall
     ProcessWmiPowerQueryOrSetData(
         _In_ RdWmiPowerAction Action,
@@ -164,7 +164,7 @@ public:
         _In_    LPCGUID pDeviceInterfaceGuid,
         _In_    PCWSTR  pSymbolicLink
         );
-        
+
     virtual void __stdcall
     RemoteInterfaceRemoval(
         _In_    WUDF_INTERFACE_CONTEXT RemoteInterfaceID
@@ -186,18 +186,28 @@ public:
     PoFxDevicePowerRequired(
         VOID
         );
-    
+
     virtual void __stdcall
     PoFxDevicePowerNotRequired(
         VOID
         );
-    
+
+    virtual void __stdcall
+    PoFxDirectedPowerUp(
+        VOID
+        );
+
+    virtual void __stdcall
+    PoFxDirectedPowerDown(
+        VOID
+        );
+
     //
     // Additional public functions.
     //
 public:
     //
-    // Returns the Dispatcher object from the given interface without 
+    // Returns the Dispatcher object from the given interface without
     // incrementing the refcount.
     //
     static
@@ -207,7 +217,7 @@ public:
         );
 
     //
-    // Returns the specified interface from the given object without 
+    // Returns the specified interface from the given object without
     // incrementing the refcount.
     //
     static
@@ -225,7 +235,7 @@ public:
         )
     {
         return m_Device->GetDriver()->GetDriverObject();
-    }    
+    }
 
     MdDeviceObject
     GetDeviceObject(
@@ -233,14 +243,14 @@ public:
         )
     {
         return m_Device->GetDeviceObject();
-    }    
+    }
 
     //
     // Data members.
     //
 private:
     //
-    // Reference count for debugging purposes. The lifetime is managed by 
+    // Reference count for debugging purposes. The lifetime is managed by
     // FxDevice.
     //
     LONG                    m_cRefs;

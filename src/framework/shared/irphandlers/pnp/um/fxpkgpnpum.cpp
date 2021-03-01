@@ -79,15 +79,15 @@ FxPkgPnp::UpdateWmiInstance(
     }
     else {
         PUMDF_VERSION_DATA driverVersion = devStack->GetMinDriverVersion();
-        BOOL preserveCompat = 
+        BOOL preserveCompat =
              devStack->ShouldPreserveIrpCompletionStatusCompatibility();
-        
+
         status = CHostFxUtil::NtStatusFromHr(hr,
                                              driverVersion->MajorNumber,
                                              driverVersion->MinorNumber,
                                              preserveCompat);
     }
-    
+
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(GetDriverGlobals(),
                             TRACE_LEVEL_ERROR,
@@ -113,10 +113,10 @@ FxPkgPnp::ReadStateFromRegistry(
     DWORD dataSize;
     HKEY pwrPolKey = NULL;
     IWudfDeviceStack* devStack;
-    
+
     ASSERT(NULL != Value);
-    ASSERT(ValueName != NULL && 
-           ValueName->Length != 0 && 
+    ASSERT(ValueName != NULL &&
+           ValueName->Length != 0 &&
            ValueName->Buffer != NULL);
 
     *Value = 0;
@@ -131,7 +131,7 @@ FxPkgPnp::ReadStateFromRegistry(
         DoTraceLevelMessage(GetDriverGlobals(),
                             TRACE_LEVEL_ERROR,
                             TRACINGPNP,
-                            "RegOpenKeyEx returned error %d", 
+                            "RegOpenKeyEx returned error %d",
                             err);
         goto Clean;
     }
@@ -148,7 +148,7 @@ FxPkgPnp::ReadStateFromRegistry(
                             TRACE_LEVEL_ERROR,
                             TRACINGPNP,
                             "failed to read registry, "
-                            "RegQueryValueEx returned error %d", 
+                            "RegQueryValueEx returned error %d",
                             err);
         goto Clean;
     }
@@ -160,15 +160,15 @@ Clean:
     if (NULL != pwrPolKey) {
         RegCloseKey(pwrPolKey);
     }
-    
+
     if (ERROR_SUCCESS == err) {
         status = STATUS_SUCCESS;
     }
     else {
         PUMDF_VERSION_DATA driverVersion = devStack->GetMinDriverVersion();
-        BOOL preserveCompat = 
+        BOOL preserveCompat =
              devStack->ShouldPreserveIrpCompletionStatusCompatibility();
-        
+
         status = CHostFxUtil::NtStatusFromHr(HRESULT_FROM_WIN32(err),
                                              driverVersion->MajorNumber,
                                              driverVersion->MinorNumber,
@@ -193,8 +193,8 @@ FxPkgPnp::WriteStateToRegistry(
 
     UNREFERENCED_PARAMETER(RegKey);
 
-    ASSERT(ValueName != NULL && 
-           ValueName->Length != 0 && 
+    ASSERT(ValueName != NULL &&
+           ValueName->Length != 0 &&
            ValueName->Buffer != NULL);
 
     devStack = m_Device->GetDeviceStack();
@@ -214,7 +214,7 @@ FxPkgPnp::WriteStateToRegistry(
     }
 
     //
-    // Failure to save the user's idle/wake settings is not critical and we 
+    // Failure to save the user's idle/wake settings is not critical and we
     // will continue on regardless. Hence we ignore the return value.
     //
     err = RegSetValueEx(hKey,
@@ -228,7 +228,7 @@ FxPkgPnp::WriteStateToRegistry(
                             TRACE_LEVEL_ERROR,
                             TRACINGPNP,
                             "Failed to set Registry value "
-                            "for S0Idle/SxWake error %d", 
+                            "for S0Idle/SxWake error %d",
                             err);
         goto Clean;
     }
@@ -238,7 +238,7 @@ Clean:
         RegCloseKey(hKey);
     }
 }
- 
+
 NTSTATUS
 FxPkgPnp::UpdateWmiInstanceForS0Idle(
     __in FxWmiInstanceAction Action
@@ -251,7 +251,7 @@ FxPkgPnp::UpdateWmiInstanceForS0Idle(
     // to add/remove S0Idle WMI instance.
     //
     status = UpdateWmiInstance(Action, TRUE);
-    
+
     return status;
 }
 
@@ -277,6 +277,50 @@ FxPkgPnp::ReadRegistryS0Idle(
     }
 }
 
+VOID
+FxPkgPnp::ReadRegistryPofxDirectredTransition(
+    _In_    PCUNICODE_STRING ValueName,
+    _Inout_ BOOLEAN *Enabled
+    )
+{
+    IWudfDeviceStack* devStack;
+    HKEY hKey;
+    DWORD err;
+    DWORD value;
+    DWORD dataSize;
+
+    dataSize = sizeof(value);
+    devStack = m_Device->GetDeviceStack();
+
+    err = RegOpenKeyEx(devStack->GetDeviceRegistryKey(),
+                       L"WDF",
+                       0,
+                       KEY_READ,
+                       &hKey);
+
+    if (ERROR_SUCCESS == err) {
+
+        err = RegQueryValueEx(hKey,
+                          ValueName->Buffer,
+                          NULL,
+                          NULL,
+                          (BYTE*) &value,
+                          &dataSize);
+
+        //
+        // Modify value of Enabled only if success
+        //
+        if (ERROR_SUCCESS == err) {
+            //
+            // Normalize the ULONG value into a BOOLEAN
+            //
+            *Enabled = (value == FALSE) ? FALSE : TRUE;
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
 NTSTATUS
 FxPkgPnp::UpdateWmiInstanceForSxWake(
     __in FxWmiInstanceAction Action
@@ -289,7 +333,7 @@ FxPkgPnp::UpdateWmiInstanceForSxWake(
     // to add/remove SxWake WMI instance.
     //
     status = UpdateWmiInstance(Action, FALSE);
-    
+
     return status;
 }
 

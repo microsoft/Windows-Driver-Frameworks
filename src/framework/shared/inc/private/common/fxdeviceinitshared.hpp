@@ -30,6 +30,21 @@ struct PdoInit {
         VOID
         )
     {
+        //
+        // Cannot RtlZeroMemory the whole structure because the data member
+        // FxCollectionInternal has its own constructor
+        //
+        RtlZeroMemory(&EventCallbacks, sizeof(EventCallbacks));
+        Raw = FALSE;
+        Static = FALSE;
+        Parent = NULL;
+        DeviceID = NULL;
+        InstanceID = NULL;
+        ContainerID = NULL;
+        DefaultLocale = 0x0;
+        DescriptionEntry = NULL;
+        ForwardRequestToParent = FALSE;
+        NoPowerDependencyOnParent = FALSE;
         DeviceText.Next = NULL;
         LastDeviceTextEntry = &DeviceText.Next;
     }
@@ -60,6 +75,8 @@ struct PdoInit {
     BOOLEAN Static;
 
     BOOLEAN ForwardRequestToParent;
+
+    BOOLEAN NoPowerDependencyOnParent;
 };
 
 #endif //__FXDEVICEINITSHARED_HPP__

@@ -2907,7 +2907,13 @@ FxChildList::PostParentToD0(
             continue;
         }
 
-        if (pEntry->m_Pdo != NULL) {
+        //
+        // A child PDO that does not have a power dependency on the parent will
+        // never wait for this event, so don't post it.
+        //
+        if ((pEntry->m_Pdo != NULL) &&
+            (pEntry->m_Pdo->GetPdoPkg()->HasPowerDependencyOnParent() != FALSE)) {
+
             pEntry->m_Pdo->m_PkgPnp->PowerProcessEvent(PowerParentToD0);
         }
     }

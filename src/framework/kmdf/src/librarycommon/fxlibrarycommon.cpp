@@ -371,20 +371,22 @@ FxLibraryCommonRegisterClient(
     __assume(WdfVersion.FuncCount == sizeof(WDFFUNCTIONS)/sizeof(PVOID));
 
     if (Info->FuncCount > WdfVersion.FuncCount) {
-        __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+        DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
+                 LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
                  ": version mismatch detected in function table count: client"
                  "has 0x%x,  library has 0x%x\n",
-                 Info->FuncCount, WdfVersion.FuncCount));
+                 Info->FuncCount, WdfVersion.FuncCount);
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_25) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_27) {
         //
         // Make sure table count matches exactly with previously
         // released framework version table sizes.
         //
         switch (Info->FuncCount) {
 
+     // case WdfFunctionTableNumEntries_V1_27: // 453 - win10 1809 RS5
         case WdfFunctionTableNumEntries_V1_25: // 453 - win10 1803 RS4
         case WdfFunctionTableNumEntries_V1_23: // 451 - win10 1709 RS3
         case WdfFunctionTableNumEntries_V1_21: // 448 - win10 1703 RS2
@@ -401,13 +403,22 @@ FxLibraryCommonRegisterClient(
             break;
 
         default:
-            __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
+            DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL,
+                     LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
                      ": Function table count 0x%x doesn't match any previously "
                      "released framework version table size\n",
-                     Info->FuncCount));
+                     Info->FuncCount);
             goto Done;
         }
     }
+
+
+
+
+
+
+
+
     else {
 
 

@@ -64,6 +64,20 @@ const GUID FxPkgPnp::GUID_POWER_THREAD_INTERFACE = {
     0xdc7a8e51, 0x49b3, 0x4a3a, { 0x9e, 0x81, 0x62, 0x52, 0x05, 0xe7, 0xd7, 0x29 }
 };
 
+//
+// Define registry setting for drivers to opt into PoFx's Directed power
+// management (DFx) feature. Note this registry setting only applies to drivers
+// that opt into WDF system-managed idle timeout policy.
+//
+#define WDF_S0_IDLE_DFX_ENABLE_VALUE_NAME L"WdfDirectedPowerTransitionEnable"
+
+//
+// Ignore children devices when doing directed power transition.
+//
+// This is useful only for KMDF bus driver that enables DFx.
+//
+#define WDF_S0_IDLE_DFX_CHILDREN_OPTIONAL_VALUE_NAME L"WdfDirectedPowerTransitionChildrenOptional"
+
 FxPkgPnp::FxPkgPnp(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in CfxDevice* Device,
@@ -81,14 +95,17 @@ FxPkgPnp::FxPkgPnp(
     // Initialize the structures to the default state and then override the
     // non WDF std default values to the unsupported / off values.
     //
-    m_PnpStateAndCaps.Value =
+    m_PnpState.Value =
         FxPnpStateDisabledUseDefault         |
         FxPnpStateDontDisplayInUIUseDefault  |
         FxPnpStateFailedUseDefault           |
         FxPnpStateNotDisableableUseDefault   |
         FxPnpStateRemovedUseDefault          |
         FxPnpStateResourcesChangedUseDefault |
+        FxPnpStateAssignedToGuestUseDefault
+        ;
 
+    m_PnpCaps.Value =
         FxPnpCapLockSupportedUseDefault      |
         FxPnpCapEjectSupportedUseDefault     |
         FxPnpCapRemovableUseDefault          |
@@ -177,6 +194,9 @@ FxPkgPnp::FxPkgPnp(
     m_SelfManagedIoMachine = NULL;
 
     m_EnumInfo = NULL;
+
+    m_BusEnumRetries = 0;
+    RtlZeroMemory(&m_BusInformation, sizeof(m_BusInformation));
 
     m_Resources = NULL;
     m_ResourcesRaw = NULL;
@@ -798,6 +818,10 @@ Returns:
                              PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED,
                              state,
                              ResourcesChanged);
+    SET_PNP_DEVICE_STATE_BIT(&PnpDeviceState,
+                             PNP_DEVICE_ASSIGNED_TO_GUEST,
+                             state,
+                             AssignedToGuest);
 
     if ((state & FxPnpStateDontDisplayInUIMask) == FxPnpStateDontDisplayInUIUseDefault) {
         LONG caps;
@@ -1482,6 +1506,8 @@ Returns:
     case WdfSpecialFileHibernation:
     case WdfSpecialFileDump:
     case WdfSpecialFileBoot:
+    case WdfSpecialFilePostDisplay:
+    case WdfSpecialFileGuestAssigned:
         SetUsageSupport(_SpecialTypeToUsage(FileType), Supported);
         break;
 
@@ -2968,7 +2994,7 @@ Return Value:
     DEVICE_POWER_STATE dxState;
     ULONG idleTimeout;
     NTSTATUS status;
-    BOOLEAN enabled, s0Capable, overridable, firstTime;
+    BOOLEAN enabled, s0Capable, overridable, firstTime, directedTransitions;
     WDF_TRI_STATE powerUpOnSystemWake;
     const LONGLONG negliblySmallIdleTimeout = -1; // 100 nanoseconds
 
@@ -2976,6 +3002,7 @@ Return Value:
     dxState = PowerDeviceD3;
     overridable = FALSE;
     firstTime = TRUE;
+    directedTransitions = FxLibraryGlobals.WdfDirectedPowerTransitionEnabled;
 
     if (Settings->Enabled == WdfTrue) {
         enabled = TRUE;
@@ -3205,6 +3232,48 @@ Return Value:
                 if (!NT_SUCCESS(status)) {
                     return status;
                 }
+
+                //
+                // Query the registry to determine if the device wants to opt
+                // into PoFx Directed power management (DFx) feature. This is
+                // only supported for system-managed idle timeout devices.
+                //
+                BOOLEAN dfxChildrenOptional = FALSE;
+                if (Mx::MxGetCurrentIrql() == PASSIVE_LEVEL) {
+
+                    DECLARE_CONST_UNICODE_STRING(valueName, \
+                        WDF_S0_IDLE_DFX_ENABLE_VALUE_NAME);
+
+                    //
+                    // Read registry. If registry value is not found, the value of
+                    // "directedTransitions" remains unchanged.
+                    //
+                    ReadRegistryPofxDirectredTransition(&valueName, &directedTransitions);
+
+                    DECLARE_CONST_UNICODE_STRING(childrenOptionalName, \
+                        WDF_S0_IDLE_DFX_CHILDREN_OPTIONAL_VALUE_NAME);
+
+                    ReadRegistryPofxDirectredTransition(&childrenOptionalName, &dfxChildrenOptional);
+                }
+                else {
+                    DoTraceLevelMessage(
+                        GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+                        "If registry value WdfDirectedPowerTransitionEnable was present, "
+                        "it was not read because DDI WdfDeviceAssignS0IdleSettings "
+                        "was not called at PASSIVE_LEVEL");
+                }
+
+                //
+                // Set it to the registry specified value or the default value.
+                //
+                m_PowerPolicyMachine.m_Owner->m_IdleSettings.
+                    m_TimeoutMgmt.SetDirectedPowerTransitionSupport(
+                        directedTransitions);
+
+                m_PowerPolicyMachine.m_Owner->m_IdleSettings.
+                    m_TimeoutMgmt.SetDirectedPowerTransitionChildrenOptional(
+                        dfxChildrenOptional);
+
             }
         } else {
             //
@@ -4176,12 +4245,13 @@ FxPkgPnp::PnpDeviceUsageNotification(
     DoTraceLevelMessage(
         GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
         "type %x, in path %x, can support paging %x, dump file %x, "
-        "hiber file %x, boot file %x",
+        "hiber file %x, boot file %x, guest assigned %x",
         type, inPath,
         IsUsageSupported(_SpecialTypeToUsage(WdfSpecialFilePaging)),
         IsUsageSupported(_SpecialTypeToUsage(WdfSpecialFileDump)),
         IsUsageSupported(_SpecialTypeToUsage(WdfSpecialFileHibernation)),
-        IsUsageSupported(_SpecialTypeToUsage(WdfSpecialFileBoot)));
+        IsUsageSupported(_SpecialTypeToUsage(WdfSpecialFileBoot)),
+        IsUsageSupported(_SpecialTypeToUsage(WdfSpecialFileGuestAssigned)));
 
 
     if (type >= WdfSpecialFilePaging && type < WdfSpecialFileMax) {
@@ -4497,7 +4567,7 @@ FxPkgPnp::PnpDeviceUsageNotification(
         if (NT_SUCCESS(status) &&
             inPath &&
             (HasPowerThread() == FALSE) &&
-            type != WdfSpecialFileBoot
+            IsUsagePowerRelated(_UsageToSpecialType(type))
             ) {
             status = QueryForPowerThread();
 
@@ -4822,9 +4892,9 @@ Return Value:
     AdjustUsageCount(Type, InPath);
 
     //
-    // Boot notification doesn't require updating device flags.
+    // Some notifications don't require updating device flags.
     //
-    if (Type == WdfSpecialFileBoot) {
+    if (IsUsagePowerRelated(_UsageToSpecialType(Type)) == FALSE) {
         return oldFlags;
     }
 
@@ -5733,18 +5803,7 @@ Return Value:
 
   --*/
 {
-    LONG state;
-    KIRQL irql;
-
-    //
-    // State is shared with the caps bits.  Use a lock to guard against
-    // corruption of the value between these 2 values
-    //
-    Lock(&irql);
-    state = m_PnpStateAndCaps.Value & FxPnpStateMask;
-    Unlock(irql);
-
-    return state;
+    return m_PnpState.Value;
 }
 
 LONG
@@ -5766,14 +5825,7 @@ Return Value:
 
   --*/
 {
-    LONG caps;
-    KIRQL irql;
-
-    Lock(&irql);
-    caps = m_PnpStateAndCaps.Value & FxPnpCapMask;
-    Unlock(irql);
-
-    return caps;
+    return m_PnpCaps.Value;
 }
 
 
@@ -5796,7 +5848,6 @@ Return Value:
   --*/
 {
     LONG pnpCaps;
-    KIRQL irql;
 
     pnpCaps = 0;
     pnpCaps |= GET_PNP_CAP_BITS_FROM_STRUCT(PnpCapabilities, LockSupported);
@@ -5821,13 +5872,7 @@ Return Value:
         m_PnpCapsUINumber = PnpCapabilities->UINumber;
     }
 
-    //
-    // Use the FxPnpStateMask to keep the state mask while applying the new
-    // pnp capabilities.
-    //
-    Lock(&irql);
-    m_PnpStateAndCaps.Value = (m_PnpStateAndCaps.Value & FxPnpStateMask) | pnpCaps;
-    Unlock(irql);
+    m_PnpCaps.Value = pnpCaps;
 }
 
 VOID
@@ -5858,6 +5903,9 @@ Return Value:
     SET_TRI_STATE_FROM_STATE_BITS(state, State, NotDisableable);
     SET_TRI_STATE_FROM_STATE_BITS(state, State, Removed);
     SET_TRI_STATE_FROM_STATE_BITS(state, State, ResourcesChanged);
+    if (State->Size > sizeof(WDF_DEVICE_STATE_V1_27)) {
+        SET_TRI_STATE_FROM_STATE_BITS(state, State, AssignedToGuest);
+    }
 }
 
 VOID
@@ -5878,7 +5926,6 @@ Return Value:
   --*/
 {
     LONG pnpState;
-    KIRQL irql;
 
     pnpState = 0x0;
     pnpState |= GET_PNP_STATE_BITS_FROM_STRUCT(State, Disabled);
@@ -5887,14 +5934,14 @@ Return Value:
     pnpState |= GET_PNP_STATE_BITS_FROM_STRUCT(State, NotDisableable);
     pnpState |= GET_PNP_STATE_BITS_FROM_STRUCT(State, Removed);
     pnpState |= GET_PNP_STATE_BITS_FROM_STRUCT(State, ResourcesChanged);
+    if (State->Size <= sizeof(WDF_DEVICE_STATE_V1_27)) {
+        pnpState |= FxPnpStateAssignedToGuestUseDefault;
+    }
+    else {
+        pnpState |= GET_PNP_STATE_BITS_FROM_STRUCT(State, AssignedToGuest);
+    }
 
-    //
-    // Mask off FxPnpCapMask to keep the capabilities part of the bitfield
-    // the same while change the pnp state.
-    //
-    Lock(&irql);
-    m_PnpStateAndCaps.Value = (m_PnpStateAndCaps.Value & FxPnpCapMask) | pnpState;
-    Unlock(irql);
+    m_PnpState.Value = pnpState;
 }
 
 VOID

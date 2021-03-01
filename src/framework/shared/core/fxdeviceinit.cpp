@@ -40,9 +40,6 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
     DeviceType = FILE_DEVICE_UNKNOWN;
     Characteristics = FILE_DEVICE_SECURE_OPEN;
 
-    RtlZeroMemory(&FileObject, sizeof(FileObject));
-    FileObject.AutoForwardCleanupClose = WdfUseDefault;
-
     DeviceName = NULL;
     CreatedDevice = NULL;
 
@@ -53,32 +50,7 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
 
     RemoveLockOptionFlags = 0;
 
-    RtlZeroMemory(&PnpPower.PnpPowerEventCallbacks, sizeof(PnpPower.PnpPowerEventCallbacks));
-    RtlZeroMemory(&PnpPower.PolicyEventCallbacks, sizeof(PnpPower.PolicyEventCallbacks));
-    PnpPower.PnpStateCallbacks = NULL;
-    PnpPower.PowerStateCallbacks = NULL;
-    PnpPower.PowerPolicyStateCallbacks = NULL;
-
-    PnpPower.PowerPolicyOwner = WdfUseDefault;
-
     InitType = FxDeviceInitTypeFdo;
-
-    RtlZeroMemory(&Fdo.EventCallbacks, sizeof(Fdo.EventCallbacks));
-    RtlZeroMemory(&Fdo.ListConfig, sizeof(Fdo.ListConfig));
-    RtlZeroMemory(&Fdo.ListConfigAttributes, sizeof(Fdo.ListConfigAttributes));
-    Fdo.Filter = FALSE;
-
-    RtlZeroMemory(&Pdo.EventCallbacks, sizeof(Pdo.EventCallbacks));
-    Pdo.Raw = FALSE;
-    Pdo.Static = FALSE;
-    Pdo.DeviceID = NULL;
-    Pdo.InstanceID = NULL;
-    Pdo.ContainerID = NULL;
-    Pdo.DefaultLocale = 0x0;
-    Pdo.DescriptionEntry = NULL;
-    Pdo.ForwardRequestToParent = FALSE;
-    
-    RtlZeroMemory(&Security, sizeof(Security));
 
     RtlZeroMemory(&RequestAttributes, sizeof(RequestAttributes));
 
@@ -89,7 +61,7 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
     InitializeListHead(&CxDeviceInitListHead);
 
     ReleaseHardwareOrderOnFailure = WdfReleaseHardwareOrderOnFailureEarly;
-    
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 
     DeviceControlIoType = WdfDeviceIoBuffered;
@@ -107,19 +79,14 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
 
     DriverID = 0;
 
-    //
-    // Companion related member initilaization
-    //
     Companion = NULL;
-
-    RtlZeroMemory(&CompanionInit.CompanionEventCallbacks, sizeof(CompanionInit.CompanionEventCallbacks));
 #endif
 }
 
 WDFDEVICE_INIT::~WDFDEVICE_INIT()
 {
     PLIST_ENTRY next;
-    
+
     if (PnpPower.PnpStateCallbacks != NULL) {
         delete PnpPower.PnpStateCallbacks;
     }
@@ -295,8 +262,8 @@ WDFDEVICE_INIT::ShouldCreateSecure(
             ASSERT(Pdo.Raw == FALSE);
 
             DoTraceLevelMessage(
-                DriverGlobals, 
-                TRACE_LEVEL_WARNING, 
+                DriverGlobals,
+                TRACE_LEVEL_WARNING,
                 TRACINGDEVICE,
                 "WDFDRIVER 0x%p asked for a named device object, but the PDO "
                 "will be created without a name because an SDDL string has not "

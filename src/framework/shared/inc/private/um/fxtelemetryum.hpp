@@ -26,6 +26,8 @@ Notes:
 
 #pragma once
 
+#include <telemetry\MicrosoftTelemetryAssert.h>
+
 #include "fxldrum.h"
 
 //

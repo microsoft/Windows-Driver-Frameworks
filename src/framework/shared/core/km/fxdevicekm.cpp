@@ -302,6 +302,10 @@ FxDevice::PdoInitialize(
             pPkgPdo->m_AllowForwardRequestToParent = TRUE;
         }
 
+        if (DeviceInit->Pdo.NoPowerDependencyOnParent) {
+            pPkgPdo->m_HasPowerDependencyOnParent = FALSE;
+        }
+
         status = m_PkgWmi->PostCreateDeviceInitialize();
         if (!NT_SUCCESS(status)) {
             return status;

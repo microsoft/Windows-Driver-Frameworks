@@ -626,10 +626,23 @@ WDFEXPORT(WdfDeviceSetSpecialFileSupport)(
                                    (PVOID *) &pDevice,
                                    &pFxDriverGlobals);
 
-    if (FileType < WdfSpecialFilePaging  || FileType >= WdfSpecialFileMax) {
+    if (FileType < WdfSpecialFilePaging  ||
+        FileType == WdfSpecialFilePostDisplay ||
+        FileType >= WdfSpecialFileMax) {
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
             "WDFDEVICE 0x%p FileType %d specified is not in valid range",
+            Device, FileType);
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+        return;
+    }
+
+    if ((pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1, 29) == FALSE) &&
+        (FileType > WdfSpecialFileBoot)) {
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+            "WDFDEVICE 0x%p FileType %d specified is not supported in this version",
             Device, FileType);
         FxVerifierDbgBreakPoint(pFxDriverGlobals);
         return;

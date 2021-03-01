@@ -76,6 +76,7 @@ RegisterTelemetryProvider(
     VOID
     )
 {
+    InitializeTelemetryAssertsKMByName("wdf01000.sys");
     TraceLoggingRegister(g_TelemetryProvider);
 }
 
@@ -84,6 +85,7 @@ UnregisterTelemetryProvider(
     VOID
     )
 {
+    UninitializeTelemetryAssertsKM();
     TraceLoggingUnregister(g_TelemetryProvider);
 }
 
@@ -126,7 +128,7 @@ IsLoggingEnabledAndNeeded(
     // repeatedly firing events during PnP rebalance.
     //
     if (InterlockedBitTestAndSet(
-            &DriverGlobals->TelemetryContext->DoOnceFlagsBitmap, 
+            &DriverGlobals->TelemetryContext->DoOnceFlagsBitmap,
             DeviceStartEventBit) != 0) {
         return FALSE;
     }
@@ -573,7 +575,7 @@ Return Value:
             status);
         return status;
     }
-    
+
     //
     // Build Unicode string out of registry data
     //

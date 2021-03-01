@@ -92,7 +92,7 @@ Returns:
 
 --*/
 {
-    
+
     DoTraceLevelMessage( FxDriverGlobals, TRACE_LEVEL_FATAL, TRACINGERROR,
                          "NULL Required Parameter Passed to a DDI\n"
                          "FxDriverGlobals 0x%p",
@@ -120,7 +120,7 @@ FxVerifierDriverReportedBugcheck(
 
 Routine Description:
 
-    For KMDF this will bugcheck the system while for UMDF a watson report 
+    For KMDF this will bugcheck the system while for UMDF a watson report
     is filed that will blame the driver for the host failure.
 
 Arguments:
@@ -141,6 +141,11 @@ Returns: VOID
 
 --*/
 {
+    //
+    // Indicate to the BugCheck callback filter which IFR to dump.
+    //
+    FxDriverGlobals->FxForceLogsInMiniDump = TRUE;
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
     FX_VERIFY_WITH_NAME(DRIVER(BadAction, BugCheckCode), TRAPMSG("A UMDF driver "
         "reported a fatal error"), FxDriverGlobals->Public.DriverName);

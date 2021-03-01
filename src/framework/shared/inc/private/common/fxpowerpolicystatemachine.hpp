@@ -41,6 +41,10 @@ enum FxPowerPolicyEvent {
     PwrPolDevicePowerRequired           = 0x00800000,
     PwrPolRemove                        = 0x01000000,
     PwrPolWakeInterruptFired            = 0x02000000,
+    PwrPolDeviceDirectedPowerDown       = 0x04000000,
+    PwrPolDeviceDirectedPowerUp         = 0x08000000,
+    PwrPolDevicePowerNotRequiredDirected = 0x10000000,
+    PwrPolDevicePowerRequiredDirected   = 0x20000000,
 
     //
     // Not a real event, just a value that indicates all of the events which
@@ -60,7 +64,10 @@ enum FxPowerPolicyEvent {
                                           PwrPolWakeFailed |
                                           PwrPolPowerUpNotSeen |
                                           PwrPolUsbSelectiveSuspendCompleted |
-                                          PwrPolWakeInterruptFired,
+                                          PwrPolWakeInterruptFired |
+                                          PwrPolDevicePowerNotRequiredDirected |
+                                          PwrPolDevicePowerRequiredDirected |
+                                          PwrPolDeviceDirectedPowerUp,
 
     //
     // Not a real event, just a value that indicates all of the events which
@@ -82,7 +89,6 @@ enum FxPowerPolicyEvent {
     // this event.
     //
                                           PwrPolWakeInterruptFired,
-
 
     PwrPolNull                          = 0xFFFFFFFF,
 };
@@ -371,6 +377,28 @@ private:
     //
     PPOX_SETTINGS m_PoxSettings;
 
+    //
+    // This member is used to determine whether or not the driver will advertise
+    // support for Directed power transitions when it registers with PoFx for
+    // runtime idle support.
+    //
+    BOOLEAN m_DirectedTransitionsSupported;
+
+    //
+    // When DFx is enabled on a device, normally all child devices need enable
+    // DFx as well. However, if the child devices don't do any power management 
+    // e.g. software devices, they shouldn't be required to implement DFx too.
+    // 
+    // Also note that WDF currently doesn't support powering down a parent device
+    // if there is a child device(s) in D0. Thus child PDO has to be enumerated
+    // side-band through either a upper filter or SwDeviceCreate.
+    //
+    // In summary: if a WDF driver enables DFx, is not a bus driver, and knows
+    // that it might have some virtual child devices through side-band approach,
+    // then it can set the flag below.
+    //
+    BOOLEAN m_DirectedTransitionsChildrenOptional;
+
 private:
     IdleTimeoutStatusUpdateResult
     UpdateIdleTimeoutStatus(
@@ -386,7 +414,9 @@ public:
     IdleTimeoutManagement(
         VOID
         ) : m_IdleTimeoutStatus(0),
-            m_PoxSettings(NULL)
+            m_PoxSettings(NULL),
+            m_DirectedTransitionsSupported(FALSE),
+            m_DirectedTransitionsChildrenOptional(FALSE)
     {
     }
 
@@ -474,6 +504,40 @@ public:
         )
     {
         return m_PoxSettings;
+    }
+
+    VOID
+    SetDirectedPowerTransitionSupport(
+        BOOLEAN Supported
+        )
+    {
+        m_DirectedTransitionsSupported = Supported;
+        return;
+    }
+
+    BOOLEAN
+    GetDirectedPowerTransitionSupport(
+        VOID
+        )
+    {
+        return m_DirectedTransitionsSupported;
+    }
+
+    VOID
+    SetDirectedPowerTransitionChildrenOptional(
+        BOOLEAN IsOptional
+        )
+    {
+        m_DirectedTransitionsChildrenOptional = IsOptional;
+        return;
+    }
+
+    BOOLEAN
+    GetDirectedPowerTransitionChildrenOptional(
+        VOID
+        )
+    {
+        return m_DirectedTransitionsChildrenOptional;
     }
 };
 

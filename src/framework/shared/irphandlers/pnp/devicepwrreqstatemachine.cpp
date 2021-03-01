@@ -19,18 +19,20 @@ extern "C" {
 #endif
 }
 
-const FxDevicePwrRequirementTargetState 
+const FxDevicePwrRequirementTargetState
 FxDevicePwrRequirementMachine::m_UnregisteredStates[] =
 {
     {DprEventRegisteredWithPox, DprDevicePowerRequiredD0 DEBUGGED_EVENT}
 };
 
-const FxDevicePwrRequirementTargetState 
+const FxDevicePwrRequirementTargetState
 FxDevicePwrRequirementMachine::m_DevicePowerRequiredD0States[] =
 {
     {DprEventPoxDoesNotRequirePower, DprDevicePowerNotRequiredD0 DEBUGGED_EVENT},
     {DprEventUnregisteredWithPox, DprUnregistered DEBUGGED_EVENT},
-    {DprEventDeviceReturnedToD0, DprDevicePowerRequiredD0 DEBUGGED_EVENT}
+    {DprEventDeviceReturnedToD0, DprDevicePowerRequiredD0 DEBUGGED_EVENT},
+    {DprEventPoxDirectedPowerDown, DprDirectedPowerDownInitiate DEBUGGED_EVENT},
+    {DprEventDeviceDirectedPoweredDown, DprDirectedPowerDownComplete DEBUGGED_EVENT},
 };
 
 const FxDevicePwrRequirementTargetState
@@ -45,13 +47,17 @@ const FxDevicePwrRequirementTargetState
 FxDevicePwrRequirementMachine::m_DevicePowerNotRequiredDxStates[] =
 {
     {DprEventDeviceReturnedToD0, DprWaitingForDevicePowerRequiredD0 DEBUGGED_EVENT},
-    {DprEventPoxRequiresPower, DprDevicePowerRequiredDx DEBUGGED_EVENT}
+    {DprEventPoxRequiresPower, DprDevicePowerRequiredDx DEBUGGED_EVENT},
+    {DprEventDeviceDirectedPoweredDown, DprDirectedPowerDownComplete DEBUGGED_EVENT},
 };
 
 const FxDevicePwrRequirementTargetState
 FxDevicePwrRequirementMachine::m_DevicePowerRequiredDxStates[] =
 {
-    {DprEventDeviceReturnedToD0, DprReportingDevicePowerAvailable DEBUGGED_EVENT}
+    {DprEventDeviceReturnedToD0, DprReportingDevicePowerAvailable DEBUGGED_EVENT},
+    {DprEventPoxDirectedPowerUp, DprDirectedPowerUpComplete DEBUGGED_EVENT},
+    {DprEventDeviceDirectedPoweredDown, DprDirectedPowerUpComplete DEBUGGED_EVENT},
+    {DprEventDeviceDirectedPoweredUp, DprDirectedPowerUpComplete DEBUGGED_EVENT},
 };
 
 const FxDevicePwrRequirementTargetState
@@ -62,7 +68,26 @@ FxDevicePwrRequirementMachine::m_WaitingForDevicePowerRequiredD0States[] =
     {DprEventUnregisteredWithPox, DprUnregistered DEBUGGED_EVENT},
 };
 
-const FxDevicePwrRequirementStateTable 
+const FxDevicePwrRequirementTargetState
+FxDevicePwrRequirementMachine::m_DirectedPowerDownCompleteStates[] =
+{
+    {DprEventPoxDirectedPowerUp, DprDirectedPowerUpInitiate DEBUGGED_EVENT},
+    {DprEventDeviceReturnedToD0, DprDirectedPowerDownFailedWaitingForUp DEBUGGED_EVENT},
+};
+
+const FxDevicePwrRequirementTargetState
+FxDevicePwrRequirementMachine::m_DirectedPowerUpCompleteStates[] =
+{
+    {DprEventDeviceReturnedToD0, DprReportingDevicePowerAvailable DEBUGGED_EVENT},
+};
+
+const FxDevicePwrRequirementTargetState
+FxDevicePwrRequirementMachine::m_DirectedPowerDownFailedWaitingForUpStates[] =
+{
+    {DprEventPoxDirectedPowerUp, DprDirectedPowerDownFailedUpArrived DEBUGGED_EVENT},
+};
+
+const FxDevicePwrRequirementStateTable
 FxDevicePwrRequirementMachine::m_StateTable[] =
 {
     // DprUnregistered
@@ -106,6 +131,49 @@ FxDevicePwrRequirementMachine::m_StateTable[] =
         FxDevicePwrRequirementMachine::m_WaitingForDevicePowerRequiredD0States,
         ARRAY_SIZE(FxDevicePwrRequirementMachine::m_WaitingForDevicePowerRequiredD0States),
     },
+
+    // DprDirectedPowerDownInitiate
+    {   FxDevicePwrRequirementMachine::DirectedPowerDownInitiate,
+        NULL,
+        0,
+    },
+
+    // DprDirectedPowerDownComplete
+    {   FxDevicePwrRequirementMachine::DirectedPowerDownComplete,
+        FxDevicePwrRequirementMachine::m_DirectedPowerDownCompleteStates,
+        ARRAY_SIZE(FxDevicePwrRequirementMachine::m_DirectedPowerDownCompleteStates),
+    },
+
+    // DprDirectedPowerUpInitiate
+    {   FxDevicePwrRequirementMachine::DirectedPowerUpInitiate,
+        NULL,
+        0,
+    },
+
+    // DprDirectedPowerUpComplete
+    {   FxDevicePwrRequirementMachine::DirectedPowerUpComplete,
+        FxDevicePwrRequirementMachine::m_DirectedPowerUpCompleteStates,
+        ARRAY_SIZE(FxDevicePwrRequirementMachine::m_DirectedPowerUpCompleteStates),
+    },
+
+    // DprDirectedPowerDownFailedWaitingForUp
+    {   NULL,
+        FxDevicePwrRequirementMachine::m_DirectedPowerDownFailedWaitingForUpStates,
+        ARRAY_SIZE(FxDevicePwrRequirementMachine::m_DirectedPowerDownFailedWaitingForUpStates),
+    },
+
+    // DprDirectedPowerDownFailedUpArrived
+    {   FxDevicePwrRequirementMachine::DirectedPowerDownFailedUpArrived,
+        NULL,
+        0,
+    },
+
+    // DprDirectedPowerUpFailedComplete
+    {   FxDevicePwrRequirementMachine::DirectedPowerUpFailedComplete,
+        NULL,
+        0,
+    },
+
 };
 
 FxDevicePwrRequirementMachine::FxDevicePwrRequirementMachine(
@@ -116,9 +184,9 @@ FxDevicePwrRequirementMachine::FxDevicePwrRequirementMachine(
     // Make sure we can fit the state into a byte
     //
     C_ASSERT(DprMax <= 0xFF);
-    
+
     m_CurrentState = DprUnregistered;
-    
+
     RtlZeroMemory(&m_Queue, sizeof(m_Queue));
     RtlZeroMemory(&m_States, sizeof(m_States));
 
@@ -137,7 +205,7 @@ FxDevicePwrRequirementMachine::ProcessEvent(
     NTSTATUS status;
     KIRQL irql;
     LONGLONG timeout = 0;
- 
+
     //
     // Acquire state machine *queue* lock, raising to DISPATCH_LEVEL
     //
@@ -149,7 +217,7 @@ FxDevicePwrRequirementMachine::ProcessEvent(
         //
         Unlock(irql);
 
-        ASSERTMSG("The device power requirement state machine queue is full\n", 
+        ASSERTMSG("The device power requirement state machine queue is full\n",
                   FALSE);
         return;
     }
@@ -165,13 +233,13 @@ FxDevicePwrRequirementMachine::ProcessEvent(
           "%!FxDevicePwrRequirementEvents! because of a closed queue",
           m_PoxInterface->m_PkgPnp->GetDevice()->GetHandle(),
           m_PoxInterface->m_PkgPnp->GetDevice()->GetDeviceObject(),
-          m_CurrentState, 
+          m_CurrentState,
           Event);
-            
+
         Unlock(irql);
-        
+
         ASSERTMSG(
-            "The device power requirement state machine queue is closed\n", 
+            "The device power requirement state machine queue is closed\n",
             FALSE
             );
         return;
@@ -186,7 +254,7 @@ FxDevicePwrRequirementMachine::ProcessEvent(
     // Drop the state machine *queue* lock
     //
     Unlock(irql);
-    
+
     //
     // Now, if we are running at PASSIVE_LEVEL, attempt to run the state machine
     // on this thread. If we can't do that, then queue a work item.
@@ -196,7 +264,7 @@ FxDevicePwrRequirementMachine::ProcessEvent(
         // Try to acquire the state machine lock
         //
         status = m_StateMachineLock.AcquireLock(
-                    m_PoxInterface->m_PkgPnp->GetDriverGlobals(), 
+                    m_PoxInterface->m_PkgPnp->GetDriverGlobals(),
                     &timeout
                     );
         if (FxWaitLockInternal::IsLockAcquired(status)) {
@@ -225,7 +293,7 @@ FxDevicePwrRequirementMachine::ProcessEvent(
             return;
         }
     }
-    
+
     //
     // For one reason or another, we couldn't run the state machine on this
     // thread.  So queue a work item to do it.
@@ -242,9 +310,9 @@ FxDevicePwrRequirementMachine::_ProcessEventInner(
     )
 {
     FxDevicePwrRequirementMachine * pThis = NULL;
-    
+
     UNREFERENCED_PARAMETER(WorkerContext);
-    
+
     pThis = PkgPnp->m_PowerPolicyMachine.m_Owner->
                 m_PoxInterface.m_DevicePowerRequirementMachine;
 
@@ -319,7 +387,7 @@ FxDevicePwrRequirementMachine::ProcessEventInner(
         // Get the state table entry for the current state
         //
         // NOTE: Prefast complains about buffer overflow if (m_CurrentState ==
-        // DprMax), but that should never happen because DprMax is not a real 
+        // DprMax), but that should never happen because DprMax is not a real
         // state. We just use it to represent the maximum value in the enum that
         // defines the states.
         //
@@ -337,52 +405,75 @@ FxDevicePwrRequirementMachine::ProcessEventInner(
                 break;
             }
         }
-        
+
         if (newState == DprMax) {
             //
             // Unexpected event for this state
             //
             DoTraceLevelMessage(
-                m_PoxInterface->PkgPnp()->GetDriverGlobals(), 
-                TRACE_LEVEL_INFORMATION, 
+                m_PoxInterface->PkgPnp()->GetDriverGlobals(),
+                TRACE_LEVEL_INFORMATION,
                 TRACINGPNP,
                 "WDFDEVICE 0x%p !devobj 0x%p device power requirement state "
                 "%!FxDevicePwrRequirementStates! dropping event "
                 "%!FxDevicePwrRequirementEvents!",
                 m_PoxInterface->PkgPnp()->GetDevice()->GetHandle(),
                 m_PoxInterface->PkgPnp()->GetDevice()->GetDeviceObject(),
-                m_CurrentState, 
+                m_CurrentState,
                 event
                 );
 
             COVERAGE_TRAP();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
-        
+
         while (newState != DprMax) {
             DoTraceLevelMessage(
-                m_PoxInterface->PkgPnp()->GetDriverGlobals(), 
-                TRACE_LEVEL_INFORMATION, 
+                m_PoxInterface->PkgPnp()->GetDriverGlobals(),
+                TRACE_LEVEL_INFORMATION,
                 TRACINGPNPPOWERSTATES,
                 "WDFDEVICE 0x%p !devobj 0x%p entering device power requirement "
                 "state %!FxDevicePwrRequirementStates! from "
                 "%!FxDevicePwrRequirementStates!",
                 m_PoxInterface->PkgPnp()->GetDevice()->GetHandle(),
                 m_PoxInterface->PkgPnp()->GetDevice()->GetDeviceObject(),
-                newState, 
+                newState,
                 m_CurrentState
                 );
-        
+
             //
             // Update the state history array
             //
             m_States.History[IncrementHistoryIndex()] = (UCHAR) newState;
-        
+
             //
             // Move to the new state
             //
             m_CurrentState = (BYTE) newState;
             entry = &m_StateTable[m_CurrentState-DprUnregistered];
-        
+
             //
             // Invoke the state entry function (if present) for the new state
             //
@@ -394,8 +485,8 @@ FxDevicePwrRequirementMachine::ProcessEventInner(
             }
         }
     }
-    
-    return;    
+
+    return;
 }
 
 FxDevicePwrRequirementStates
@@ -403,9 +494,22 @@ FxDevicePwrRequirementMachine::PowerNotRequiredD0(
     __in FxDevicePwrRequirementMachine* This
     )
 {
-    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(
-                                        PwrPolDevicePowerNotRequired
-                                        );
+    BOOLEAN directedTransition;
+    FxPowerPolicyEvent event;
+
+    //
+    // Check whether a directed transition is currently in progress. If it is
+    // in progress, then post the directed transition specific DPNR event.
+    // Otherwise post the regular DPNR event.
+    //
+    directedTransition = This->m_PoxInterface->IsDirectedTransitionInProgress();
+    if (directedTransition != FALSE) {
+        event = PwrPolDevicePowerNotRequiredDirected;
+    } else {
+        event = PwrPolDevicePowerNotRequired;
+    }
+
+    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(event);
     return DprMax;
 }
 
@@ -414,9 +518,22 @@ FxDevicePwrRequirementMachine::PowerRequiredDx(
     __in FxDevicePwrRequirementMachine* This
     )
 {
-    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(
-                                        PwrPolDevicePowerRequired
-                                        );
+    BOOLEAN directedTransition;
+    FxPowerPolicyEvent event;
+
+    //
+    // Check whether a directed transition is currently in progress. If it is
+    // in progress, then post the directed transition specific DPR event.
+    // Otherwise post the regular DPR event.
+    //
+    directedTransition = This->m_PoxInterface->IsDirectedTransitionInProgress();
+    if (directedTransition != FALSE) {
+        event = PwrPolDevicePowerRequiredDirected;
+    } else {
+        event = PwrPolDevicePowerRequired;
+    }
+
+    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(event);
     return DprMax;
 }
 
@@ -428,3 +545,72 @@ FxDevicePwrRequirementMachine::ReportingDevicePowerAvailable(
     This->m_PoxInterface->PoxReportDevicePoweredOn();
     return DprDevicePowerRequiredD0;
 }
+
+FxDevicePwrRequirementStates
+FxDevicePwrRequirementMachine::DirectedPowerDownInitiate(
+    _In_ FxDevicePwrRequirementMachine* This
+    )
+{
+    //
+    // Queue a directed power down event to the power policy state machine.
+    //
+    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(
+                                        PwrPolDeviceDirectedPowerDown
+                                        );
+    return DprDevicePowerRequiredD0;
+}
+
+FxDevicePwrRequirementStates
+FxDevicePwrRequirementMachine::DirectedPowerDownComplete(
+    _In_ FxDevicePwrRequirementMachine* This
+    )
+{
+    This->m_PoxInterface->NotifyPoxDirectedPowerDownCompletion();
+    return DprMax;
+}
+
+FxDevicePwrRequirementStates
+FxDevicePwrRequirementMachine::DirectedPowerUpInitiate(
+    _In_ FxDevicePwrRequirementMachine* This
+    )
+{
+    //
+    // Queue a directed power up event to the power policy state machine.
+    //
+    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(
+                                        PwrPolDeviceDirectedPowerUp
+                                        );
+    return DprDevicePowerNotRequiredDx;
+}
+
+FxDevicePwrRequirementStates
+FxDevicePwrRequirementMachine::DirectedPowerUpComplete(
+    _In_ FxDevicePwrRequirementMachine* This
+    )
+{
+    This->m_PoxInterface->NotifyPoxDirectedPowerUpCompletion();
+    return DprMax;
+}
+
+FxDevicePwrRequirementStates
+FxDevicePwrRequirementMachine::DirectedPowerDownFailedUpArrived(
+    _In_ FxDevicePwrRequirementMachine* This
+    )
+{
+
+    COVERAGE_TRAP();
+    This->m_PoxInterface->PkgPnp()->PowerPolicyProcessEvent(
+                                        PwrPolDeviceDirectedPowerUp
+                                        );
+    return DprDirectedPowerUpFailedComplete;
+}
+
+FxDevicePwrRequirementStates
+FxDevicePwrRequirementMachine::DirectedPowerUpFailedComplete(
+    _In_ FxDevicePwrRequirementMachine* This
+    )
+{
+    This->m_PoxInterface->NotifyPoxDirectedPowerUpCompletion();
+    return DprReportingDevicePowerAvailable;
+}
+

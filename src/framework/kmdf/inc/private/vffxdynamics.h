@@ -1479,7 +1479,7 @@ VFWDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     UCHAR MajorFunction,
     _In_
-    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDisptach,
+    PFN_WDFDEVICE_WDM_IRP_DISPATCH EvtDeviceWdmIrpDispatch,
     _In_opt_
     WDFCONTEXT DriverContext
     );
@@ -3920,6 +3920,16 @@ VFWDFEXPORT(WdfPdoClearEjectionRelationsDevices)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+VOID
+VFWDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit
     );
 
 _Must_inspect_result_
@@ -6617,6 +6627,7 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfCompanionTargetWdmGetCompanionProcess),
         VFWDFEXPORT(WdfDriverOpenPersistentStateRegistryKey),
         VFWDFEXPORT(WdfDriverErrorReportApiMissing),
+        VFWDFEXPORT(WdfPdoInitRemovePowerDependencyOnParent),
     }
 };
 

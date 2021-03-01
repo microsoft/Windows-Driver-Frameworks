@@ -32,16 +32,6 @@ Revision History:
 #define FX_IS_KERNEL_MODE (TRUE)
 #endif
 
-/*
-extern "C" {
-#include <ntddk.h>
-#include "wdf.h"
-}
-
-#define WDF_REGISTRY_BASE_PATH L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf"
-
-*/
-
 extern "C" {
 #include "mx.h"
 }
@@ -397,3 +387,49 @@ typedef struct _WDF_TIMER_CONFIG_V1_11 {
 
 } WDF_TIMER_CONFIG_V1_11, *PWDF_TIMER_CONFIG_V1_11;
 
+typedef struct _WDF_DEVICE_STATE_V1_27 {
+    //
+    // Size of this structure in bytes
+    //
+    ULONG Size;
+
+    //
+    // If set to WdfTrue, the device will be disabled
+    //
+    WDF_TRI_STATE Disabled;
+
+    //
+    // If set to WdfTrue, the device will not be displayed in device manager.
+    // Once hidden, the device cannot be unhidden.
+    //
+    WDF_TRI_STATE DontDisplayInUI;
+
+    //
+    // If set to WdfTrue, the device is reporting itself as failed.  If set
+    // in conjuction with ResourcesChanged to WdfTrue, the device will receive
+    // a PnP stop and then a new PnP start device.
+    //
+    WDF_TRI_STATE Failed;
+
+    //
+    // If set to WdfTrue, the device cannot be subsequently disabled.
+    //
+    WDF_TRI_STATE NotDisableable;
+
+
+
+
+
+    //
+    // If set to WdfTrue, the device stack will be torn down.
+    //
+    WDF_TRI_STATE Removed;
+
+    //
+    // If set to WdfTrue, the device will be sent another PnP start.  If the
+    // Failed field is set to WdfTrue as well, a PnP stop will be sent before
+    // the start.
+    //
+    WDF_TRI_STATE ResourcesChanged;
+
+} WDF_DEVICE_STATE_V1_27, *PWDF_DEVICE_STATE_V1_27;

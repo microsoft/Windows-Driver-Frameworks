@@ -19,6 +19,7 @@ extern "C" {
 #include "wdf221.h"
 #include "wdf223.h"
 #include "wdf225.h"
+#include "wdf227.h"
 
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
@@ -374,10 +375,11 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_25) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_27) {
 
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V2_27: // 269 - win10 1809 RS5
         case WdfFunctionTableNumEntries_V2_25: // 268 - win10 1803 RS4
         case WdfFunctionTableNumEntries_V2_23: // 265 - win10 1709 RS3
         case WdfFunctionTableNumEntries_V2_21: // 261 - win10 1703 RS2

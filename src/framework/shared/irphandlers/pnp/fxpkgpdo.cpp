@@ -102,6 +102,7 @@ Returns:
 
 {
     m_DeviceTextHead.Next = NULL;
+    m_DefaultLocale = 0x0;
 
     m_DeviceID   = NULL;
     m_InstanceID = NULL;
@@ -113,8 +114,10 @@ Returns:
     m_RawOK = FALSE;
     m_Static = FALSE;
     m_AddedToStaticList = FALSE;
+    m_AllowForwardRequestToParent = FALSE;
 
     //
+    // Override the setting in FxPkgPnp.
     // By default the PDO is the owner of wait wake irps (only case where this
     // wouldn't be the case is for a bus filter to be sitting above us).
     //
@@ -128,6 +131,8 @@ Returns:
 
     m_CanBeDeleted = FALSE;
     m_EnableWakeAtBusInvoked = FALSE;
+
+    m_HasPowerDependencyOnParent = TRUE;
 }
 
 FxPkgPdo::~FxPkgPdo(
@@ -289,7 +294,7 @@ Returns:
         pCur = (PWSTR) WDF_PTR_ADD_OFFSET(m_InstanceID,
                                           cbStrLength + sizeof(UNICODE_NULL));
     }
-    
+
     if (pPdo->ContainerID != NULL) {
         m_ContainerID = pCur;
 
@@ -344,7 +349,7 @@ FxPkgPdo::FinishInitialize(
     PdoInit* pdoInit;
 
     pdoInit = &DeviceInit->Pdo;
-    
+
     m_DefaultLocale = pdoInit->DefaultLocale;
     m_DeviceTextHead.Next = pdoInit->DeviceText.Next;
     pdoInit->DeviceText.Next = NULL;
@@ -607,7 +612,7 @@ Returns:
 
             status = workItem.Allocate(m_Device->GetDeviceObject());
 
-            if (NT_SUCCESS(status)) {    
+            if (NT_SUCCESS(status)) {
                 //
                 // Store off the work item so we can free it in the worker routine
                 //
@@ -798,7 +803,7 @@ FxPkgPdo::_QueryCapsWorkItem(
 
     status = GetStackCapabilities(
         pPkgPdo->m_Device->GetDriverGlobals(),
-        &parentDeviceObject, 
+        &parentDeviceObject,
         NULL, // D3ColdInterface
         &parentCapabilities);
 
@@ -973,9 +978,9 @@ FxPkgPdo::_PnpEject(
 
 Routine Description:
 
-    Ejection is handled by the PnP state machine. Handle it synchronously. 
-    Don't pend it since PnP manager does not serilaize it with other state 
-    changing pnp irps if handled asynchronously. 
+    Ejection is handled by the PnP state machine. Handle it synchronously.
+    Don't pend it since PnP manager does not serilaize it with other state
+    changing pnp irps if handled asynchronously.
 
 Arguments:
 
@@ -995,13 +1000,13 @@ Return Value:
 
     pdoPkg = (FxPkgPdo*)This;
 
-    // 
+    //
     // This will make sure no new state changing pnp irps arrive while
     // we are still processing this one. Also, note that irp is not being
-    // marked pending. 
+    // marked pending.
     //
     pdoPkg->SetPendingPnpIrp(Irp, FALSE);
-    
+
     status = event.Initialize(SynchronizationEvent, FALSE);
     if (!NT_SUCCESS(status)) {
 
@@ -1027,10 +1032,10 @@ Return Value:
         event.WaitFor(Executive, KernelMode, FALSE, NULL);
 
         pdoPkg->m_DeviceEjectProcessed = NULL;
-        
+
         status = Irp->GetStatus();
     }
-    
+
     //
     // complete request
     //
@@ -1085,17 +1090,17 @@ Return Value:
         if (NT_SUCCESS(status)) {
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
-                "PDO WDFDEVICE %p !devobj %p marked missing as a result of eject",  
+                "PDO WDFDEVICE %p !devobj %p marked missing as a result of eject",
                 m_Device->GetHandle(), m_Device->GetDeviceObject());
         }
         else {
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-                "Failed to mark PDO WDFDEVICE %p !devobj %p missing after eject %!STATUS!", 
-                m_Device->GetHandle(), m_Device->GetDeviceObject(), 
+                "Failed to mark PDO WDFDEVICE %p !devobj %p missing after eject %!STATUS!",
+                m_Device->GetHandle(), m_Device->GetDeviceObject(),
                 status);
         }
-        
+
         //
         // We must wait for any pending scans to finish so that the previous
         // update as missing is enacted into the list and reported to the
@@ -1129,7 +1134,7 @@ Return Value:
         if (status == STATUS_NOT_SUPPORTED) {
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGDEVICE,
-                "EvtDeviceEject returned an invalid status STATUS_NOT_SUPPORTED");                
+                "EvtDeviceEject returned an invalid status STATUS_NOT_SUPPORTED");
 
             if (GetDriverGlobals()->IsVerificationEnabled(1, 11, OkForDownLevel)) {
                 FxVerifierDbgBreakPoint(GetDriverGlobals());
@@ -1141,9 +1146,9 @@ Return Value:
     // set irp status
     //
     SetPendingPnpIrpStatus(status);
-    
+
     //
-    // Pnp dispatch routine is waiting on this event, and it will complete 
+    // Pnp dispatch routine is waiting on this event, and it will complete
     // the Eject irp
     //
     m_DeviceEjectProcessed->Set();
@@ -1461,7 +1466,7 @@ FxPkgPdo::_PnpQueryId(
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "WDFDEVICE %p does not have a string for PnP query IdType "
-                "%!BUS_QUERY_ID_TYPE!, %!STATUS!", 
+                "%!BUS_QUERY_ID_TYPE!, %!STATUS!",
                 pThis->m_Device->GetHandle(),
                 queryIdType, status);
         }
@@ -1469,7 +1474,7 @@ FxPkgPdo::_PnpQueryId(
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "WDFDEVICE %p could not alloc string for PnP query IdType "
-                "%!BUS_QUERY_ID_TYPE!, %!STATUS!", 
+                "%!BUS_QUERY_ID_TYPE!, %!STATUS!",
                 pThis->m_Device->GetHandle(),
                 queryIdType, status);
         }
@@ -1513,7 +1518,7 @@ Return Value:
     DoTraceLevelMessage(
         FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGPNP,
         "WDFDEVICE 0x%p !devobj 0x%p returning PNP_DEVICE_STATE 0x%d IRP 0x%p",
-        This->GetDevice()->GetHandle(), 
+        This->GetDevice()->GetHandle(),
         This->GetDevice()->GetDeviceObject(),
         pnpDeviceState,
         Irp->GetIrp());

@@ -1,8 +1,10 @@
 # Windows Driver Frameworks
+
 The Windows Driver Frameworks (WDF) are a set of libraries that make
 it simple to write high-quality device drivers.
 
 ## Goals for this project
+
 Developers can use the MSDN reference documentation to learn about the
 core concepts of WDF and the APIs available for use. Still, there's no
 substitute for actual source code. That's why we've published
@@ -16,8 +18,8 @@ source. Our aim is to make the inner workings of WDF as transparent
 for developers as possible.
 
 *Note: As you experiment with WDF, you may come across undocumented
- behavior or APIS. We strongly advise against taking dependencies on
- that behavior as it's subject to change in future releases.*
+behavior or APIS. We strongly advise against taking dependencies on
+that behavior as it's subject to change in future releases.*
 
 ### Debugging with the framework
 
@@ -26,9 +28,9 @@ debugging into the WDF source. This makes it much easier to follow
 driver activity, understand interactions with the framework, and
 diagnose issues.  Debugging can be done live by hooking onto a running
 driver or after a crash by analyzing the dump file.  See the
-[debugging
-page](https://github.com/Microsoft/Windows-Driver-Frameworks/wiki/Debugging-with-WDF-Source
-"Debugging with source") in the wiki for instructions.
+[debugging page][] in the wiki for instructions.
+
+[debugging page]: https://github.com/Microsoft/Windows-Driver-Frameworks/wiki/Debugging-with-WDF-Source
 
 ## Scope
 
@@ -38,19 +40,23 @@ between the two. Driving the frameworks forward with a unified model
 is a key priority for the WDF team.
 
 ## Contributing to WDF
-See
-[CONTRIBUTING.md](https://github.com/Microsoft/Windows-Driver-Frameworks/blob/master/CONTRIBUTING.md
-"Contributing") for policies on pull-requests to this repo.
+
+See [CONTRIBUTING.md][] for policies on pull requests to this repo.
+
+[CONTRIBUTING.md]: https://github.com/Microsoft/Windows-Driver-Frameworks/blob/master/CONTRIBUTING.md
 
 ## FAQ about this repo
-See the [FAQ
-page](https://github.com/Microsoft/Windows-Driver-Frameworks/wiki/WDF-on-GitHub-FAQ
-"WDF FAQ") in the Wiki.
+
+See the [FAQ page][] in the Wiki.
+
+[FAQ page]: https://github.com/Microsoft/Windows-Driver-Frameworks/wiki/WDF-on-GitHub-FAQ
 
 ## Licensing
+
 WDF is licensed under the MIT License.
 
-##Related Repos
-Driver samples for Windows 10 now also live on GitHub at
-[/Microsoft/Windows-Driver-Samples](https://github.com/Microsoft/windows-driver-samples
-"Driver Samples")
+## Related Repos
+
+[Driver samples][] for Windows 10 now also live on GitHub.
+
+[Driver samples]: https://github.com/Microsoft/windows-driver-samples

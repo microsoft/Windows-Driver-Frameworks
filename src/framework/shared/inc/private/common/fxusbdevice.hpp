@@ -597,7 +597,7 @@ protected:
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
     _Must_inspect_result_
     NTSTATUS
-    FxUsbDevice::SendSyncRequest(
+    SendSyncRequest(
         __in FxSyncRequest* Request,
         __in ULONGLONG Time
         );

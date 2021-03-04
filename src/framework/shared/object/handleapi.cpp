@@ -53,7 +53,7 @@ Return Value:
   --*/
 {
     size_t contextSize = 0;
-    
+
     if (Attributes != NULL) {
         if (Attributes->ContextTypeInfo != NULL) {
             if (Attributes->ContextSizeOverride != 0) {
@@ -64,7 +64,7 @@ Return Value:
             }
         }
     }
-        
+
     return contextSize;
 }
 
@@ -435,11 +435,11 @@ Return Value:
     if (fxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,11)) {
         flags |= FX_VALIDATE_OPTION_PARENT_NOT_ALLOWED;
     }
-    
+
     //
     // Basic validations.
     //
-    status = FxValidateObjectAttributes(fxDriverGlobals, Attributes, flags); 
+    status = FxValidateObjectAttributes(fxDriverGlobals, Attributes, flags);
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
@@ -455,7 +455,7 @@ Return Value:
             Attributes, status);
         goto Done;
     }
-    
+
     Object->ADDREF(&status);
     relRef = TRUE;
 
@@ -475,7 +475,7 @@ Return Value:
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Done;
     }
-    
+
     FxContextHeaderInit(header, Object, Attributes);
 
     status = Object->AddContext(header, Context, Attributes);
@@ -489,12 +489,61 @@ Return Value:
     }
 
 Done:
-    
+
     if (relRef) {
         Object->RELEASE(&status);
     }
-    
+
     return status;
+}
+
+PVOID
+FxObjectGetTypedContext(
+    _In_ FxObject*                      Object,
+    _In_ PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+    )
+/*++
+
+Routine Description:
+    Find the context given its type info
+
+Arguments:
+    Object - object on which to find a context
+    TypeInfo - the type info of the said context
+
+Return Value:
+    A pointer to the typed context structure if success, or NULL if failed
+
+  --*/
+{
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
+    FxContextHeader*   pHeader;
+
+    pFxDriverGlobals = Object->GetDriverGlobals();
+
+    pHeader = Object->GetContextHeader();
+
+    for ( ; pHeader != NULL; pHeader = pHeader->NextHeader) {
+        if (pHeader->ContextTypeInfo == TypeInfo) {
+            return &pHeader->Context[0];
+        }
+    }
+
+    LPCSTR pGivenName;
+
+    if (TypeInfo->ContextName != NULL) {
+        pGivenName = TypeInfo->ContextName;
+    }
+    else {
+        pGivenName = "<no typename given>";
+    }
+
+    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGHANDLE,
+                        "Attempting to get context type %s from FxObject 0x%p",
+                        pGivenName, Object);
+
+    return NULL;
+
 }
 
 // extern "C" all APIs
@@ -502,7 +551,7 @@ extern "C" {
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
-WDFAPI    
+WDFAPI
 NTSTATUS
 WDFEXPORT(WdfObjectAllocateContext)(
     __in
@@ -536,7 +585,7 @@ Return Value:
     NTSTATUS            status;
     FxObject*           object;
     WDFOBJECT_OFFSET    offset;
-    
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), Handle);
 
     //
@@ -570,7 +619,7 @@ Done:
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL+1)
-WDFAPI    
+WDFAPI
 PVOID
 FASTCALL
 WDFEXPORT(WdfObjectGetTypedContextWorker)(
@@ -600,13 +649,12 @@ Return Value:
 {
     DDI_ENTRY_IMPERSONATION_OK();
 
-    FxContextHeader* pHeader;
     FxObject* pObject;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     WDFOBJECT_OFFSET offset;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), Handle);
-    
+
     //
     // Do not call FxObjectHandleGetPtr( , , FX_TYPE_OBJECT) because this is a
     // hot spot / workhorse function that should be as efficient as possible.
@@ -628,32 +676,11 @@ Return Value:
 
     FxPointerNotNull(pFxDriverGlobals, TypeInfo);
 
-    pHeader = pObject->GetContextHeader();
-
-    for ( ; pHeader != NULL; pHeader = pHeader->NextHeader) {
-        if (pHeader->ContextTypeInfo == TypeInfo) {
-            return &pHeader->Context[0];
-        }
-    }
-
-    LPCSTR pGivenName;
-
-    if (TypeInfo->ContextName != NULL) {
-        pGivenName = TypeInfo->ContextName;
-    }
-    else {
-        pGivenName = "<no typename given>";
-    }
-
-    DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGHANDLE,
-                        "Attempting to get context type %s from WDFOBJECT 0x%p",
-                        pGivenName, Handle);
-
-    return NULL;
+    return FxObjectGetTypedContext(pObject, TypeInfo);
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL+1)
-WDFAPI    
+WDFAPI
 WDFOBJECT
 FASTCALL
 WDFEXPORT(WdfObjectContextGetObject)(
@@ -687,14 +714,14 @@ Return Value:
     // handle value from the FxObject*.
     //
     #pragma prefast(push);
-    
+
 
     #pragma prefast(disable:__WARNING_BUFFER_UNDERFLOW, "No way to express that passed in ptr is at an offset");
 
     pHeader = CONTAINING_RECORD(ContextPointer, FxContextHeader, Context);
     pObject = pHeader->Object;
 
-    #pragma prefast(pop);    
+    #pragma prefast(pop);
 
     return (WDFOBJECT) pObject->GetObjectHandle();
 }

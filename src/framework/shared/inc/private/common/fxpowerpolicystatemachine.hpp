@@ -386,9 +386,9 @@ private:
 
     //
     // When DFx is enabled on a device, normally all child devices need enable
-    // DFx as well. However, if the child devices don't do any power management 
+    // DFx as well. However, if the child devices don't do any power management
     // e.g. software devices, they shouldn't be required to implement DFx too.
-    // 
+    //
     // Also note that WDF currently doesn't support powering down a parent device
     // if there is a child device(s) in D0. Thus child PDO has to be enumerated
     // side-band through either a upper filter or SwDeviceCreate.
@@ -626,6 +626,124 @@ struct WakePolicySettings : PolicySettings {
     BOOLEAN IndicateChildWakeOnParentWake;
 };
 
+enum RequestDIrpReason {
+
+    RequestDIrpReasonInvalid = 0,
+    RequestDIrpFailed,      // PoRequestPowerIrp failed. No D-IRP is sent out.
+
+    RequestD0ForS0,         // System in Sx. System wakes up
+    RequestDxForSx,         // Device in D0. System sleeps
+
+    RequestD0ForSx,         // Device in Dx. Sx comes, Device wakes to D0 first
+    RequestD0ForOther,      // Device in Dx. Wake by I/O present, StopIdle, USB
+                            // selective suspend completed, PoFx power required
+                            // callback, S0IdlePolicyChange
+    RequestD0ForDeviceWake, // Device in Dx. Wake by external signal
+    RequestD0ForArmWakeFail,// Device in D0. Dx comes and it fails to arm wake.
+                            // Now in Dx. Return to D0 next
+    RequestDxForIdleOut,    // Device in D0. Sleep because of Idle out
+    RequestDxForPnpStop,    // Device in D0. Pnp remove, Device implicitly Dx
+    RequestD0ForPnpStop,    // Device in Dx. Pnp remove, Device wakes to D0 first
+};
+
+class FxDevicePowerIrpTracker {
+
+public:
+    FxDevicePowerIrpTracker(
+        VOID
+        )
+    {
+        InitHistory();
+        m_DIrpRequestedForSIrp = RequestDIrpReasonInvalid;
+    }
+
+    VOID
+    SaveStateFromSystemPowerIrp(
+        _In_ FxIrp *Irp
+        );
+
+
+    //
+    // Record the reason of requesting D-IRP into an FIFO history which can be
+    // reviewed using `!wdfkd.wdfdevice _device_ ff` debugger command later.
+    //
+    VOID
+    LogRequestDIrpReason(
+        _In_ RequestDIrpReason Reason
+        )
+    {
+        AddToHistory(Reason);
+    }
+
+    VOID
+    StartTrackingDevicePowerIrp(
+        _In_ RequestDIrpReason Reason
+        );
+
+    VOID
+    StopTrackingDevicePowerIrp(
+        VOID
+        );
+
+    POWER_ACTION
+    GetSystemPowerAction(
+        VOID
+        );
+
+private:
+
+    //
+    // Special handling only for RequestD0ForS0 and RequestDxForSx.
+    //
+    // Set right before D-IRP is requested.
+    //
+    // Cleared when D-IRP processing is finished:
+    //   - For RequestD0ForS0, PwrPolPowerUp is received.
+    //   - For RequestDxForSx, PwrPolPowerDown is received.
+    //   - Failure happens.
+    //
+    RequestDIrpReason m_DIrpRequestedForSIrp;
+
+    POWER_ACTION m_S0PowerAction;
+    POWER_ACTION m_SxPowerAction;
+
+    //
+    // Keep the history of RequestDIrpReason
+    //
+    struct HistoryEntry {
+        RequestDIrpReason Reason;
+        LARGE_INTEGER     Timestamp; // 100-nanosec ticks since 1601-01-01 GMT
+    };
+
+    static const UCHAR
+                 m_HistoryDepth = 8;
+    UCHAR        m_HistoryIndex;
+    HistoryEntry m_History[m_HistoryDepth];
+
+    VOID
+    InitHistory(
+        VOID
+        )
+    {
+        m_HistoryIndex = 0;
+        RtlZeroMemory(m_History, sizeof(m_History)); // 0 = RequestDIrpReasonInvalid
+    }
+
+    VOID
+    AddToHistory(
+        _In_ RequestDIrpReason Reason
+        )
+    {
+        HistoryEntry entry;
+
+        entry.Reason = Reason;
+        Mx::MxQuerySystemTime(&entry.Timestamp);
+
+        m_History[m_HistoryIndex] = entry;
+        m_HistoryIndex = (m_HistoryIndex + 1 ) % m_HistoryDepth;
+    }
+};
+
 struct FxPowerPolicyOwnerSettings : public FxStump {
 
 friend FxPowerPolicyMachine;
@@ -696,6 +814,8 @@ public:
     WakePolicySettings m_WakeSettings;
 
     IdlePolicySettings m_IdleSettings;
+
+    FxDevicePowerIrpTracker          m_DevicePowerIrpTracker;
 
     //
     // Nibble packed structure.  Each D state is encoded 4 bits.  The S state is

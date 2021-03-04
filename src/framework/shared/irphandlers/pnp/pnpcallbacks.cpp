@@ -98,7 +98,7 @@ FxPnpDeviceD0Entry::InvokeClient(
                 m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
                 "EvtDeviceD0Entry WDFDEVICE 0x%p !devobj 0x%p, old state "
                 "%!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
-                m_Device, 
+                m_Device,
                 m_PkgPnp->GetDevice()->GetDeviceObject(),
                 m_PreviousState, status);
         }
@@ -127,7 +127,7 @@ FxPnpDeviceD0Entry::InvokeCxCallback(
         method = Context->u.D0Entry.PostCallback;
     }
 
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     //
     // EvtCxDevicePreD0Entry EvtCxDevicePostD0Entry
@@ -142,7 +142,7 @@ FxPnpDeviceD0Entry::InvokeCxCallback(
             "EvtCxDevice%sD0Entry WDFDEVICE 0x%p !devobj 0x%p, old state "
             "%!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
             PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
-            m_Device, 
+            m_Device,
             m_PkgPnp->GetDevice()->GetDeviceObject(),
             m_PreviousState, status);
     }
@@ -158,7 +158,7 @@ FxPnpDeviceD0Entry::InvokeCxCleanupCallback(
     PFN_WDFCX_DEVICE_PRE_D0_ENTRY_FAILED_CLEANUP method;
 
     method = Context->u.D0Entry.CleanupCallback;
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     CallbackStart();
     method(m_Device, m_PreviousState);
@@ -188,6 +188,65 @@ FxPnpDeviceD0EntryPostInterruptsEnabled::Invoke(
         return STATUS_SUCCESS;
     }
 }
+
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceD0EntryPostHwEnabled::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    NTSTATUS status;
+    PFN_WDF_DEVICE_D0_ENTRY_POST_HARDWARE_ENABLED method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.D0EntryPostHardwareEnabled.PreCallback;
+    }
+    else {
+        method = Context->u.D0EntryPostHardwareEnabled.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreD0EntryPostHardwareEnabled
+    // EvtCxDevicePostD0EntryPostHardwareEnabled
+    //
+    CallbackStart();
+    status = method(m_Device, m_PreviousState);
+    CallbackEnd();
+
+    if (!NT_SUCCESS(status)) {
+        DoTraceLevelMessage(
+            m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtCxDevice%sD0EntryPostHardwareEnabled WDFDEVICE 0x%p !devobj 0x%p, old state "
+            "%!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
+            PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+            m_Device,
+            m_PkgPnp->GetDevice()->GetDeviceObject(),
+            m_PreviousState, status);
+    }
+
+    return status;
+}
+
+VOID
+FxPnpDeviceD0EntryPostHwEnabled::InvokeCxCleanupCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context
+    )
+{
+    PFN_WDFCX_DEVICE_PRE_D0_ENTRY_POST_HARDWARE_ENABLED_FAILED_CLEANUP method;
+
+    method = Context->u.D0EntryPostHardwareEnabled.CleanupCallback;
+    ASSERT(method != NULL);
+
+    CallbackStart();
+    method(m_Device, m_PreviousState);
+    CallbackEnd();
+
+    return;
+}
+
 
 _Must_inspect_result_
 NTSTATUS
@@ -231,7 +290,7 @@ FxPnpDeviceD0Exit::InvokeClient(
                 m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
                 "EvtDeviceD0Exit WDFDEVICE 0x%p !devobj 0x%p, new state "
                 "%!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
-                m_Device, 
+                m_Device,
                 m_PkgPnp->GetDevice()->GetDeviceObject(),
                 m_TargetState, status);
         }
@@ -260,7 +319,7 @@ FxPnpDeviceD0Exit::InvokeCxCallback(
         method = Context->u.D0Exit.PostCallback;
     }
 
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     //
     // EvtCxDevicePreD0Exit EvtCxDevicePostD0Exit
@@ -275,7 +334,7 @@ FxPnpDeviceD0Exit::InvokeCxCallback(
             "EvtCxDevice%sD0Exit WDFDEVICE 0x%p !devobj 0x%p, new state "
             "%!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
             PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
-            m_Device, 
+            m_Device,
             m_PkgPnp->GetDevice()->GetDeviceObject(),
             m_TargetState, status);
     }
@@ -304,6 +363,47 @@ FxPnpDeviceD0ExitPreInterruptsDisabled::Invoke(
     }
 }
 
+_Must_inspect_result_
+NTSTATUS
+FxPnpDeviceD0ExitPreHwDisabled::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    NTSTATUS status;
+    PFN_WDF_DEVICE_D0_EXIT_PRE_HARDWARE_DISABLED method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.D0ExitPreHardwareDisabled.PreCallback;
+    }
+    else {
+        method = Context->u.D0ExitPreHardwareDisabled.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreD0ExitPreHardwareDisabled
+    // EvtCxDevicePostD0ExitPreHardwareDisabled
+    //
+    CallbackStart();
+    status = method(m_Device, m_TargetState);
+    CallbackEnd();
+
+    if (!NT_SUCCESS(status)) {
+        DoTraceLevelMessage(
+            m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtCxDevice%sD0ExitPreHardwareDisabled WDFDEVICE 0x%p !devobj 0x%p, new state "
+            "%!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
+            PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+            m_Device,
+            m_PkgPnp->GetDevice()->GetDeviceObject(),
+            m_TargetState, status);
+    }
+
+    return status;
+}
+
 __drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
 _Must_inspect_result_
 NTSTATUS
@@ -318,7 +418,7 @@ FxPnpDevicePrepareHardware::Invoke(
     m_ResourcesRaw = ResourcesRaw;
     m_ResourcesTranslated = ResourcesTranslated;
 
-    return FxPrePostCallback::InvokeStateful(Progress, 
+    return FxPrePostCallback::InvokeStateful(Progress,
                                              FxCxCleanupAfterPreFailure);
 }
 
@@ -379,7 +479,7 @@ FxPnpDevicePrepareHardware::InvokeCxCallback(
         method = Context->u.PrepareHardware.PostCallback;
     }
 
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     //
     // EvtCxDevicePrePrepareHardware EvtCxDevicePostPrepareHardware
@@ -392,7 +492,7 @@ FxPnpDevicePrepareHardware::InvokeCxCallback(
         DoTraceLevelMessage(
             m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
             "EvtCxDevice%sPrepareHardware WDFDEVICE 0x%p !devobj 0x%p failed, "
-            "%!STATUS!", 
+            "%!STATUS!",
             PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
             m_Device,
             m_PkgPnp->GetDevice()->GetDeviceObject(),
@@ -410,7 +510,7 @@ FxPnpDevicePrepareHardware::InvokeCxCleanupCallback(
     PFN_WDFCX_DEVICE_PRE_PREPARE_HARDWARE_FAILED_CLEANUP method;
 
     method = Context->u.PrepareHardware.CleanupCallback;
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     CallbackStart();
     method(m_Device, m_ResourcesRaw, m_ResourcesTranslated);
@@ -471,7 +571,7 @@ FxPnpDeviceReleaseHardware::InvokeClient(
         return STATUS_SUCCESS;
     }
 }
-    
+
 _Must_inspect_result_
 NTSTATUS
 FxPnpDeviceReleaseHardware::InvokeCxCallback(
@@ -489,7 +589,7 @@ FxPnpDeviceReleaseHardware::InvokeCxCallback(
         method = Context->u.ReleaseHardware.PostCallback;
     }
 
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     //
     // EvtCxDevicePreReleaseHardware EvtCxDevicePostReleaseHardware
@@ -586,7 +686,7 @@ FxPnpDeviceSelfManagedIoCleanup::InvokeCxCallback(
         method = Context->u.SmIoCleanup.PostCallback;
     }
 
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     //
     // EvtCxDevicePreSelfManagedIoCleanup EvtCxDevicePostSelfManagedIoCleanup
@@ -595,10 +695,10 @@ FxPnpDeviceSelfManagedIoCleanup::InvokeCxCallback(
     method(m_Device);
     CallbackEnd();
 
-    
+
     return STATUS_SUCCESS;
 }
- 
+
 VOID
 FxPnpDeviceSelfManagedIoFlush::Invoke(
     __in  WDFDEVICE  Device
@@ -634,7 +734,7 @@ FxPnpDeviceSelfManagedIoFlush::InvokeClient(
     }
     return STATUS_SUCCESS;
 }
-    
+
 _Must_inspect_result_
 NTSTATUS
 FxPnpDeviceSelfManagedIoFlush::InvokeCxCallback(
@@ -686,7 +786,7 @@ FxPnpDeviceSelfManagedIoInit::Initialize(
     m_Method = Method;
     m_PkgPnp = PkgPnp;
     m_CallbackType = FxCxCallbackSmIoInit;
-}  
+}
 
 _Must_inspect_result_
 NTSTATUS
@@ -765,7 +865,7 @@ FxPnpDeviceSelfManagedIoInit::InvokeCxCleanupCallback(
     PFN_WDFCX_DEVICE_PRE_SELF_MANAGED_IO_INIT_FAILED_CLEANUP method;
 
     method = Context->u.SmIoInit.CleanupCallback;
-    ASSERT(method != NULL);                          
+    ASSERT(method != NULL);
 
     CallbackStart();
     method(m_Device);
@@ -775,7 +875,7 @@ FxPnpDeviceSelfManagedIoInit::InvokeCxCleanupCallback(
 }
 
 
-    
+
 
 _Must_inspect_result_
 NTSTATUS
@@ -827,7 +927,7 @@ FxPnpDeviceSelfManagedIoSuspend::InvokeClient(
         return STATUS_SUCCESS;
     }
 }
-        
+
 _Must_inspect_result_
 NTSTATUS
 FxPnpDeviceSelfManagedIoSuspend::InvokeCxCallback(
@@ -836,33 +936,68 @@ FxPnpDeviceSelfManagedIoSuspend::InvokeCxCallback(
     )
 {
     NTSTATUS status;
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND method;
 
-    if (PrePost == FxCxInvokePreCallback) {
-        method = Context->u.SmIoSuspend.PreCallback;
+    if (Context->m_CallbackType == FxCxCallbackSmIoSuspend) {
+
+        PFN_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND method;
+
+        if (PrePost == FxCxInvokePreCallback) {
+            method = Context->u.SmIoSuspend.PreCallback;
+        }
+        else {
+            method = Context->u.SmIoSuspend.PostCallback;
+        }
+
+        ASSERT(method != NULL);
+
+        //
+        // EvtCxDevicePreSelfManagedIoSuspend EvtCxDevicePostSelfManagedIoSuspend
+        //
+        CallbackStart();
+        status = method(m_Device);
+        CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "EvtCxDevice%sSelfManagedIoSuspend WDFDEVICE 0x%p !devobj "
+                "0x%p failed, %!STATUS!",
+                PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+                m_Device,
+                m_PkgPnp->GetDevice()->GetDeviceObject(),
+                status);
+        }
     }
     else {
-        method = Context->u.SmIoSuspend.PostCallback;
-    }
 
-    ASSERT(method != NULL);
+        PFN_WDFCX_DEVICE_PRE_SELF_MANAGED_IO_SUSPEND_EX method;
 
-    // 
-    // EvtCxDevicePreSelfManagedIoSuspend EvtCxDevicePostSelfManagedIoSuspend
-    //
-    CallbackStart();
-    status = method(m_Device);
-    CallbackEnd();
+        if (PrePost == FxCxInvokePreCallback) {
+            method = Context->u.SmIoSuspendEx.PreCallback;
+        }
+        else {
+            method = Context->u.SmIoSuspendEx.PostCallback;
+        }
 
-    if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(
-            m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
-            "EvtCxDevice%sSelfManagedIoSuspend WDFDEVICE 0x%p !devobj "
-            "0x%p failed, %!STATUS!",
-            PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
-            m_Device,
-            m_PkgPnp->GetDevice()->GetDeviceObject(),
-            status);
+        ASSERT(method != NULL);
+
+        //
+        // EvtCxDevicePreSelfManagedIoSuspendEx EvtCxDevicePostSelfManagedIoSuspendEx
+        //
+        CallbackStart();
+        status = method(m_Device, m_TargetState);
+        CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "EvtCxDevice%sSelfManagedIoSuspendEx WDFDEVICE 0x%p !devobj "
+                "0x%p failed, %!STATUS!",
+                PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+                m_Device,
+                m_PkgPnp->GetDevice()->GetDeviceObject(),
+                status);
+        }
     }
 
     return status;
@@ -914,7 +1049,7 @@ FxPnpDeviceSelfManagedIoRestart::InvokeClient(
                 m_PkgPnp->GetDevice()->GetDeviceObject(),
                 status);
         }
-        
+
         return status;
     }
     else {
@@ -930,35 +1065,73 @@ FxPnpDeviceSelfManagedIoRestart::InvokeCxCallback(
     )
 {
     NTSTATUS status;
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_RESTART method;
 
-    if (PrePost == FxCxInvokePreCallback) {
-        method = Context->u.SmIoRestart.PreCallback;
+    if (Context->m_CallbackType == FxCxCallbackSmIoRestart) {
+
+        PFN_WDF_DEVICE_SELF_MANAGED_IO_RESTART method;
+
+        if (PrePost == FxCxInvokePreCallback) {
+            method = Context->u.SmIoRestart.PreCallback;
+        }
+        else {
+            method = Context->u.SmIoRestart.PostCallback;
+        }
+
+        ASSERT(method != NULL);
+
+        //
+        // EvtCxDevicePreSelfManagedIoRestart EvtCxDevicePostSelfManagedIoRestart
+        //
+        CallbackStart();
+        status = method(m_Device);
+        CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "EvtCxDevice%sSelfManagedIoRestart WDFDEVICE 0x%p !devobj "
+                "0x%p failed, %!STATUS!",
+                PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+                m_Device,
+                m_PkgPnp->GetDevice()->GetDeviceObject(),
+                status);
+        }
     }
     else {
-        method = Context->u.SmIoRestart.PostCallback;
+
+        PFN_WDFCX_DEVICE_PRE_SELF_MANAGED_IO_RESTART_EX method;
+        WDF_POWER_DEVICE_STATE previousState;
+
+        previousState = (WDF_POWER_DEVICE_STATE) m_PkgPnp->m_DevicePowerState;
+
+        if (PrePost == FxCxInvokePreCallback) {
+            method = Context->u.SmIoRestartEx.PreCallback;
+        }
+        else {
+            method = Context->u.SmIoRestartEx.PostCallback;
+        }
+
+        ASSERT(method != NULL);
+
+        //
+        // EvtCxDevicePreSelfManagedIoRestartEx EvtCxDevicePostSelfManagedIoRestartEx
+        //
+        CallbackStart();
+        status = method(m_Device, previousState);
+        CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
+                "EvtCxDevice%sSelfManagedIoRestartEx WDFDEVICE 0x%p !devobj "
+                "0x%p failed, %!STATUS!",
+                PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+                m_Device,
+                m_PkgPnp->GetDevice()->GetDeviceObject(),
+                status);
+        }
     }
 
-    ASSERT(method != NULL);
-
-    // 
-    // EvtCxDevicePreSelfManagedIoRestart EvtCxDevicePostSelfManagedIoRestart
-    //
-    CallbackStart();
-    status = method(m_Device);
-    CallbackEnd();
-
-    if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(
-            m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGPNP,
-            "EvtCxDevice%sSelfManagedIoRestart WDFDEVICE 0x%p !devobj "
-            "0x%p failed, %!STATUS!",
-            PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
-            m_Device,
-            m_PkgPnp->GetDevice()->GetDeviceObject(),
-            status);
-    }
-    
     return status;
 }
 
@@ -967,14 +1140,31 @@ FxPnpDeviceSelfManagedIoRestart::InvokeCxCleanupCallback(
     _In_ PFxCxPnpPowerCallbackContext Context
     )
 {
-    PFN_WDFCX_DEVICE_PRE_SELF_MANAGED_IO_RESTART_FAILED_CLEANUP method;
+    if (Context->m_CallbackType == FxCxCallbackSmIoRestart) {
 
-    method = Context->u.SmIoRestart.CleanupCallback;
-    ASSERT(method != NULL);                          
+        PFN_WDFCX_DEVICE_PRE_SELF_MANAGED_IO_RESTART_FAILED_CLEANUP method;
 
-    CallbackStart();
-    method(m_Device);
-    CallbackEnd();
+        method = Context->u.SmIoRestart.CleanupCallback;
+        ASSERT(method != NULL);
+
+        CallbackStart();
+        method(m_Device);
+        CallbackEnd();
+    }
+    else {
+
+        PFN_WDFCX_DEVICE_PRE_SELF_MANAGED_IO_RESTART_EX_FAILED_CLEANUP method;
+        WDF_POWER_DEVICE_STATE previousState;
+
+        previousState = (WDF_POWER_DEVICE_STATE) m_PkgPnp->m_DevicePowerState;
+
+        method = Context->u.SmIoRestartEx.CleanupCallback;
+        ASSERT(method != NULL);
+
+        CallbackStart();
+        method(m_Device, previousState);
+        CallbackEnd();
+    }
 
     return;
 }
@@ -1129,14 +1319,14 @@ FxPnpDeviceSurpriseRemoval::InvokeCxCallback(
     )
 {
     PFN_WDF_DEVICE_SURPRISE_REMOVAL method;
-                    
+
     if (PrePost == FxCxInvokePreCallback) {
         method = Context->u.SurpriseRemoval.PreCallback;
     }
     else {
         method = Context->u.SurpriseRemoval.PostCallback;
     }
-    
+
     ASSERT(method != NULL);
 
     //
@@ -1267,43 +1457,170 @@ FxPowerDeviceDisableWakeAtBus::Invoke(
     }
 }
 
-
+_When_(!NT_SUCCESS(return), _At_(Progress, _Must_inspect_result_))
 _Must_inspect_result_
 NTSTATUS
 FxPowerDeviceArmWakeFromS0::Invoke(
-    __in WDFDEVICE Device
+    _In_ WDFDEVICE  Device,
+    _Out_ FxCxCallbackProgress *Progress
+    )
+{
+    m_Device = Device;
+
+    return FxPrePostCallback::InvokeStateful(Progress,
+                                             FxCxCleanupAfterPreOrClientFailure);
+}
+
+VOID
+FxPowerDeviceArmWakeFromS0::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_ARM_WAKE_FROM_S0 Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackArmWakeFromS0;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceArmWakeFromS0::InvokeClient(
+    VOID
     )
 {
     if (m_Method != NULL) {
         NTSTATUS status;
 
         CallbackStart();
-        status = m_Method(Device);
+        status = m_Method(m_Device);
         CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtDeviceArmWakeFromS0 WDFDEVICE 0x%p !devobj 0x%p failed, "
+                "%!STATUS!",
+                m_Device, m_PkgPnp->GetDevice()->GetDeviceObject(), status);
+        }
 
         return status;
     }
     else {
         return STATUS_SUCCESS;
     }
+
 }
 
 _Must_inspect_result_
 NTSTATUS
+FxPowerDeviceArmWakeFromS0::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    NTSTATUS status;
+    PFN_WDF_DEVICE_ARM_WAKE_FROM_S0 method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.ArmWakeFromS0.PreCallback;
+    }
+    else {
+        method = Context->u.ArmWakeFromS0.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreArmWakeFromS0 EvtCxDevicePostArmWakeFromS0
+    //
+    CallbackStart();
+    status = method(m_Device);
+    CallbackEnd();
+
+    if (!NT_SUCCESS(status)) {
+        DoTraceLevelMessage(
+            m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "EvtCxDevice%sArmWakeFromS0 WDFDEVICE 0x%p !devobj 0x%p failed, "
+            "%!STATUS!",
+            PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+            m_Device,
+            m_PkgPnp->GetDevice()->GetDeviceObject(),
+            status);
+    }
+
+    return status;
+}
+
+VOID
+FxPowerDeviceArmWakeFromS0::InvokeCxCleanupCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context
+    )
+{
+    PFN_WDFCX_DEVICE_PRE_ARM_WAKE_FROM_S0_FAILED_CLEANUP method;
+
+    method = Context->u.ArmWakeFromS0.CleanupCallback;
+    ASSERT(method != NULL);
+
+    CallbackStart();
+    method(m_Device);
+    CallbackEnd();
+
+    return;
+}
+
+_When_(!NT_SUCCESS(return), _At_(Progress, _Must_inspect_result_))
+_Must_inspect_result_
+NTSTATUS
 FxPowerDeviceArmWakeFromSx::Invoke(
-    __in WDFDEVICE Device,
-    __in BOOLEAN DeviceWakeEnabled,
-    __in BOOLEAN ChildrenArmedForWake
+    _In_ WDFDEVICE  Device,
+    _In_ BOOLEAN DeviceWakeEnabled,
+    _In_ BOOLEAN ChildrenArmedForWake,
+    _Out_ FxCxCallbackProgress *Progress
+    )
+{
+    m_Device = Device;
+    m_DeviceWakeEnabled = DeviceWakeEnabled;
+    m_ChildrenArmedForWake = ChildrenArmedForWake;
+
+    return FxPrePostCallback::InvokeStateful(Progress,
+                                             FxCxCleanupAfterPreFailure);
+}
+
+VOID
+FxPowerDeviceArmWakeFromSx::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_ARM_WAKE_FROM_SX Method,
+    _In_ PFN_WDF_DEVICE_ARM_WAKE_FROM_SX_WITH_REASON MethodWithReason
+    )
+{
+    m_Method = Method;
+    m_MethodWithReason = MethodWithReason;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackArmWakeFromSxWithReason;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceArmWakeFromSx::InvokeClient(
+    VOID
     )
 {
     if (m_MethodWithReason != NULL) {
         NTSTATUS status;
 
         CallbackStart();
-        status = m_MethodWithReason(Device,
-                                    DeviceWakeEnabled,
-                                    ChildrenArmedForWake);
+        status = m_MethodWithReason(m_Device,
+                                    m_DeviceWakeEnabled,
+                                    m_ChildrenArmedForWake);
         CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtDeviceArmWakeFromSxWithReason WDFDEVICE 0x%p !devobj 0x%p failed, "
+                "%!STATUS!",
+                m_Device, m_PkgPnp->GetDevice()->GetDeviceObject(), status);
+        }
 
         return status;
     }
@@ -1311,64 +1628,391 @@ FxPowerDeviceArmWakeFromSx::Invoke(
         NTSTATUS status;
 
         CallbackStart();
-        status = m_Method(Device);
+        status = m_Method(m_Device);
         CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtDeviceArmWakeFromSx WDFDEVICE 0x%p !devobj 0x%p failed, "
+                "%!STATUS!",
+                m_Device, m_PkgPnp->GetDevice()->GetDeviceObject(), status);
+        }
 
         return status;
     }
     else {
         return STATUS_SUCCESS;
     }
+
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceArmWakeFromSx::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    NTSTATUS status;
+
+    if (Context->m_CallbackType == FxCxCallbackArmWakeFromSxWithReason) {
+
+        PFN_WDF_DEVICE_ARM_WAKE_FROM_SX_WITH_REASON method;
+
+        if (PrePost == FxCxInvokePreCallback) {
+            method = Context->u.ArmWakeFromSxWithReason.PreCallback;
+        }
+        else {
+            method = Context->u.ArmWakeFromSxWithReason.PostCallback;
+        }
+
+        ASSERT(method != NULL);
+
+        //
+        // EvtCxDevicePreArmWakeFromSxWithReason EvtCxDevicePostArmWakeFromSxWithReason
+        //
+        CallbackStart();
+        status = method(m_Device, m_DeviceWakeEnabled, m_ChildrenArmedForWake);
+        CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtCxDevice%sArmWakeFromSxWithReason WDFDEVICE 0x%p !devobj 0x%p failed, "
+                "%!STATUS!",
+                PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+                m_Device,
+                m_PkgPnp->GetDevice()->GetDeviceObject(),
+                status);
+        }
+    }
+    else {
+
+        PFN_WDF_DEVICE_ARM_WAKE_FROM_SX method;
+
+        if (PrePost == FxCxInvokePreCallback) {
+            method = Context->u.ArmWakeFromSx.PreCallback;
+        }
+        else {
+            method = Context->u.ArmWakeFromSx.PostCallback;
+        }
+
+        ASSERT(method != NULL);
+
+        //
+        // EvtCxDevicePreArmWakeFromSx EvtCxDevicePostArmWakeFromSx
+        //
+        CallbackStart();
+        status = method(m_Device);
+        CallbackEnd();
+
+        if (!NT_SUCCESS(status)) {
+            DoTraceLevelMessage(
+                m_PkgPnp->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "EvtCxDevice%sArmWakeFromSx WDFDEVICE 0x%p !devobj 0x%p failed, "
+                "%!STATUS!",
+                PrePost == FxCxInvokePreCallback ? "Pre" : "Post",
+                m_Device,
+                m_PkgPnp->GetDevice()->GetDeviceObject(),
+                status);
+        }
+    }
+
+    return status;
 }
 
 VOID
+FxPowerDeviceArmWakeFromSx::InvokeCxCleanupCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context
+    )
+{
+    if (Context->m_CallbackType == FxCxCallbackArmWakeFromSxWithReason) {
+
+        PFN_WDFCX_DEVICE_PRE_ARM_WAKE_FROM_SX_WITH_REASON_FAILED_CLEANUP method;
+
+        method = Context->u.ArmWakeFromSxWithReason.CleanupCallback;
+        ASSERT(method != NULL);
+
+        CallbackStart();
+        method(m_Device, m_DeviceWakeEnabled, m_ChildrenArmedForWake);
+        CallbackEnd();
+    }
+    else {
+
+        PFN_WDFCX_DEVICE_PRE_ARM_WAKE_FROM_SX_FAILED_CLEANUP method;
+
+        method = Context->u.ArmWakeFromSx.CleanupCallback;
+        ASSERT(method != NULL);
+
+        CallbackStart();
+        method(m_Device);
+        CallbackEnd();
+    }
+
+    return;
+}
+
+_Must_inspect_result_
+NTSTATUS
 FxPowerDeviceDisarmWakeFromS0::Invoke(
-    __in WDFDEVICE Device
+    _In_ WDFDEVICE  Device
+    )
+{
+    m_Device = Device;
+
+    return FxPrePostCallback::InvokeStateless();
+}
+
+VOID
+FxPowerDeviceDisarmWakeFromS0::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_DISARM_WAKE_FROM_S0 Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackDisarmWakeFromS0;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceDisarmWakeFromS0::InvokeClient(
+    VOID
     )
 {
     if (m_Method != NULL) {
         CallbackStart();
-        m_Method(Device);
+        m_Method(m_Device);
         CallbackEnd();
     }
+
+    return STATUS_SUCCESS;
 }
- 
-VOID
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceDisarmWakeFromS0::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    PFN_WDF_DEVICE_DISARM_WAKE_FROM_S0 method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.DisarmWakeFromS0.PreCallback;
+    }
+    else {
+        method = Context->u.DisarmWakeFromS0.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreDisarmWakeFromS0 EvtCxDevicePostDisarmWakeFromS0
+    //
+    CallbackStart();
+    method(m_Device);
+    CallbackEnd();
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
 FxPowerDeviceDisarmWakeFromSx::Invoke(
-    __in WDFDEVICE Device
+    _In_ WDFDEVICE  Device
+    )
+{
+    m_Device = Device;
+
+    return FxPrePostCallback::InvokeStateless();
+}
+
+VOID
+FxPowerDeviceDisarmWakeFromSx::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_DISARM_WAKE_FROM_SX Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackDisarmWakeFromSx;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceDisarmWakeFromSx::InvokeClient(
+    VOID
     )
 {
     if (m_Method != NULL) {
         CallbackStart();
-        m_Method(Device);
+        m_Method(m_Device);
         CallbackEnd();
     }
+
+    return STATUS_SUCCESS;
 }
 
-VOID
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceDisarmWakeFromSx::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    PFN_WDF_DEVICE_DISARM_WAKE_FROM_SX method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.DisarmWakeFromSx.PreCallback;
+    }
+    else {
+        method = Context->u.DisarmWakeFromSx.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreDisarmWakeFromSx EvtCxDevicePostDisarmWakeFromSx
+    //
+    CallbackStart();
+    method(m_Device);
+    CallbackEnd();
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
 FxPowerDeviceWakeFromSxTriggered::Invoke(
-    __in WDFDEVICE Device
+    _In_ WDFDEVICE  Device
     )
 {
-    if (m_Method != NULL) {
-        CallbackStart();
-        m_Method(Device);
-        CallbackEnd();
-    }
-}
- 
-VOID
-FxPowerDeviceWakeFromS0Triggered::Invoke(
-    __in WDFDEVICE Device
-    )
-{
-    if (m_Method != NULL) {
-        CallbackStart();
-        m_Method(Device);
-        CallbackEnd();
-    }
+    m_Device = Device;
+
+    return FxPrePostCallback::InvokeStateless();
 }
 
+VOID
+FxPowerDeviceWakeFromSxTriggered::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_WAKE_FROM_SX_TRIGGERED Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackWakeFromSxTriggered;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceWakeFromSxTriggered::InvokeClient(
+    VOID
+    )
+{
+    if (m_Method != NULL) {
+        CallbackStart();
+        m_Method(m_Device);
+        CallbackEnd();
+    }
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceWakeFromSxTriggered::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    PFN_WDF_DEVICE_WAKE_FROM_SX_TRIGGERED method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.WakeFromSxTriggered.PreCallback;
+    }
+    else {
+        method = Context->u.WakeFromSxTriggered.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreWakeFromSxTriggered EvtCxDevicePostWakeFromSxTriggered
+    //
+    CallbackStart();
+    method(m_Device);
+    CallbackEnd();
+
+    return STATUS_SUCCESS;
+}
+
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceWakeFromS0Triggered::Invoke(
+    _In_ WDFDEVICE  Device
+    )
+{
+    m_Device = Device;
+
+    return FxPrePostCallback::InvokeStateless();
+}
+
+VOID
+FxPowerDeviceWakeFromS0Triggered::Initialize(
+    _In_ FxPkgPnp* PkgPnp,
+    _In_ PFN_WDF_DEVICE_WAKE_FROM_S0_TRIGGERED Method
+    )
+{
+    m_Method = Method;
+    m_PkgPnp = PkgPnp;
+    m_CallbackType = FxCxCallbackWakeFromS0Triggered;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceWakeFromS0Triggered::InvokeClient(
+    VOID
+    )
+{
+    if (m_Method != NULL) {
+        CallbackStart();
+        m_Method(m_Device);
+        CallbackEnd();
+    }
+
+    return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+NTSTATUS
+FxPowerDeviceWakeFromS0Triggered::InvokeCxCallback(
+    _In_ PFxCxPnpPowerCallbackContext Context,
+    _In_ FxCxInvokeCallbackSubType PrePost
+    )
+{
+    PFN_WDF_DEVICE_WAKE_FROM_S0_TRIGGERED method;
+
+    if (PrePost == FxCxInvokePreCallback) {
+        method = Context->u.WakeFromS0Triggered.PreCallback;
+    }
+    else {
+        method = Context->u.WakeFromS0Triggered.PostCallback;
+    }
+
+    ASSERT(method != NULL);
+
+    //
+    // EvtCxDevicePreWakeFromS0Triggered EvtCxDevicePostWakeFromS0Triggered
+    //
+    CallbackStart();
+    method(m_Device);
+    CallbackEnd();
+
+    return STATUS_SUCCESS;
+}
 
 VOID
 FxPnpStateCallback::Invoke(

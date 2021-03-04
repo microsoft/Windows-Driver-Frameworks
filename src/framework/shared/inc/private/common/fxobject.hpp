@@ -19,7 +19,7 @@ Revision History:
 
 
         Made mode agnostic
-        
+
         IMPORTANT: Common code must call Initialize method of
         FxObject before using it
 
@@ -236,7 +236,7 @@ enum FxObjectDebugExtensionValues {
 class UfxObject;
 
 class FxObject {
-    
+
     friend UfxObject; //UMDF object wrapper
 
     friend FxDisposeList;
@@ -244,12 +244,12 @@ class FxObject {
 
 private:
 
-#if FX_CORE_MODE==FX_CORE_USER_MODE        
+#if FX_CORE_MODE==FX_CORE_USER_MODE
 #ifndef INLINE_WRAPPER_ALLOCATION
     PVOID         m_COMWrapper;
 #endif
 #endif
-    
+
     WDFTYPE       m_Type;
 
     //
@@ -342,11 +342,11 @@ private:
     {
         // Always make the caller supply a type and size
     }
-    
+
     // Do not specify argument names
     FX_DECLARE_VF_FUNCTION_P1(
-    VOID, 
-    VerifyConstruct, 
+    VOID,
+    VerifyConstruct,
         _In_ BOOLEAN
         );
 
@@ -500,14 +500,14 @@ public:
 
 #ifdef INLINE_WRAPPER_ALLOCATION
 
-#if FX_CORE_MODE==FX_CORE_USER_MODE        
+#if FX_CORE_MODE==FX_CORE_USER_MODE
     static
     USHORT
     GetWrapperSize(
         );
 
     virtual
-    PVOID        
+    PVOID
     GetCOMWrapper(
         ) = 0;
 
@@ -525,7 +525,7 @@ public:
 
 #else
 
-#if FX_CORE_MODE==FX_CORE_USER_MODE        
+#if FX_CORE_MODE==FX_CORE_USER_MODE
     PVOID GetCOMWrapper(){ return m_COMWrapper; }
 
     void SetCOMWrapper(__drv_aliasesMem PVOID Wrapper){ m_COMWrapper = Wrapper; }
@@ -684,7 +684,7 @@ public:
     _ReferenceActual(
         __in        WDFOBJECT Object,
         __in_opt    PVOID Tag,
-        __in        LONG Line, 
+        __in        LONG Line,
         __in        PCSTR File
         )
     {
@@ -699,7 +699,7 @@ public:
         }
         else {
             pObject->AddRefOverride(offset, Tag, Line, File);
-        }        
+        }
     }
 
     static
@@ -708,7 +708,7 @@ public:
     _DereferenceActual(
         __in        WDFOBJECT Object,
         __in_opt    PVOID Tag,
-        __in        LONG Line, 
+        __in        LONG Line,
         __in        PCSTR File
         )
     {
@@ -1219,9 +1219,15 @@ public:
     _Must_inspect_result_
     NTSTATUS
     AddContext(
-        __in FxContextHeader *Header,
-        __in PVOID* Context,
-        __in PWDF_OBJECT_ATTRIBUTES Attributes
+        _In_         FxContextHeader*       Header,
+        _Outptr_opt_ PVOID*                 Context,
+        _In_opt_     PWDF_OBJECT_ATTRIBUTES Attributes
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    MoveContexts(
+        _In_ FxObject* TargetObject
         );
 
     //
@@ -1388,7 +1394,7 @@ private:
         )
     {
         return FLAG_TO_BOOL(m_ObjectFlags, FXOBJECT_FLAGS_FORCE_DISPOSE_THREAD);
-    }       
+    }
 
     BOOLEAN
     ShouldDeferDisposeLocked(

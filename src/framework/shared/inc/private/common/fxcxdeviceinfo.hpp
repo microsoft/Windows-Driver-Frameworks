@@ -16,8 +16,8 @@ struct FxCxDeviceInfo : public FxStump {
         RtlZeroMemory(&RequestAttributes, sizeof(RequestAttributes));
         RtlZeroMemory(&CxPnpPowerCallbackContexts, sizeof(CxPnpPowerCallbackContexts));
     }
-        
-    ~FxCxDeviceInfo() 
+
+    ~FxCxDeviceInfo()
     {
         ASSERT(IsListEmpty(&ListEntry));
 
@@ -28,8 +28,64 @@ struct FxCxDeviceInfo : public FxStump {
         }
     }
 
+    FxCxPnpPowerCallbackContext*
+    GetCxPnpPowerCallbackContexts(FxCxCallbackType CallbackType)
+    /*
+      A CX can register callbacks for either ArmWakeFromSx or ArmWakeFromSxWithReason,
+      but not both. They are called "equal types". When new equal types are
+      introduced, add them here, and then update their InvokeCxCallback /
+      InvokeCxCleanupCallback like FxPowerDeviceArmWakeFromSx does:
+          FxPowerDeviceArmWakeFromSx::InvokeCxCallback()
+          FxPowerDeviceArmWakeFromSx::InvokeCxCleanupCallback()
+    */
+    {
+        FxCxPnpPowerCallbackContext* result;
+        FxCxCallbackType equalType;
 
-    LIST_ENTRY                  ListEntry;    
+        result = CxPnpPowerCallbackContexts[CallbackType];
+        if (result != NULL) {
+            return result;
+        }
+
+        switch (CallbackType) {
+
+        // FxCxCallbackArmWakeFromSx vs. FxCxCallbackArmWakeFromSxWithReason
+
+        case FxCxCallbackArmWakeFromSx:
+            equalType = FxCxCallbackArmWakeFromSxWithReason;
+            break;
+
+        case FxCxCallbackArmWakeFromSxWithReason:
+            equalType = FxCxCallbackArmWakeFromSx;
+            break;
+
+        // FxCxCallbackSmIoRestart vs. FxCxCallbackSmIoRestartEx
+
+        case FxCxCallbackSmIoRestart:
+            equalType = FxCxCallbackSmIoRestartEx;
+            break;
+
+        case FxCxCallbackSmIoRestartEx:
+            equalType = FxCxCallbackSmIoRestart;
+            break;
+
+        // FxCxCallbackSmIoSuspend vs. FxCxCallbackSmIoSuspendEx
+
+        case FxCxCallbackSmIoSuspend:
+            equalType = FxCxCallbackSmIoSuspendEx;
+            break;
+
+        case FxCxCallbackSmIoSuspendEx:
+            equalType = FxCxCallbackSmIoSuspend;
+            break;
+
+        default:
+            return NULL;
+        }
+        return CxPnpPowerCallbackContexts[equalType];
+    }
+
+    LIST_ENTRY                  ListEntry;
     FxDriver*                   Driver;
     FxIoInCallerContext         IoInCallerContextCallback;
     WDF_OBJECT_ATTRIBUTES       RequestAttributes;

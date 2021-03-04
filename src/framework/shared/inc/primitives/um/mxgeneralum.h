@@ -53,7 +53,7 @@ typedef InterruptSynchronizeRoutine MdInterruptSynchronizeRoutineType, *MdInterr
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
-typedef 
+typedef
 VOID
 CALLBACK_FUNCTION(
         __in PVOID CallbackContext,
@@ -100,7 +100,7 @@ Mx::MxGetCurrentThread(
     //
     // We can't use GetCurrentThread as it returns a pseudo handle
     // which would have same numeric value for different threads
-    // We could use DuplicateHandle to get real handle but that has the 
+    // We could use DuplicateHandle to get real handle but that has the
     // following problems:
     //    1) It returns different handle values for the same thread
     //       if called again without closing handle.
@@ -379,7 +379,7 @@ __inline
 NTSTATUS
 Mx::MxAcquireRemoveLock(
     __in MdRemoveLock  RemoveLock,
-    __in_opt PVOID  Tag 
+    __in_opt PVOID  Tag
     )
 {
     UNREFERENCED_PARAMETER(Tag);
@@ -396,7 +396,7 @@ Mx::MxAcquireRemoveLock(
     else {
         if (0 == InterlockedDecrement(&RemoveLock->IoCount)) {
             if (! SetEvent(RemoveLock->RemoveEvent)) {
-                Mx::MxBugCheckEx(WDF_VIOLATION, 
+                Mx::MxBugCheckEx(WDF_VIOLATION,
                                 0, 0, 0, 0);
             }
         }
@@ -410,7 +410,7 @@ __inline
 VOID
 Mx::MxReleaseRemoveLock(
     __in MdRemoveLock  RemoveLock,
-    __in PVOID  Tag 
+    __in PVOID  Tag
     )
 {
     UNREFERENCED_PARAMETER(Tag);
@@ -428,7 +428,7 @@ Mx::MxReleaseRemoveLock(
         // that it's safe to go ahead.
         //
         if (! SetEvent(RemoveLock->RemoveEvent)) {
-            Mx::MxBugCheckEx(WDF_VIOLATION, 
+            Mx::MxBugCheckEx(WDF_VIOLATION,
                             0, 0, 0, 0);
         }
     }
@@ -438,7 +438,7 @@ __inline
 VOID
 Mx::MxReleaseRemoveLockAndWait(
     __in MdRemoveLock  RemoveLock,
-    __in PVOID  Tag 
+    __in PVOID  Tag
     )
 {
     UNREFERENCED_PARAMETER(Tag);
@@ -452,7 +452,7 @@ Mx::MxReleaseRemoveLockAndWait(
 
     if (0 < InterlockedDecrement (&RemoveLock->IoCount)) {
         retVal = WaitForSingleObject(RemoveLock->RemoveEvent,
-                        REMOVE_LOCK_RELEASE_TIMEOUT_IN_SECONDS*1000); 
+                        REMOVE_LOCK_RELEASE_TIMEOUT_IN_SECONDS*1000);
         ASSERT(retVal == WAIT_OBJECT_0);
     }
 
@@ -712,18 +712,18 @@ Mx::MxDeleteDevice(
     )
 {
     UNREFERENCED_PARAMETER(Device);
-    
+
 
 
 
     //
-    // Host's device stack object holds the only reference to the host devices. 
+    // Host's device stack object holds the only reference to the host devices.
     // The infrastructure controls the device object's lifetime.
-    // 
+    //
     DO_NOTHING();
 }
 
-__inline 
+__inline
 NTSTATUS
 Mx::MxCreateDeviceSecure(
       _In_      MdDriverObject DriverObject,
@@ -759,7 +759,7 @@ Mx::MxAttachDeviceToDeviceStack(
     _In_ MdDeviceObject TargetDevice
     )
 {
-    
+
     UNREFERENCED_PARAMETER(SourceDevice);
     UNREFERENCED_PARAMETER(TargetDevice);
 
@@ -769,7 +769,7 @@ Mx::MxAttachDeviceToDeviceStack(
 }
 
 __inline
-NTSTATUS 
+NTSTATUS
 Mx::MxCreateDevice(
     _In_      MdDriverObject DriverObject,
     _In_      ULONG DeviceExtensionSize,
@@ -828,7 +828,7 @@ Mx::MxSetDeviceInterfaceState(
 {
     UNREFERENCED_PARAMETER(SymbolicLinkName);
     UNREFERENCED_PARAMETER(Enable);
-        
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
     return STATUS_NOT_IMPLEMENTED;
@@ -848,14 +848,14 @@ Mx::MxRegisterDeviceInterface(
     UNREFERENCED_PARAMETER(InterfaceClassGuid);
     UNREFERENCED_PARAMETER(ReferenceString);
     UNREFERENCED_PARAMETER(SymbolicLinkName);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
     return STATUS_NOT_IMPLEMENTED;
 }
 
 __inline
-VOID 
+VOID
 Mx::MxInitializeMdl(
     _In_  PMDL MemoryDescriptorList,
     _In_  PVOID BaseVa,
@@ -865,7 +865,7 @@ Mx::MxInitializeMdl(
     UNREFERENCED_PARAMETER(MemoryDescriptorList);
     UNREFERENCED_PARAMETER(BaseVa);
     UNREFERENCED_PARAMETER(Length);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
 }
@@ -877,14 +877,14 @@ Mx::MxGetMdlVirtualAddress(
     )
 {
     UNREFERENCED_PARAMETER(Mdl);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 
     return NULL;
 }
 
 __inline
-VOID 
+VOID
 Mx::MxBuildPartialMdl(
     _In_     PMDL SourceMdl,
     _Inout_  PMDL TargetMdl,
@@ -896,19 +896,22 @@ Mx::MxBuildPartialMdl(
     UNREFERENCED_PARAMETER(TargetMdl);
     UNREFERENCED_PARAMETER(VirtualAddress);
     UNREFERENCED_PARAMETER(Length);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
 __inline
-VOID 
+VOID
 Mx::MxQuerySystemTime(
     _Out_ PLARGE_INTEGER CurrentTime
     )
 {
-    UNREFERENCED_PARAMETER(CurrentTime);
-    
-    ASSERTMSG("Not implemented for UMDF\n", FALSE);
+    FILETIME filetime;
+
+    GetSystemTimeAsFileTime(&filetime);
+
+    CurrentTime->LowPart = filetime.dwLowDateTime;
+    CurrentTime->HighPart = (LONG) filetime.dwHighDateTime;
 }
 
 __inline
@@ -984,7 +987,7 @@ Mx::MxReleaseInterruptSpinLock(
 }
 
 __inline
-BOOLEAN 
+BOOLEAN
 Mx::MxInsertQueueDpc(
   __inout   PRKDPC Dpc,
   __in_opt  PVOID SystemArgument1,

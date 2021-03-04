@@ -291,6 +291,10 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFDRIVERERRORREPORTAPIMISSING                        pfnWdfDriverErrorReportApiMissing;
     PFN_WDFDEVICERETRIEVEDEVICEDIRECTORYSTRING                pfnWdfDeviceRetrieveDeviceDirectoryString;
     PFN_WDFDRIVERRETRIEVEDRIVERDATADIRECTORYSTRING            pfnWdfDriverRetrieveDriverDataDirectoryString;
+    PFN_WDFCXDEVICEINITALLOCATECONTEXT                        pfnWdfCxDeviceInitAllocateContext;
+    PFN_WDFCXDEVICEINITGETTYPEDCONTEXTWORKER                  pfnWdfCxDeviceInitGetTypedContextWorker;
+    PFN_WDFCXDEVICEINITSETPOWERPOLICYEVENTCALLBACKS           pfnWdfCxDeviceInitSetPowerPolicyEventCallbacks;
+    PFN_WDFDEVICESETDEVICEINTERFACESTATEEX                    pfnWdfDeviceSetDeviceInterfaceStateEx;
 
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
 
@@ -374,6 +378,7 @@ typedef struct _WDFSTRUCTURES {
     size_t  SIZE_WDFOBJECT_TRIAGE_INFO;
     size_t  SIZE_WDFQUEUE_TRIAGE_INFO;
     size_t  SIZE_WDFREQUEST_TRIAGE_INFO;
+    size_t  SIZE_WDFCX_POWER_POLICY_EVENT_CALLBACKS;
 
 } WDFSTRUCTURES, *PWDFSTRUCTURES;
 
@@ -393,6 +398,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfCollectionCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -405,6 +411,7 @@ WDFEXPORT(WdfCollectionCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG
+NTAPI
 WDFEXPORT(WdfCollectionGetCount)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -416,6 +423,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfCollectionAdd)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -428,6 +436,7 @@ WDFEXPORT(WdfCollectionAdd)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfCollectionRemove)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -440,6 +449,7 @@ WDFEXPORT(WdfCollectionRemove)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfCollectionRemoveItem)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -452,6 +462,7 @@ WDFEXPORT(WdfCollectionRemoveItem)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
+NTAPI
 WDFEXPORT(WdfCollectionGetItem)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -464,6 +475,7 @@ WDFEXPORT(WdfCollectionGetItem)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
+NTAPI
 WDFEXPORT(WdfCollectionGetFirstItem)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -474,6 +486,7 @@ WDFEXPORT(WdfCollectionGetFirstItem)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
+NTAPI
 WDFEXPORT(WdfCollectionGetLastItem)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -484,6 +497,7 @@ WDFEXPORT(WdfCollectionGetLastItem)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetCompanionEventCallbacks)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -497,6 +511,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfCompanionCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -511,6 +526,7 @@ WDFEXPORT(WdfCompanionCreate)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 HANDLE
+NTAPI
 WDFEXPORT(WdfCompanionWdmGetSecureDeviceHandle)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -522,6 +538,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfCompanionCreateTaskQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -539,6 +556,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 PWDFCXDEVICE_INIT
+NTAPI
 WDFEXPORT(WdfCxDeviceInitAllocate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -549,6 +567,7 @@ WDFEXPORT(WdfCxDeviceInitAllocate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfCxDeviceInitSetRequestAttributes)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -561,6 +580,7 @@ WDFEXPORT(WdfCxDeviceInitSetRequestAttributes)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfCxDeviceInitSetFileObjectConfig)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -575,6 +595,7 @@ WDFEXPORT(WdfCxDeviceInitSetFileObjectConfig)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -584,8 +605,22 @@ WDFEXPORT(WdfCxDeviceInitSetPnpPowerEventCallbacks)(
     PWDFCX_PNPPOWER_EVENT_CALLBACKS CxPnpPowerCallbacks
     );
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
+WDFEXPORT(WdfCxDeviceInitSetPowerPolicyEventCallbacks)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFCXDEVICE_INIT CxDeviceInit,
+    _In_
+    PWDFCX_POWER_POLICY_EVENT_CALLBACKS CxPowerPolicyCallbacks
+    );
+
+WDFAPI
+VOID
+NTAPI
 WDFEXPORT(WdfCxVerifierKeBugCheck)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -603,9 +638,39 @@ WDFEXPORT(WdfCxVerifierKeBugCheck)(
     ULONG_PTR BugCheckParameter4
     );
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+WDFAPI
+NTSTATUS
+NTAPI
+WDFEXPORT(WdfCxDeviceInitAllocateContext)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit,
+    _In_
+    PWDF_OBJECT_ATTRIBUTES ContextAttributes,
+    _Outptr_opt_
+    PVOID* Context
+    );
+
+_IRQL_requires_max_(DISPATCH_LEVEL+1)
+WDFAPI
+PVOID
+NTAPI
+WDFEXPORT(WdfCxDeviceInitGetTypedContextWorker)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    PWDFDEVICE_INIT DeviceInit,
+    _In_
+    PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+    );
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceGetDeviceState)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -618,6 +683,7 @@ WDFEXPORT(WdfDeviceGetDeviceState)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceSetDeviceState)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -631,6 +697,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceWdmDispatchIrp)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -646,6 +713,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -662,6 +730,7 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDRIVER
+NTAPI
 WDFEXPORT(WdfDeviceGetDriver)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -672,6 +741,7 @@ WDFEXPORT(WdfDeviceGetDriver)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFIOTARGET
+NTAPI
 WDFEXPORT(WdfDeviceGetIoTarget)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -683,6 +753,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAssignS0IdleSettings)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -696,6 +767,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAssignSxWakeSettings)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -709,6 +781,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceOpenRegistryKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -728,6 +801,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceOpenDevicemapKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -746,6 +820,7 @@ WDFEXPORT(WdfDeviceOpenDevicemapKey)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -758,6 +833,7 @@ WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetPowerPolicyEventCallbacks)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -770,6 +846,7 @@ WDFEXPORT(WdfDeviceInitSetPowerPolicyEventCallbacks)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetPowerPolicyOwnership)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -782,6 +859,7 @@ WDFEXPORT(WdfDeviceInitSetPowerPolicyOwnership)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetIoType)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -794,6 +872,7 @@ WDFEXPORT(WdfDeviceInitSetIoType)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetFileObjectConfig)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -808,6 +887,7 @@ WDFEXPORT(WdfDeviceInitSetFileObjectConfig)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetRequestAttributes)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -821,6 +901,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -835,6 +916,7 @@ WDFEXPORT(WdfDeviceCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceSetStaticStopRemove)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -848,6 +930,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceCreateDeviceInterface)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -862,7 +945,25 @@ WDFEXPORT(WdfDeviceCreateDeviceInterface)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceSetDeviceInterfaceState)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    CONST GUID* InterfaceClassGUID,
+    _In_opt_
+    PCUNICODE_STRING ReferenceString,
+    _In_
+    BOOLEAN IsInterfaceEnabled
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+VOID
+NTAPI
+WDFEXPORT(WdfDeviceSetDeviceInterfaceStateEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -879,6 +980,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceRetrieveDeviceInterfaceString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -896,6 +998,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceCreateSymbolicLink)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -909,6 +1012,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceQueryProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -928,6 +1032,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAllocAndQueryProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -947,6 +1052,7 @@ WDFEXPORT(WdfDeviceAllocAndQueryProperty)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceSetPnpCapabilities)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -959,6 +1065,7 @@ WDFEXPORT(WdfDeviceSetPnpCapabilities)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceSetPowerCapabilities)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -971,6 +1078,7 @@ WDFEXPORT(WdfDeviceSetPowerCapabilities)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceSetFailed)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -985,6 +1093,7 @@ _When_(WaitForD0 == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
 _When_(WaitForD0 != 0, _IRQL_requires_max_(PASSIVE_LEVEL))
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceStopIdleNoTrack)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -997,6 +1106,7 @@ WDFEXPORT(WdfDeviceStopIdleNoTrack)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceResumeIdleNoTrack)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1009,6 +1119,7 @@ _When_(WaitForD0 == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
 _When_(WaitForD0 != 0, _IRQL_requires_max_(PASSIVE_LEVEL))
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceStopIdleActual)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1027,6 +1138,7 @@ WDFEXPORT(WdfDeviceStopIdleActual)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceResumeIdleActual)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1043,6 +1155,7 @@ WDFEXPORT(WdfDeviceResumeIdleActual)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFFILEOBJECT
+NTAPI
 WDFEXPORT(WdfDeviceGetFileObject)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1055,6 +1168,7 @@ WDFEXPORT(WdfDeviceGetFileObject)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFQUEUE
+NTAPI
 WDFEXPORT(WdfDeviceGetDefaultQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1066,6 +1180,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceConfigureRequestDispatching)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1082,6 +1197,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1100,6 +1216,7 @@ WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 POWER_ACTION
+NTAPI
 WDFEXPORT(WdfDeviceGetSystemPowerAction)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1110,6 +1227,7 @@ WDFEXPORT(WdfDeviceGetSystemPowerAction)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1122,6 +1240,7 @@ WDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitSetIoTypeEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1134,6 +1253,7 @@ WDFEXPORT(WdfDeviceInitSetIoTypeEx)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDevicePostEvent)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1153,6 +1273,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceMapIoSpace)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1171,6 +1292,7 @@ WDFEXPORT(WdfDeviceMapIoSpace)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceUnmapIoSpace)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1185,6 +1307,7 @@ WDFEXPORT(WdfDeviceUnmapIoSpace)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 PVOID
+NTAPI
 WDFEXPORT(WdfDeviceGetHardwareRegisterMappedAddress)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1197,6 +1320,7 @@ WDFEXPORT(WdfDeviceGetHardwareRegisterMappedAddress)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 SIZE_T
+NTAPI
 WDFEXPORT(WdfDeviceReadFromHardware)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1217,6 +1341,7 @@ WDFEXPORT(WdfDeviceReadFromHardware)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceWriteToHardware)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1239,6 +1364,7 @@ WDFEXPORT(WdfDeviceWriteToHardware)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAssignInterfaceProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1257,6 +1383,7 @@ WDFEXPORT(WdfDeviceAssignInterfaceProperty)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAllocAndQueryInterfaceProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1277,6 +1404,7 @@ WDFEXPORT(WdfDeviceAllocAndQueryInterfaceProperty)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceQueryInterfaceProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1297,6 +1425,7 @@ WDFEXPORT(WdfDeviceQueryInterfaceProperty)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceGetDeviceStackIoType)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1311,6 +1440,7 @@ WDFEXPORT(WdfDeviceGetDeviceStackIoType)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1324,6 +1454,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceQueryPropertyEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1345,6 +1476,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAllocAndQueryPropertyEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1367,6 +1499,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceAssignProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1385,6 +1518,7 @@ WDFEXPORT(WdfDeviceAssignProperty)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFIOTARGET
+NTAPI
 WDFEXPORT(WdfDeviceGetSelfIoTarget)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1395,6 +1529,7 @@ WDFEXPORT(WdfDeviceGetSelfIoTarget)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitAllowSelfIoTarget)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1406,6 +1541,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1424,6 +1560,7 @@ WDFEXPORT(WdfDriverCreate)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 PWSTR
+NTAPI
 WDFEXPORT(WdfDriverGetRegistryPath)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1435,6 +1572,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1452,6 +1590,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverRetrieveVersionString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1465,6 +1604,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfDriverIsVersionAvailable)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1478,6 +1618,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverErrorReportApiMissing)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1495,6 +1636,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1511,6 +1653,7 @@ WDFEXPORT(WdfDriverOpenPersistentStateRegistryKey)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1524,6 +1667,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfFdoInitOpenRegistryKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1543,6 +1687,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfFdoInitQueryProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1562,6 +1707,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfFdoInitAllocAndQueryProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1582,6 +1728,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfFdoInitQueryPropertyEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1603,6 +1750,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfFdoInitAllocAndQueryPropertyEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1624,6 +1772,7 @@ WDFEXPORT(WdfFdoInitAllocAndQueryPropertyEx)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfFdoInitSetFilter)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1634,6 +1783,7 @@ WDFEXPORT(WdfFdoInitSetFilter)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 PUNICODE_STRING
+NTAPI
 WDFEXPORT(WdfFileObjectGetFileName)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1644,6 +1794,7 @@ WDFEXPORT(WdfFileObjectGetFileName)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
+NTAPI
 WDFEXPORT(WdfFileObjectGetDevice)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1654,6 +1805,7 @@ WDFEXPORT(WdfFileObjectGetDevice)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG
+NTAPI
 WDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1664,6 +1816,7 @@ WDFEXPORT(WdfFileObjectGetInitiatorProcessId)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 WDFFILEOBJECT
+NTAPI
 WDFEXPORT(WdfFileObjectGetRelatedFileObject)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1674,6 +1827,7 @@ WDFEXPORT(WdfFileObjectGetRelatedFileObject)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDeviceInitEnableHidInterface)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1685,6 +1839,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDeviceHidNotifyPresence)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1698,6 +1853,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfInterruptCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1713,6 +1869,7 @@ WDFEXPORT(WdfInterruptCreate)(
 
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfInterruptQueueDpcForIsr)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1722,6 +1879,7 @@ WDFEXPORT(WdfInterruptQueueDpcForIsr)(
 
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfInterruptQueueWorkItemForIsr)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1732,6 +1890,7 @@ WDFEXPORT(WdfInterruptQueueWorkItemForIsr)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfInterruptSynchronize)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1746,6 +1905,7 @@ WDFEXPORT(WdfInterruptSynchronize)(
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptAcquireLock)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1758,6 +1918,7 @@ WDFEXPORT(WdfInterruptAcquireLock)(
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptReleaseLock)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1770,6 +1931,7 @@ WDFEXPORT(WdfInterruptReleaseLock)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptEnable)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1780,6 +1942,7 @@ WDFEXPORT(WdfInterruptEnable)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptDisable)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1790,6 +1953,7 @@ WDFEXPORT(WdfInterruptDisable)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptGetInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1802,6 +1966,7 @@ WDFEXPORT(WdfInterruptGetInfo)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptSetPolicy)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1818,6 +1983,7 @@ WDFEXPORT(WdfInterruptSetPolicy)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfInterruptSetExtendedPolicy)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1829,6 +1995,7 @@ WDFEXPORT(WdfInterruptSetExtendedPolicy)(
 
 WDFAPI
 WDFDEVICE
+NTAPI
 WDFEXPORT(WdfInterruptGetDevice)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1841,6 +2008,7 @@ _Post_satisfies_(return == 1 || return == 0)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfInterruptTryToAcquireLock)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1854,6 +2022,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1870,6 +2039,7 @@ WDFEXPORT(WdfIoQueueCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDF_IO_QUEUE_STATE
+NTAPI
 WDFEXPORT(WdfIoQueueGetState)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1884,6 +2054,7 @@ WDFEXPORT(WdfIoQueueGetState)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStart)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1894,6 +2065,7 @@ WDFEXPORT(WdfIoQueueStart)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStop)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1910,6 +2082,7 @@ WDFEXPORT(WdfIoQueueStop)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStopSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1920,6 +2093,7 @@ WDFEXPORT(WdfIoQueueStopSynchronously)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
+NTAPI
 WDFEXPORT(WdfIoQueueGetDevice)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1931,6 +2105,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueRetrieveNextRequest)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1944,6 +2119,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueRetrieveRequestByFileObject)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1959,6 +2135,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueFindRequest)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1978,6 +2155,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueRetrieveFoundRequest)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1992,6 +2170,7 @@ WDFEXPORT(WdfIoQueueRetrieveFoundRequest)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueDrainSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2002,6 +2181,7 @@ WDFEXPORT(WdfIoQueueDrainSynchronously)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueDrain)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2018,6 +2198,7 @@ WDFEXPORT(WdfIoQueueDrain)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueuePurgeSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2028,6 +2209,7 @@ WDFEXPORT(WdfIoQueuePurgeSynchronously)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueuePurge)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2045,6 +2227,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoQueueReadyNotify)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2059,6 +2242,7 @@ WDFEXPORT(WdfIoQueueReadyNotify)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStopAndPurge)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2075,6 +2259,7 @@ WDFEXPORT(WdfIoQueueStopAndPurge)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoQueueStopAndPurgeSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2086,6 +2271,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2101,6 +2287,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetOpen)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2113,6 +2300,7 @@ WDFEXPORT(WdfIoTargetOpen)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoTargetCloseForQueryRemove)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2123,6 +2311,7 @@ WDFEXPORT(WdfIoTargetCloseForQueryRemove)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoTargetClose)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2134,6 +2323,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetStart)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2145,6 +2335,7 @@ _When_(Action == 3, _IRQL_requires_max_(DISPATCH_LEVEL))
 _When_(Action == 0 || Action == 1 || Action == 2, _IRQL_requires_max_(PASSIVE_LEVEL))
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoTargetStop)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2159,6 +2350,7 @@ _When_(Action == 2, _IRQL_requires_max_(DISPATCH_LEVEL))
 _When_(Action == 0 || Action == 1, _IRQL_requires_max_(PASSIVE_LEVEL))
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfIoTargetPurge)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2172,6 +2364,7 @@ WDFEXPORT(WdfIoTargetPurge)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDF_IO_TARGET_STATE
+NTAPI
 WDFEXPORT(WdfIoTargetGetState)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2182,6 +2375,7 @@ WDFEXPORT(WdfIoTargetGetState)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
+NTAPI
 WDFEXPORT(WdfIoTargetGetDevice)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2192,6 +2386,7 @@ WDFEXPORT(WdfIoTargetGetDevice)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 HANDLE
+NTAPI
 WDFEXPORT(WdfIoTargetWdmGetTargetFileHandle)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2203,6 +2398,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetSendReadSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2224,6 +2420,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetFormatRequestForRead)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2243,6 +2440,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetSendWriteSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2264,6 +2462,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetFormatRequestForWrite)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2283,6 +2482,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetSendIoctlSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2306,6 +2506,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetFormatRequestForIoctl)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2328,6 +2529,7 @@ WDFEXPORT(WdfIoTargetFormatRequestForIoctl)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2342,6 +2544,7 @@ _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
 _When_(PoolType == 0 || PoolType == 256 || PoolType == 512, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfMemoryCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2365,6 +2568,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfMemoryCreatePreallocated)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2382,6 +2586,7 @@ WDFEXPORT(WdfMemoryCreatePreallocated)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 PVOID
+NTAPI
 WDFEXPORT(WdfMemoryGetBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2395,6 +2600,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfMemoryAssignBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2411,6 +2617,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfMemoryCopyToBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2429,6 +2636,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfMemoryCopyFromBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2460,6 +2668,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfObjectAllocateContext)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2485,6 +2694,7 @@ WDFEXPORT(WdfObjectContextGetObject)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfObjectReferenceActual)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2501,6 +2711,7 @@ WDFEXPORT(WdfObjectReferenceActual)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfObjectDereferenceActual)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2518,6 +2729,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfObjectCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2530,6 +2742,7 @@ WDFEXPORT(WdfObjectCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfObjectDelete)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2541,6 +2754,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfObjectQuery)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2558,6 +2772,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryOpenKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2577,6 +2792,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryCreateKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2599,6 +2815,7 @@ WDFEXPORT(WdfRegistryCreateKey)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRegistryClose)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2609,6 +2826,7 @@ WDFEXPORT(WdfRegistryClose)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 HANDLE
+NTAPI
 WDFEXPORT(WdfRegistryWdmGetHandle)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2620,6 +2838,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryRemoveKey)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2631,6 +2850,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryRemoveValue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2644,6 +2864,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryQueryValue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2665,6 +2886,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryQueryMemory)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2687,6 +2909,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryQueryMultiString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2704,6 +2927,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryQueryUnicodeString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2721,6 +2945,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryQueryString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2736,6 +2961,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryQueryULong)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2751,6 +2977,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryAssignValue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2770,6 +2997,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryAssignMemory)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2789,6 +3017,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryAssignMultiString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2804,6 +3033,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryAssignUnicodeString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2819,6 +3049,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryAssignString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2834,6 +3065,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRegistryAssignULong)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2849,6 +3081,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2863,6 +3096,7 @@ WDFEXPORT(WdfRequestCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG
+NTAPI
 WDFEXPORT(WdfRequestGetRequestorProcessId)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2873,6 +3107,7 @@ WDFEXPORT(WdfRequestGetRequestorProcessId)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestReuse)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2886,6 +3121,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestChangeTarget)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2898,6 +3134,7 @@ WDFEXPORT(WdfRequestChangeTarget)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestFormatRequestUsingCurrentType)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2909,6 +3146,7 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 _When_(Options->Flags & WDF_REQUEST_SEND_OPTION_SYNCHRONOUS == 0, _Must_inspect_result_)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfRequestSend)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2924,6 +3162,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestGetStatus)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2934,6 +3173,7 @@ WDFEXPORT(WdfRequestGetStatus)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestMarkCancelable)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2947,6 +3187,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestMarkCancelableEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2960,6 +3201,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestUnmarkCancelable)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2971,6 +3213,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfRequestIsCanceled)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2981,6 +3224,7 @@ WDFEXPORT(WdfRequestIsCanceled)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfRequestCancelSentRequest)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2992,6 +3236,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfRequestIsFrom32BitProcess)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3002,6 +3247,7 @@ WDFEXPORT(WdfRequestIsFrom32BitProcess)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestSetCompletionRoutine)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3016,6 +3262,7 @@ WDFEXPORT(WdfRequestSetCompletionRoutine)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestGetCompletionParams)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3029,6 +3276,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestAllocateTimer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3039,6 +3287,7 @@ WDFEXPORT(WdfRequestAllocateTimer)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestComplete)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3051,6 +3300,7 @@ WDFEXPORT(WdfRequestComplete)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestCompleteWithInformation)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3065,6 +3315,7 @@ WDFEXPORT(WdfRequestCompleteWithInformation)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestGetParameters)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3078,6 +3329,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestRetrieveInputMemory)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3091,6 +3343,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestRetrieveOutputMemory)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3104,6 +3357,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestRetrieveInputBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3121,6 +3375,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestRetrieveOutputBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3137,6 +3392,7 @@ WDFEXPORT(WdfRequestRetrieveOutputBuffer)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestSetInformation)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3149,6 +3405,7 @@ WDFEXPORT(WdfRequestSetInformation)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG_PTR
+NTAPI
 WDFEXPORT(WdfRequestGetInformation)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3159,6 +3416,7 @@ WDFEXPORT(WdfRequestGetInformation)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFFILEOBJECT
+NTAPI
 WDFEXPORT(WdfRequestGetFileObject)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3169,6 +3427,7 @@ WDFEXPORT(WdfRequestGetFileObject)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 KPROCESSOR_MODE
+NTAPI
 WDFEXPORT(WdfRequestGetRequestorMode)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3180,6 +3439,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestForwardToIoQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3192,6 +3452,7 @@ WDFEXPORT(WdfRequestForwardToIoQueue)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFQUEUE
+NTAPI
 WDFEXPORT(WdfRequestGetIoQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3203,6 +3464,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestRequeue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3213,6 +3475,7 @@ WDFEXPORT(WdfRequestRequeue)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestStopAcknowledge)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3226,6 +3489,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestImpersonate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3242,6 +3506,7 @@ WDFEXPORT(WdfRequestImpersonate)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfRequestIsFromUserModeDriver)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3252,6 +3517,7 @@ WDFEXPORT(WdfRequestIsFromUserModeDriver)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestSetUserModeDriverInitiatedIo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3264,6 +3530,7 @@ WDFEXPORT(WdfRequestSetUserModeDriverInitiatedIo)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfRequestGetUserModeDriverInitiatedIo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3274,6 +3541,7 @@ WDFEXPORT(WdfRequestGetUserModeDriverInitiatedIo)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfRequestSetActivityId)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3286,6 +3554,7 @@ WDFEXPORT(WdfRequestSetActivityId)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfRequestRetrieveActivityId)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3298,6 +3567,7 @@ WDFEXPORT(WdfRequestRetrieveActivityId)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 WDF_DEVICE_IO_TYPE
+NTAPI
 WDFEXPORT(WdfRequestGetEffectiveIoType)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3308,6 +3578,7 @@ WDFEXPORT(WdfRequestGetEffectiveIoType)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG
+NTAPI
 WDFEXPORT(WdfCmResourceListGetCount)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3318,6 +3589,7 @@ WDFEXPORT(WdfCmResourceListGetCount)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
+NTAPI
 WDFEXPORT(WdfCmResourceListGetDescriptor)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3331,6 +3603,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfStringCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3345,6 +3618,7 @@ WDFEXPORT(WdfStringCreate)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfStringGetUnicodeString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3357,6 +3631,7 @@ WDFEXPORT(WdfStringGetUnicodeString)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfObjectAcquireLock)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3369,6 +3644,7 @@ WDFEXPORT(WdfObjectAcquireLock)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfObjectReleaseLock)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3382,6 +3658,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfWaitLockCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3399,6 +3676,7 @@ _When_(Timeout != NULL && return == STATUS_SUCCESS, _Acquires_lock_(Lock))
 _When_(Timeout != NULL, _Must_inspect_result_)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfWaitLockAcquire)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3412,6 +3690,7 @@ WDFEXPORT(WdfWaitLockAcquire)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfWaitLockRelease)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3425,6 +3704,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfSpinLockCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3438,6 +3718,7 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_raises_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfSpinLockAcquire)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3452,6 +3733,7 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_requires_min_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfSpinLockRelease)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3466,6 +3748,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfTimerCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3480,6 +3763,7 @@ WDFEXPORT(WdfTimerCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfTimerStart)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3493,6 +3777,7 @@ _When_(Wait == __true, _IRQL_requires_max_(PASSIVE_LEVEL))
 _When_(Wait == __false, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfTimerStop)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3505,6 +3790,7 @@ WDFEXPORT(WdfTimerStop)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
+NTAPI
 WDFEXPORT(WdfTimerGetParentObject)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3516,6 +3802,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3531,6 +3818,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceCreateWithParameters)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3548,6 +3836,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceRetrieveInformation)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3560,6 +3849,7 @@ WDFEXPORT(WdfUsbTargetDeviceRetrieveInformation)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceGetDeviceDescriptor)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3573,6 +3863,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceRetrieveConfigDescriptor)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3588,6 +3879,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceQueryString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3611,6 +3903,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceAllocAndQueryString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3632,6 +3925,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForString)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3652,6 +3946,7 @@ WDFEXPORT(WdfUsbTargetDeviceFormatRequestForString)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 UCHAR
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceGetNumInterfaces)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3663,6 +3958,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceSelectConfig)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3678,6 +3974,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceSendControlTransferSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3699,6 +3996,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForControlTransfer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3718,6 +4016,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceResetPortSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3729,6 +4028,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceQueryUsbCapability)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3750,6 +4050,7 @@ WDFEXPORT(WdfUsbTargetDeviceQueryUsbCapability)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeGetInformation)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3762,6 +4063,7 @@ WDFEXPORT(WdfUsbTargetPipeGetInformation)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeIsInEndpoint)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3772,6 +4074,7 @@ WDFEXPORT(WdfUsbTargetPipeIsInEndpoint)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeIsOutEndpoint)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3782,6 +4085,7 @@ WDFEXPORT(WdfUsbTargetPipeIsOutEndpoint)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDF_USB_PIPE_TYPE
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeGetType)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3792,6 +4096,7 @@ WDFEXPORT(WdfUsbTargetPipeGetType)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeSetNoMaximumPacketSizeCheck)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3803,6 +4108,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeWriteSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3822,6 +4128,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForWrite)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3839,6 +4146,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeReadSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3858,6 +4166,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForRead)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3875,6 +4184,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeConfigContinuousReader)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3888,6 +4198,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeAbortSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3903,6 +4214,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForAbort)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3916,6 +4228,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeResetSynchronously)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3931,6 +4244,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForReset)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3943,6 +4257,7 @@ WDFEXPORT(WdfUsbTargetPipeFormatRequestForReset)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BYTE
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetInterfaceNumber)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3953,6 +4268,7 @@ WDFEXPORT(WdfUsbInterfaceGetInterfaceNumber)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BYTE
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetNumEndpoints)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3965,6 +4281,7 @@ WDFEXPORT(WdfUsbInterfaceGetNumEndpoints)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetDescriptor)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3979,6 +4296,7 @@ WDFEXPORT(WdfUsbInterfaceGetDescriptor)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BYTE
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetNumSettings)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -3990,6 +4308,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfUsbInterfaceSelectSetting)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4004,6 +4323,7 @@ WDFEXPORT(WdfUsbInterfaceSelectSetting)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetEndpointInformation)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4020,6 +4340,7 @@ WDFEXPORT(WdfUsbInterfaceGetEndpointInformation)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFUSBINTERFACE
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceGetInterface)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4032,6 +4353,7 @@ WDFEXPORT(WdfUsbTargetDeviceGetInterface)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BYTE
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4042,6 +4364,7 @@ WDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BYTE
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4052,6 +4375,7 @@ WDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFUSBPIPE
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetConfiguredPipe)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4065,6 +4389,7 @@ WDFEXPORT(WdfUsbInterfaceGetConfiguredPipe)(
 
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -4072,6 +4397,7 @@ WDFEXPORT(WdfVerifierDbgBreakPoint)(
 
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfVerifierKeBugCheck)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4089,6 +4415,7 @@ WDFEXPORT(WdfVerifierKeBugCheck)(
 
 WDFAPI
 PVOID
+NTAPI
 WDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -4098,6 +4425,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfWorkItemCreate)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4112,6 +4440,7 @@ WDFEXPORT(WdfWorkItemCreate)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfWorkItemEnqueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4122,6 +4451,7 @@ WDFEXPORT(WdfWorkItemEnqueue)(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
+NTAPI
 WDFEXPORT(WdfWorkItemGetParentObject)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4132,6 +4462,7 @@ WDFEXPORT(WdfWorkItemGetParentObject)(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfWorkItemFlush)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -4417,6 +4748,10 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfDriverErrorReportApiMissing),
         WDFEXPORT(WdfDeviceRetrieveDeviceDirectoryString),
         WDFEXPORT(WdfDriverRetrieveDriverDataDirectoryString),
+        WDFEXPORT(WdfCxDeviceInitAllocateContext),
+        WDFEXPORT(WdfCxDeviceInitGetTypedContextWorker),
+        WDFEXPORT(WdfCxDeviceInitSetPowerPolicyEventCallbacks),
+        WDFEXPORT(WdfDeviceSetDeviceInterfaceStateEx),
     },
     sizeof(WDFSTRUCTURES)/sizeof(size_t),
     {
@@ -4497,6 +4832,7 @@ WDFVERSION WdfVersion = {
         sizeof(WDFOBJECT_TRIAGE_INFO),
         sizeof(WDFQUEUE_TRIAGE_INFO),
         sizeof(WDFREQUEST_TRIAGE_INFO),
+        sizeof(WDFCX_POWER_POLICY_EVENT_CALLBACKS),
     },
 };
 

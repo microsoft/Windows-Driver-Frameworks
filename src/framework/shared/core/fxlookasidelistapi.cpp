@@ -151,6 +151,10 @@ Return Value:
     // Create the appropriate object
     //
     if (FxIsPagedPoolType(PoolType) == FALSE) {
+        //
+        // FxNPagedLookasideList / FxMemoryBufferFromLookaside is used for
+        // buffer less than a page
+        //
         if (BufferSize < PAGE_SIZE) {
             pLookaside = new(pFxDriverGlobals, LookasideAttributes)
                 FxNPagedLookasideList(pFxDriverGlobals, PoolTag);

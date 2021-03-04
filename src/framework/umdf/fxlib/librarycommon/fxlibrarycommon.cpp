@@ -12,14 +12,22 @@ extern "C" {
 #include <fxldrUm.h>
 
 #include <wdfcxbase.h>
-#include "wdf20.h"
-#include "wdf215.h"
-#include "wdf217.h"
-#include "wdf219.h"
-#include "wdf221.h"
-#include "wdf223.h"
-#include "wdf225.h"
-#include "wdf227.h"
+
+typedef enum _WDFFUNCENUM_NUMENTRIES {
+
+    WdfFunctionTableNumEntries_V2_0  = 248,
+    WdfFunctionTableNumEntries_V2_15 = 257,
+    WdfFunctionTableNumEntries_V2_17 = 260,
+    WdfFunctionTableNumEntries_V2_19 = 261,
+    WdfFunctionTableNumEntries_V2_21 = 261,
+    WdfFunctionTableNumEntries_V2_23 = 265,
+    WdfFunctionTableNumEntries_V2_25 = 268,
+    WdfFunctionTableNumEntries_V2_27 = 269,
+    WdfFunctionTableNumEntries_V2_29 = 269,
+
+
+
+} WDFFUNCENUM_NUMENTRIES;
 
 //
 // This will cause inclusion of VfWdfFunctions table implementation from header
@@ -375,10 +383,14 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_27) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_29) {
+
+        ASSERT(WdfFunctionTableNumEntries_V2_29 == WdfFunctionTableNumEntries_V2_27);
+        ASSERT(WdfFunctionTableNumEntries_V2_21 == WdfFunctionTableNumEntries_V2_19);
 
         switch (Info->FuncCount) {
 
+     // case WdfFunctionTableNumEntries_V2_29: // 269 - win10 1903 19H1
         case WdfFunctionTableNumEntries_V2_27: // 269 - win10 1809 RS5
         case WdfFunctionTableNumEntries_V2_25: // 268 - win10 1803 RS4
         case WdfFunctionTableNumEntries_V2_23: // 265 - win10 1709 RS3

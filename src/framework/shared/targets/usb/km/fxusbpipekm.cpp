@@ -79,8 +79,8 @@ FxUsbPipeContinuousReader::_FxUsbPipeContinuousReadDpc(
     // want all processing to be done in the completion routine.
     //
     (void) IoCallDriver(pPipe->m_TargetDevice,
-                        pRepeater->Request->GetSubmitIrp());   
-    #pragma prefast(pop);    
+                        pRepeater->Request->GetSubmitIrp());
+    #pragma prefast(pop);
 }
 
 _Must_inspect_result_
@@ -96,8 +96,8 @@ FxUsbPipeContinuousReader::Config(
     LONG i;
 
     pFxDriverGlobals = m_Pipe->GetDriverGlobals();
-    
-    if (TotalBufferLength <= MAXUSHORT) {
+
+    if (TotalBufferLength < PAGE_SIZE) {
         m_Lookaside = new(pFxDriverGlobals, WDF_NO_OBJECT_ATTRIBUTES)
             FxNPagedLookasideList(pFxDriverGlobals, pFxDriverGlobals->Tag);
     }
@@ -176,7 +176,7 @@ FxUsbPipeContinuousReader::Config(
         // Initialize the event before FormatRepeater clears it
         //
         status = pRepeater->ReadCompletedEvent.Initialize(NotificationEvent, TRUE);
-      
+
         if (!NT_SUCCESS(status)) {
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGIOTARGET,
@@ -225,7 +225,7 @@ FxUsbPipe::FormatTransferRequest(
 
         return status;
     }
-    
+
     bufferSize = Buffer->GetBufferLength();
 
     status = RtlSizeTToULong(bufferSize, &dummyLength);
@@ -335,11 +335,11 @@ FxUsbPipe::FormatTransferRequest(
 
     if (pContext->m_Urb == &pContext->m_UrbLegacy) {
         urbType = FxUrbTypeLegacy;
-    } 
+    }
     else {
         urbType = FxUrbTypeUsbdAllocated;
     }
-    
+
     FxFormatUsbRequest(Request, (PURB)pContext->m_Urb, urbType, m_USBDHandle);
 
     return STATUS_SUCCESS;

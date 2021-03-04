@@ -51,6 +51,8 @@ Return Value:
     m_Entry.Next = NULL;
 
     m_State = FALSE;
+
+    m_AutoEnableOnFirstStart = TRUE;
 }
 
 FxDeviceInterface::~FxDeviceInterface()
@@ -214,7 +216,7 @@ FxDeviceInterface::GetSymbolicLinkName(
     )
 {
     NTSTATUS status;
-    
+
     if (m_SymbolicLinkName.Buffer == NULL) {
         //
         // The device interface has not yet been registered b/c it

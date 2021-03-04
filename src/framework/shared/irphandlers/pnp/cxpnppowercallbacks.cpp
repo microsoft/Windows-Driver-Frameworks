@@ -23,13 +23,12 @@ extern "C" {
 #endif
 }
 
-
 BOOLEAN
 FxCxPnpPowerCallbackContext::IsPreCallbackPresent(
     VOID
     )
 {
-    return IsCallbackPresent(FxCxPreCallback);
+    return (NULL != u.Generic.PreCallback);
 }
 
 BOOLEAN
@@ -37,7 +36,7 @@ FxCxPnpPowerCallbackContext::IsPostCallbackPresent(
     VOID
     )
 {
-    return IsCallbackPresent(FxCxPostCallback);
+    return (NULL != u.Generic.PostCallback);
 }
 
 BOOLEAN
@@ -45,199 +44,19 @@ FxCxPnpPowerCallbackContext::IsCleanupCallbackPresent(
     VOID
     )
 {
-    return IsCallbackPresent(FxCxCleanupCallback);
+    return (NULL != u.Generic.CleanupCallback);
 }
 
-BOOLEAN
-FxCxPnpPowerCallbackContext::IsCallbackPresent(
-    FxCxCallbackSubType SubType
+VOID
+FxPrePostCallback::_SaveTheFirstError(
+    _Inout_ NTSTATUS *FinalResult,
+    _In_    NTSTATUS  IntermeidateResult
     )
 {
-    BOOLEAN present = FALSE;
-    
-    switch(m_CallbackType) {
-    case FxCxCallbackPrepareHardware:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.PrepareHardware.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.PrepareHardware.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            present = (NULL != u.PrepareHardware.CleanupCallback);
-            break;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
+    if (NT_SUCCESS(*FinalResult)) {
+        *FinalResult = IntermeidateResult;
     }
-    case FxCxCallbackReleaseHardware:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.ReleaseHardware.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.ReleaseHardware.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            __fallthrough;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackD0Entry:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.D0Entry.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.D0Entry.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            present = (NULL != u.D0Entry.CleanupCallback);
-            break;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackD0Exit:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.D0Exit.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.D0Exit.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            __fallthrough;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackSmIoInit:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.SmIoInit.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.SmIoInit.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            present = (NULL != u.SmIoInit.CleanupCallback);
-            break;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackSmIoRestart:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.SmIoRestart.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.SmIoRestart.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            present = (NULL != u.SmIoRestart.CleanupCallback);
-            break;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackSmIoSuspend:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.SmIoSuspend.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.SmIoSuspend.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            __fallthrough;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackSmIoFlush:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.SmIoFlush.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.SmIoFlush.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            __fallthrough;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackSmIoCleanup:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.SmIoCleanup.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.SmIoCleanup.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            __fallthrough;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    case FxCxCallbackSurpriseRemoval:
-    {
-        switch(SubType) {
-        case FxCxPreCallback:
-            present = (NULL != u.SurpriseRemoval.PreCallback);
-            break;
-        case FxCxPostCallback:
-            present = (NULL != u.SurpriseRemoval.PostCallback);
-            break;
-        case FxCxCleanupCallback:
-            __fallthrough;
-        default:
-            ASSERT(0);
-            break;
-        }
-        break;
-    }
-    default:
-        ASSERT(0);
-        break;
-    }
-
-    return present;
 }
-
 
 _Must_inspect_result_
 NTSTATUS
@@ -250,17 +69,21 @@ FxPrePostCallback::_InitializeContext(
 {
     PFxCxPnpPowerCallbackContext context;
     PWDFCX_PNPPOWER_EVENT_CALLBACKS pnpPowerCallbacks;
+    PWDFCX_POWER_POLICY_EVENT_CALLBACKS powerPolicyCallbacks;
     PVOID preCallback, postCallback, cleanupCallback;
 
     preCallback = NULL;
     postCallback = NULL;
-    cleanupCallback = NULL;    
+    cleanupCallback = NULL;
 
-    ASSERT(CxInit->PnpPowerCallbacks.Set == TRUE);
-
-    pnpPowerCallbacks = &CxInit->PnpPowerCallbacks.Callbacks;
+    pnpPowerCallbacks = &CxInit->PnpPowerCallbacks.PnpPowerCallbacks;
+    powerPolicyCallbacks = &CxInit->PnpPowerCallbacks.PowerPolicyCallbacks;
 
     switch(CallbackType) {
+
+    //
+    // PnP & Power callbacks
+    //
     case FxCxCallbackPrepareHardware:
         preCallback = pnpPowerCallbacks->EvtCxDevicePrePrepareHardware;
         postCallback = pnpPowerCallbacks->EvtCxDevicePostPrepareHardware;
@@ -291,9 +114,19 @@ FxPrePostCallback::_InitializeContext(
         postCallback = pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoRestart;
         cleanupCallback = pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestartFailedCleanup;
         break;
+    case FxCxCallbackSmIoRestartEx:
+        preCallback = pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestartEx;
+        postCallback = pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoRestartEx;
+        cleanupCallback = pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestartExFailedCleanup;
+        break;
     case FxCxCallbackSmIoSuspend:
         preCallback = pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoSuspend;
         postCallback = pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoSuspend;
+        cleanupCallback = NULL;
+        break;
+    case FxCxCallbackSmIoSuspendEx:
+        preCallback = pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoSuspendEx;
+        postCallback = pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoSuspendEx;
         cleanupCallback = NULL;
         break;
     case FxCxCallbackSmIoFlush:
@@ -311,6 +144,56 @@ FxPrePostCallback::_InitializeContext(
         postCallback = pnpPowerCallbacks->EvtCxDevicePostSurpriseRemoval;
         cleanupCallback = NULL;
         break;
+    case FxCxCallbackD0EntryPostHwEnabled:
+        preCallback = pnpPowerCallbacks->EvtCxDevicePreD0EntryPostHardwareEnabled;
+        postCallback = pnpPowerCallbacks->EvtCxDevicePostD0EntryPostHardwareEnabled;
+        cleanupCallback = pnpPowerCallbacks->EvtCxDevicePreD0EntryPostHardwareEnabledFailedCleanup;;
+        break;
+    case FxCxCallbackD0ExitPreHwDisabled:
+        preCallback = pnpPowerCallbacks->EvtCxDevicePreD0ExitPreHardwareDisabled;
+        postCallback = pnpPowerCallbacks->EvtCxDevicePostD0ExitPreHardwareDisabled;
+        cleanupCallback = NULL;
+        break;
+
+    //
+    // Power Policy callbacks
+    //
+    case FxCxCallbackArmWakeFromS0:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreArmWakeFromS0;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostArmWakeFromS0;
+        cleanupCallback = powerPolicyCallbacks->EvtCxDevicePreArmWakeFromS0FailedCleanup;;
+        break;
+    case FxCxCallbackDisarmWakeFromS0:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreDisarmWakeFromS0;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostDisarmWakeFromS0;
+        cleanupCallback = NULL;
+        break;
+    case FxCxCallbackWakeFromS0Triggered:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreWakeFromS0Triggered;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostWakeFromS0Triggered;
+        cleanupCallback = NULL;
+        break;
+    case FxCxCallbackArmWakeFromSx:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreArmWakeFromSx;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostArmWakeFromSx;
+        cleanupCallback = powerPolicyCallbacks->EvtCxDevicePreArmWakeFromSxFailedCleanup;;
+        break;
+    case FxCxCallbackArmWakeFromSxWithReason:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreArmWakeFromSxWithReason;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostArmWakeFromSxWithReason;
+        cleanupCallback = powerPolicyCallbacks->EvtCxDevicePreArmWakeFromSxWithReasonFailedCleanup;;
+        break;
+    case FxCxCallbackDisarmWakeFromSx:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreDisarmWakeFromSx;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostDisarmWakeFromSx;
+        cleanupCallback = NULL;
+        break;
+    case FxCxCallbackWakeFromSxTriggered:
+        preCallback = powerPolicyCallbacks->EvtCxDevicePreWakeFromSxTriggered;
+        postCallback = powerPolicyCallbacks->EvtCxDevicePostWakeFromSxTriggered;
+        cleanupCallback = NULL;
+        break;
+
     default:
         ASSERT(0);
         break;
@@ -331,89 +214,9 @@ FxPrePostCallback::_InitializeContext(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    //
-    // NOTE: We are not using preCallback / postCallback / cleanupCallback
-    // from above. It would make the code simpler, but we would
-    // loose type safety.
-    //
-    switch(CallbackType) {
-    case FxCxCallbackPrepareHardware:
-        context->u.PrepareHardware.PreCallback = 
-            pnpPowerCallbacks->EvtCxDevicePrePrepareHardware;
-        context->u.PrepareHardware.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostPrepareHardware;
-        context->u.PrepareHardware.CleanupCallback =
-            pnpPowerCallbacks->EvtCxDevicePrePrepareHardwareFailedCleanup;
-        break;
-    case FxCxCallbackReleaseHardware:
-        context->u.ReleaseHardware.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreReleaseHardware;
-        context->u.ReleaseHardware.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostReleaseHardware;
-        cleanupCallback = NULL;
-        break;
-    case FxCxCallbackD0Entry:
-        context->u.D0Entry.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreD0Entry;
-        context->u.D0Entry.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostD0Entry;
-        context->u.D0Entry.CleanupCallback =
-            pnpPowerCallbacks->EvtCxDevicePreD0EntryFailedCleanup;
-        break;
-    case FxCxCallbackD0Exit:
-        context->u.D0Exit.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreD0Exit;
-        context->u.D0Exit.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostD0Exit;
-        break;
-    case FxCxCallbackSmIoInit:
-        context->u.SmIoInit.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoInit;
-        context->u.SmIoInit.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoInit;
-        context->u.SmIoInit.CleanupCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoInitFailedCleanup;
-        break;
-    case FxCxCallbackSmIoRestart:
-        context->u.SmIoRestart.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestart;
-        context->u.SmIoRestart.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoRestart;
-        context->u.SmIoRestart.CleanupCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoRestartFailedCleanup;
-        break;
-    case FxCxCallbackSmIoSuspend:
-        context->u.SmIoSuspend.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoSuspend;
-        context->u.SmIoSuspend.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoSuspend;
-        cleanupCallback = NULL;
-        break;
-    case FxCxCallbackSmIoFlush:
-        context->u.SmIoFlush.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoFlush;
-        context->u.SmIoFlush.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoFlush;
-        cleanupCallback = NULL;
-        break;
-    case FxCxCallbackSmIoCleanup:
-        context->u.SmIoCleanup.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSelfManagedIoCleanup;
-        context->u.SmIoCleanup.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostSelfManagedIoCleanup;
-        cleanupCallback = NULL;
-        break;
-    case FxCxCallbackSurpriseRemoval:
-        context->u.SurpriseRemoval.PreCallback =
-            pnpPowerCallbacks->EvtCxDevicePreSurpriseRemoval;
-        context->u.SurpriseRemoval.PostCallback =
-            pnpPowerCallbacks->EvtCxDevicePostSurpriseRemoval;
-        cleanupCallback = NULL;
-        break;
-    default:
-        ASSERT(0);
-        break;
-    }
+    context->u.Generic.PreCallback = preCallback;
+    context->u.Generic.PostCallback = postCallback;
+    context->u.Generic.CleanupCallback = cleanupCallback;
 
     *Context = context;
     return STATUS_SUCCESS;
@@ -428,14 +231,14 @@ FxPrePostCallback::InvokeStateful(
 /*++
 
 Routine Description:
-    Calls all CX PRE API's in a stateful manner. When an error is hit prior 
+    Calls all CX PRE API's in a stateful manner. When an error is hit prior
     to presenting the callback to the client driver then we unwind by calling
     the registered CX clean up functions. If an error happens after the client
     API is called then the error is reported to the caller, but all POST
     methods are called.
 
 Arguments:
-    OUT Progress, if an error occurs this indicates what stage the error 
+    OUT Progress, if an error occurs this indicates what stage the error
     happened in
 
 Return Value:
@@ -446,44 +249,36 @@ Return Value:
     CfxDevice* device;
     NTSTATUS status = STATUS_SUCCESS;
     FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
-    FxCompanionTarget* companionTarget;
 
-    device = m_PkgPnp->GetDevice();
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+
+    FxCompanionTarget* companionTarget;
     companionTarget = m_PkgPnp->GetCompanionTarget();
 
-    if (device->IsACxPresent() == FALSE) {
-        if (NULL != companionTarget) {
-            //
-            // If the companion callback fails, then the value of 'Progress' 
-            // which is FxCxCallbackProgressInitialized informs the caller that 
-            // the client callback was not called.
-            //
-            status = InvokeCompanionCallback(companionTarget);
-            if (!NT_SUCCESS(status)) {
-                goto exit;
-            }
+    if (NULL != companionTarget) {
+        //
+        // If the companion callback fails, then the value of 'Progress'
+        // which is FxCxCallbackProgressInitialized informs the caller that
+        // the client callback was not called.
+        //
+        status = InvokeCompanionCallback(companionTarget);
+        if (!NT_SUCCESS(status)) {
+            goto exit;
         }
+    }
+#endif
+
+    device = m_PkgPnp->GetDevice();
+
+    if (device->IsACxPresent() == FALSE) {
 
         status = InvokeClient();
         progress = FxCxCallbackProgressClientCalled;
         if (NT_SUCCESS(status)) {
             progress = FxCxCallbackProgressClientSucceeded;
         }
-
     }
     else {
-        if (NULL != companionTarget) {
-            //
-            // If the companion callback fails, then the value of 'Progress' 
-            // which is FxCxCallbackProgressInitialized informs the caller that 
-            // the client callback was not called.
-            //
-            status = InvokeCompanionCallback(companionTarget);
-            if (!NT_SUCCESS(status)) {
-                goto exit;
-            }
-        }
-
         //
         // notify all CX's to call PRE callback function
         //
@@ -492,27 +287,27 @@ Return Value:
         if (!NT_SUCCESS(status)) {
             IssueCleanupCxCallbacks(device);
         }
-        else { 
+        else {
             status = InvokeClient();
             progress = FxCxCallbackProgressClientCalled;
 
             if (NT_SUCCESS(status)) {
                 progress = FxCxCallbackProgressClientSucceeded;
+                //
+                // notify all CX's to call POST callback function
+                //
+                status = IssuePostCxCallbacks(device);
             }
             else if (CleanupAction == FxCxCleanupAfterPreOrClientFailure) {
                 IssueCleanupCxCallbacks(device);
             }
         }
-            
-        if (NT_SUCCESS(status)) {
-            //
-            // notify all CX's to call POST callback function
-            //
-            status = IssuePostCxCallbacks(device);
-        }
     }
 
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
 exit:
+#endif
+
     if (Progress) {
         *Progress = progress;
     }
@@ -527,7 +322,7 @@ FxPrePostCallback::IssuePreCxCallbacksStateful(
 /*++
 
 Routine Description:
-    Calls all CX PRE API's for the given callback type, exits loop is an error 
+    Calls all CX PRE API's for the given callback type, exits loop is an error
     is encountered
 
 Arguments:
@@ -541,6 +336,7 @@ Return Value:
     FxCxDeviceInfo *cxInfo;
     PFxCxPnpPowerCallbackContext context;
     NTSTATUS status = STATUS_SUCCESS;
+    BOOLEAN failed = FALSE;
 
     cxInfo = Device->GetFirstCxDeviceInfo();
 
@@ -550,25 +346,29 @@ Return Value:
     ASSERT(cxInfo != NULL);
 
     while (cxInfo != NULL) {
-        context = cxInfo->CxPnpPowerCallbackContexts[m_CallbackType];
-        if (context != NULL) {
+        context = cxInfo->GetCxPnpPowerCallbackContexts(m_CallbackType);
+
+        if (context != NULL &&
+            context->IsPreCallbackPresent()) {
 
             //
-            // Should be cleared by the cleanup callback if its ever set.
+            // Clear the state in case a previous IssuePreCxCallbacksStateful succeeded
             //
-            ASSERT(context->m_PreCallbackSuccessful == FALSE);
+            context->m_PreCallbackSuccessful = FALSE;
 
-            if (context->IsPreCallbackPresent()) {
+            //
+            // If a pre-callback fails, stop calling more PreCallbacks, but do
+            // continue to mark the rest as m_PreCallbackSuccessful = FALSE.
+            //
+            if (!failed) {
+
                 status = InvokeCxCallback(context, FxCxInvokePreCallback);
                 if (NT_SUCCESS(status)) {
 
                     context->m_PreCallbackSuccessful = TRUE;
                 }
                 else {
-                    //
-                    // Abort the chain in the event of an error
-                    //
-                    break;
+                    failed = TRUE;
                 }
             }
         }
@@ -588,9 +388,9 @@ FxPrePostCallback::InvokeStateless(
 Routine Description:
     Calls all CX PRE API's, then invokes the client method. Finally it will
     call all CX POST API's. An error will not stop this sequence. The first
-    error encountered will be stored temporarily and returned to the 
+    error encountered will be stored temporarily and returned to the
     caller.
-    
+
 Arguments:
     N/A
 
@@ -601,22 +401,11 @@ Return Value:
 {
     CfxDevice* device;
     NTSTATUS status = STATUS_SUCCESS;
-    NTSTATUS tempStatus = STATUS_SUCCESS;
-    FxCompanionTarget* companionTarget;
+    NTSTATUS tempStatus;
 
     device = m_PkgPnp->GetDevice();
-    companionTarget = m_PkgPnp->GetCompanionTarget();
-
     if (device->IsACxPresent() == FALSE) {
         status = InvokeClient();
-
-        if (NULL != companionTarget) {
-#pragma warning(suppress: 28193)
-            tempStatus = InvokeCompanionCallback(companionTarget);
-            if (NT_SUCCESS(status)) {
-                status = tempStatus;
-            }
-        }
     }
     else {
         //
@@ -624,31 +413,27 @@ Return Value:
         //
         status = IssuePreCxCallbacksStateless(device);
 
-// We conditionaly inspect the results instead of 100%
-#pragma warning(suppress: 28193)
         tempStatus = InvokeClient();
-        if (NT_SUCCESS(status)) {
-            status = tempStatus;
-        }
+        _SaveTheFirstError(&status, tempStatus);
 
         //
         // notify all CX's to call POST callback function
         //
-// We conditionaly inspect the results instead of 100%
-#pragma warning(suppress: 28193)
         tempStatus = IssuePostCxCallbacks(device);
-        if (NT_SUCCESS(status)) {
-            status = tempStatus;
-        }
-
-        if (NULL != companionTarget) {
-#pragma warning(suppress: 28193)
-            tempStatus = InvokeCompanionCallback(companionTarget);
-            if (NT_SUCCESS(status)) {
-                status = tempStatus;
-            }
-        }
+        _SaveTheFirstError(&status, tempStatus);
     }
+
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+
+    FxCompanionTarget* companionTarget;
+    companionTarget = m_PkgPnp->GetCompanionTarget();
+
+    if (NULL != companionTarget) {
+        tempStatus = InvokeCompanionCallback(companionTarget);
+        _SaveTheFirstError(&status, tempStatus);
+    }
+#endif
+
     return status;
 }
 
@@ -661,7 +446,7 @@ FxPrePostCallback::IssuePreCxCallbacksStateless(
 
 Routine Description:
     Calls all CX PRE API's for the given callback type; errors do not
-    stop the callback chain. The first error encountered is returned to the 
+    stop the callback chain. The first error encountered is returned to the
     caller
 
 Arguments:
@@ -675,7 +460,7 @@ Return Value:
     FxCxDeviceInfo *cxInfo;
     PFxCxPnpPowerCallbackContext context;
     NTSTATUS status = STATUS_SUCCESS;
-    NTSTATUS tempStatus = STATUS_SUCCESS;
+    NTSTATUS tempStatus;
 
     cxInfo = Device->GetFirstCxDeviceInfo();
 
@@ -685,21 +470,13 @@ Return Value:
     ASSERT(cxInfo != NULL);
 
     while (cxInfo != NULL) {
-        context = cxInfo->CxPnpPowerCallbackContexts[m_CallbackType];
+        context = cxInfo->GetCxPnpPowerCallbackContexts(m_CallbackType);
 
-        if ((context != NULL) &&
-            (context->IsPreCallbackPresent())) {
-// We conditionaly inspect the results instead of 100%
-#pragma warning(suppress: 28193)
+        if (context != NULL &&
+            context->IsPreCallbackPresent()) {
+
             tempStatus = InvokeCxCallback(context, FxCxInvokePreCallback);
-
-            //
-            // save the first error encountered
-            //
-            if (NT_SUCCESS(status)) {
-
-                status = tempStatus;
-            }
+            _SaveTheFirstError(&status, tempStatus);
         }
 
         cxInfo = Device->GetNextCxDeviceInfo(cxInfo);
@@ -717,7 +494,7 @@ FxPrePostCallback::IssuePostCxCallbacks(
     FxCxDeviceInfo *cxInfo;
     PFxCxPnpPowerCallbackContext context;
     NTSTATUS status = STATUS_SUCCESS;
-    NTSTATUS tempStatus = STATUS_SUCCESS;
+    NTSTATUS tempStatus;
 
     cxInfo = Device->GetFirstCxDeviceInfo();
 
@@ -727,32 +504,19 @@ FxPrePostCallback::IssuePostCxCallbacks(
     ASSERT(cxInfo != NULL);
 
     while (cxInfo != NULL) {
-        context = cxInfo->CxPnpPowerCallbackContexts[m_CallbackType];
-        if (context != NULL) {
+        context = cxInfo->GetCxPnpPowerCallbackContexts(m_CallbackType);
 
-            //
-            // We no longer need to keep track of this so we pre-clear it prior to 
-            // the next PRE callback being invoked
-            //
-            context->m_PreCallbackSuccessful = FALSE;
+        if (context != NULL &&
+            context->IsPostCallbackPresent()) {
 
-            if (context->IsPostCallbackPresent()) {
-// We conditionaly inspect the results instead of 100%
-#pragma warning(suppress: 28193)
-                tempStatus = InvokeCxCallback(context, FxCxInvokePostCallback);
-
-                if (NT_SUCCESS(status)) {
-                    status = tempStatus;
-                }
-            }
+            tempStatus = InvokeCxCallback(context, FxCxInvokePostCallback);
+            _SaveTheFirstError(&status, tempStatus);
         }
-
         cxInfo = Device->GetNextCxDeviceInfo(cxInfo);
     }
     return status;
 }
 
-_Must_inspect_result_
 VOID
 FxPrePostCallback::IssueCleanupCxCallbacks(
     _In_ CfxDevice* Device
@@ -769,14 +533,13 @@ FxPrePostCallback::IssueCleanupCxCallbacks(
     ASSERT(cxInfo != NULL);
 
     while (cxInfo != NULL) {
-        context = cxInfo->CxPnpPowerCallbackContexts[m_CallbackType];
-        
-        if ((context != NULL) && 
+        context = cxInfo->GetCxPnpPowerCallbackContexts(m_CallbackType);
+
+        if ((context != NULL) &&
             (context->IsCleanupCallbackPresent()) &&
             (context->m_PreCallbackSuccessful == TRUE)) {
 
             InvokeCxCleanupCallback(context);
-            context->m_PreCallbackSuccessful = FALSE;
         }
 
         cxInfo = Device->GetNextCxDeviceInfo(cxInfo);

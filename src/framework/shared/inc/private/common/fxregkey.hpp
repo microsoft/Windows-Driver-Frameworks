@@ -251,7 +251,7 @@ public:
         __out_opt PULONG ValueType
         )
     {
-        return _QueryValue(m_Globals,
+        return _QueryValue(GetDriverGlobals(),
                            m_Key,
                            ValueName,
                            ValueLength,
@@ -361,7 +361,6 @@ private:
 protected:
 
     HANDLE m_Key;
-    PFX_DRIVER_GLOBALS m_Globals;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 private:

@@ -30,8 +30,7 @@ FxRegKey::FxRegKey(
     PFX_DRIVER_GLOBALS FxDriverGlobals
     ) :
     FxPagedObject(FX_TYPE_REG_KEY, sizeof(FxRegKey), FxDriverGlobals),
-    m_Key(NULL),
-    m_Globals(FxDriverGlobals)
+    m_Key(NULL)
 {
 }
 

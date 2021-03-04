@@ -439,6 +439,19 @@ FxDevice::_Create(
     }
 
     //
+    // If class extensions allocated any context, move them to FxDevice
+    //
+    // This line cannot be put before FxDevice->Commit, or else if Commit fails,
+    // those context's cleanup callback will not be called.
+    //
+    if (pInit->CxContextObject != NULL) {
+        status = pInit->CxContextObject->MoveContexts(pDevice);
+        if (!NT_SUCCESS(status)) {
+            goto Done;
+        }
+    }
+
+    //
     // NOTE: ---> DO NOT FAIL FROM HERE FORWARD <---
     //
 
@@ -743,6 +756,10 @@ Return Value:
     //
     // Setup and initialize the Class Extension chain.
     //
+    // The order of class extension callbacks is the reverse of the order that
+    // WdfCxDeviceInitAllocate is called. This is to prioritize CX's that link
+    // to other CX's. A Client->Cx1->CX2 will have CX2 callbacks called first.
+    //
     for (next = DeviceInit->CxDeviceInitListHead.Flink;
          next != &DeviceInit->CxDeviceInitListHead;
          next = next->Flink) {
@@ -783,7 +800,7 @@ Return Value:
             ULONG callback;
             for (callback = 0 ; callback < FxCxCallbackMax; callback++) {
                 status = FxPrePostCallback::_InitializeContext(
-                            GetDriverGlobals(), 
+                            GetDriverGlobals(),
                             cxInit,
                             &cxDeviceInfo->CxPnpPowerCallbackContexts[callback],
                             (FxCxCallbackType) callback);
@@ -2184,14 +2201,14 @@ FxDevice::_ValidateOpenKeyParams(
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
-    
+
     //
     // This function should be called with exactly one valid WDFDEVICE_INIT
     // or one valid FxDevice object. Supplying neither or both is an error.
     //
     if ((DeviceInit == NULL && Device == NULL) ||
         (DeviceInit != NULL && Device != NULL)) {
-        
+
         status = STATUS_INVALID_PARAMETER;
         DoTraceLevelMessage(
             FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,

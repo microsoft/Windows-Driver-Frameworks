@@ -40,6 +40,11 @@ FxMemoryBuffer::_Create(
 {
     FxMemoryBuffer* pBuffer;
 
+    ASSERT(BufferSize < PAGE_SIZE);
+    if (BufferSize >= PAGE_SIZE) {
+        return STATUS_INVALID_BUFFER_SIZE;
+    }
+
     pBuffer = new(DriverGlobals, Attributes, (USHORT) BufferSize, PoolTag, PoolType)
         FxMemoryBuffer(DriverGlobals, BufferSize);
 
@@ -73,13 +78,13 @@ Arguments:
 
     Note on downcasting to USHORT
     ==============================
-    Note that FxMemoryBuffer is used for buffer less than a page size, and 
-    object-size and buffer-size are added and allocated together. 
+    Note that FxMemoryBuffer is used for buffer less than a page size, and
+    object-size and buffer-size are added and allocated together.
     Downcasting to USHORT is safe because size of object plus buffer (<page size)
     would be smaller than 64K that could fit in USHORT.
 
-    For buffer larger than 1 page size, object memory is allocated separately 
-    from buffer memory and the object used is FxMemoryBufferFromPool. 
+    For buffer larger than 1 page size, object memory is allocated separately
+    from buffer memory and the object used is FxMemoryBufferFromPool.
     There is no downcasting done in that case.
 
     See comments in FxMemoryObject.hpp for info on various fx memory objects.
@@ -92,7 +97,7 @@ Return Value:
 
   --*/
 {
-    ASSERT(BufferSize <= USHORT_MAX);
+    ASSERT(BufferSize < PAGE_SIZE);
 }
 
 FxMemoryBuffer::FxMemoryBuffer(
@@ -116,13 +121,13 @@ Routine Description:
 
     Note on downcasting to USHORT
     ==============================
-    Note that FxMemoryBuffer is used for buffer less than a page size, and 
-    object-size and buffer-size are added and allocated together. 
+    Note that FxMemoryBuffer is used for buffer less than a page size, and
+    object-size and buffer-size are added and allocated together.
     Downcasting to USHORT is safe because size of object plus buffer (<page size)
     would be smaller than 64K that could fit in USHORT.
 
-    For buffer larger than 1 page size, object memory is allocated separately 
-    from buffer memory and the object used is FxMemoryBufferFromPool. 
+    For buffer larger than 1 page size, object memory is allocated separately
+    from buffer memory and the object used is FxMemoryBufferFromPool.
     There is no downcasting done in that case.
 
     See comments in FxMemoryObject.hpp for info on various fx memory objects.
@@ -137,7 +142,7 @@ Return Value:
 
   --*/
 {
-    ASSERT(BufferSize <= USHORT_MAX);
+    ASSERT(BufferSize < PAGE_SIZE);
 }
 
 FxMemoryBuffer::~FxMemoryBuffer()

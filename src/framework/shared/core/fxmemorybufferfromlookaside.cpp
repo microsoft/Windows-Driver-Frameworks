@@ -55,6 +55,10 @@ Return Value:
 
   --*/
 {
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    ASSERT(BufferSize < PAGE_SIZE);
+#endif
+
     Init();
 }
 
@@ -155,15 +159,22 @@ Return Value:
 
     ASSERT(Size >= sizeof(FxMemoryBufferFromLookaside));
 
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    ASSERT(BufferSize < PAGE_SIZE);
+    if (BufferSize >= PAGE_SIZE) {
+        return NULL;
+    }
+#endif
+
     //
     // We round up the object size (via COMPUTE_OBJECT_SIZE) because the object,
     // and the buffer are all in one allocation and the returned memory needs to
     // match the alignment that raw pool follows.
-    // 
+    //
     // Note that FxMemoryBufferFromLookaside is used for buffer less than a page
-    // size so downcasting to USHORT (via COMPUTE_OBJECT_SIZE) is safe because 
-    // size of object plus buffer (<page size) would be smaller than 64K that 
-    // could fit in USHORT. See comments in FxMemoryObject.hpp for info on 
+    // size so downcasting to USHORT (via COMPUTE_OBJECT_SIZE) is safe because
+    // size of object plus buffer (<page size) would be smaller than 64K that
+    // could fit in USHORT. See comments in FxMemoryObject.hpp for info on
     // various fx memory objects.
     //
     objectSize = COMPUTE_OBJECT_SIZE(sizeof(FxMemoryBufferFromLookaside),

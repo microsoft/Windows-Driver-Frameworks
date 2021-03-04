@@ -2360,7 +2360,7 @@ Return Value:
 {
 
     This->m_AchievedStart = TRUE;
-    
+
     //
     // Log Telemetry event for the FDO
     //
@@ -2496,7 +2496,7 @@ Return Value:
         //
         // We can handle remove out of the init state, revert back to that state
         //
-        if ((matched == FALSE) || 
+        if ((matched == FALSE) ||
             (progress < FxCxCallbackProgressClientCalled)) {
             //
             // Wait for the remove irp to come in
@@ -3476,7 +3476,10 @@ Return Value:
         //
         ASSERT(pDeviceInterface->m_SymbolicLinkName.Buffer != NULL);
 #endif
-        pDeviceInterface->SetState(TRUE);
+
+        if (pDeviceInterface->m_AutoEnableOnFirstStart) {
+            pDeviceInterface->SetState(TRUE);
+        }
 
         status = STATUS_SUCCESS;
     }
@@ -3511,7 +3514,7 @@ Routine Description:
 Arguments:
     ResourcesMatched - indicates to the caller what stage failed if !NT_SUCCESS
                         is returned
-    Progress - indicates to the caller what stage the API failed if 
+    Progress - indicates to the caller what stage the API failed if
                         !NT_SUCCESS is returned
 
 Return Value:
@@ -4585,19 +4588,19 @@ Routine Description:
             the max restart count, ask for a reenumeration.  If it exceeds the
             max, do not ask for a reenumeration.
         d)  if the current time is after the period stat time and exceeds the
-            maximum period, and if the device as reached the started state, 
+            maximum period, and if the device as reached the started state,
             reset the period, count, and started state, then ask for a
             reenumeration.
 
 Considerations:
     There is a reenumeration loop that a device can get caught in. If a device
-    takes more than m_RestartTimePeriodMaximum to fail m_RestartCountMaximum 
-    times then the device will be caught in this loop. If it is failing on the 
-    way to PnpEventStarted then the device will likely cause a 9F bugcheck. 
-    This is because they hold a power lock while in this loop. If the device 
-    fails after PnpEventStarted then pnp can progress and the device can loop 
-    here indefinitely. We have shipped with this behavior for several releases, 
-    so we are hesitant to completely change this behavior. The concern is that 
+    takes more than m_RestartTimePeriodMaximum to fail m_RestartCountMaximum
+    times then the device will be caught in this loop. If it is failing on the
+    way to PnpEventStarted then the device will likely cause a 9F bugcheck.
+    This is because they hold a power lock while in this loop. If the device
+    fails after PnpEventStarted then pnp can progress and the device can loop
+    here indefinitely. We have shipped with this behavior for several releases,
+    so we are hesitant to completely change this behavior. The concern is that
     a device out there relies on this behavior.
 
 Arguments:
@@ -4617,7 +4620,7 @@ Return Value:
     DECLARE_CONST_UNICODE_STRING(valueNameStartTime, RESTART_START_TIME_NAME);
     DECLARE_CONST_UNICODE_STRING(valueNameCount, RESTART_COUNT_NAME);
     DECLARE_CONST_UNICODE_STRING(valueNameStartAchieved, RESTART_START_ACHIEVED_NAME);
-    
+
     count = 0;
     started = FALSE;
     writeTick = FALSE;
@@ -4628,12 +4631,12 @@ Return Value:
 
     started = m_AchievedStart;
     if (started) {
-        // 
+        //
         // Save the fact the driver started without failing
         //
         writeStarted = TRUE;
     }
-        
+
 
     //
     // If the key was created right now, there is nothing to check, just write out
@@ -4741,7 +4744,7 @@ Return Value:
                         started = value != 0;
                         status = STATUS_SUCCESS;
                     }
-                    
+
                     if (started) {
                         //
                         // Exceeded the time limit.  This is treated as a reset of
@@ -4753,7 +4756,7 @@ Return Value:
                         count = 1;
 
                         //
-                        // Erase the fact the driver once started and 
+                        // Erase the fact the driver once started and
                         // make it do it again to get another 5 attempts to
                         // restart.
                         //

@@ -59,7 +59,7 @@ USBD_UrbAllocate(
 NTSTATUS
 USBD_IsochUrbAllocate(
     _In_      USBD_HANDLE  USBDHandle,
-    _In_      ULONG        NumberOfIsochPacket,
+    _In_      ULONG        NumberOfIsochPackets,
     _Outptr_result_bytebuffer_(sizeof(struct _URB_ISOCH_TRANSFER) 
                                + (NumberOfIsochPackets * sizeof(USBD_ISO_PACKET_DESCRIPTOR))
                                - sizeof(USBD_ISO_PACKET_DESCRIPTOR)) 
@@ -67,7 +67,7 @@ USBD_IsochUrbAllocate(
 )
 {
     UNREFERENCED_PARAMETER(USBDHandle); 
-    UNREFERENCED_PARAMETER(NumberOfIsochPacket);
+    UNREFERENCED_PARAMETER(NumberOfIsochPackets);
     UNREFERENCED_PARAMETER(Urb); 
 
     ASSERTMSG("Not implemented for UMDF\n", FALSE);

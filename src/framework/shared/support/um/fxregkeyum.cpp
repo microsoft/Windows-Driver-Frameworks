@@ -35,7 +35,6 @@ FxRegKey::FxRegKey(
     ) :
     FxPagedObject(FX_TYPE_REG_KEY, sizeof(FxRegKey), FxDriverGlobals),
     m_Key(NULL),
-    m_Globals(FxDriverGlobals),
     m_CanCloseHandle(TRUE)
 {
 }
@@ -156,7 +155,7 @@ FxRegKey::_SetValue(
     )
 {
     DWORD err;
-    
+
     err = RegSetValueEx((HKEY)Key,
                         ValueName->Buffer,
                         0,

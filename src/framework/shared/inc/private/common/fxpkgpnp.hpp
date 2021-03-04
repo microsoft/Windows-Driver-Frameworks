@@ -1809,38 +1809,74 @@ protected:
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerUpFailedDerefParentNP(
+    PowerUpFailedDerefParentNP(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerUpFailedNP(
+    PowerUpFailedNP(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0ExitToWakeInterrupts(
+    PowerNotifyingD0ExitToWakeInterrupts(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0EntryToWakeInterrupts(
+    PowerNotifyingD0EntryToWakeInterrupts(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0ExitToWakeInterruptsNP(
+    PowerNotifyingD0ExitToWakeInterruptsNP(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0EntryToWakeInterruptsNP(
+    PowerNotifyingD0EntryToWakeInterruptsNP(
         __inout FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingPostHardwareEnabled(
+        _Inout_ FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingPostHardwareEnabledFailed(
+        _Inout_ FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingPostHardwareEnabledNP(
+        _Inout_ FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerWakingPostHardwareEnabledFailedNP(
+        _Inout_ FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerD0StartingPostHardwareEnabled(
+        _Inout_ FxPkgPnp*   This
+        );
+
+    static
+    WDF_DEVICE_POWER_STATE
+    PowerInitialPostHardwareEnabledFailed(
+        _Inout_ FxPkgPnp*   This
         );
 
     // end power state machine table based callbacks
@@ -2875,6 +2911,24 @@ protected:
         __inout FxPkgPnp* This
         );
 
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolTimerExpiredWakeCapableRevertArmWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakeCancelWake(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSleepingWakeCancelWakeNP(
+        __inout FxPkgPnp* This
+        );
+
     // end power policy state machine table based callbacks
 
     VOID
@@ -2885,16 +2939,32 @@ protected:
     BOOLEAN
     PowerGotoDxIoStopped(
         VOID
-        );
+        )
+    {
+        return PowerGotoDxIoStoppedCommon(FALSE);
+    }
 
     BOOLEAN
     PowerGotoDxIoStoppedNP(
         VOID
+        )
+    {
+        return PowerGotoDxIoStoppedCommon(TRUE);
+    }
+
+    BOOLEAN
+    PowerGotoDxIoStoppedCommon(
+        _In_ BOOLEAN NonPageable
         );
 
     BOOLEAN
     PowerDmaEnableAndScan(
-        __in BOOLEAN ImplicitPowerUp
+        VOID
+        );
+
+    WDF_DEVICE_POWER_STATE
+    PowerWakingPostHardwareEnabledCommon(
+        _In_ BOOLEAN NonPageable
         );
 
     VOID
@@ -3006,8 +3076,18 @@ protected:
     NTSTATUS
     PowerPolicySendDevicePowerRequest(
         __in DEVICE_POWER_STATE DeviceState,
-        __in SendDeviceRequestAction Action
+        __in SendDeviceRequestAction Action,
+        __in RequestDIrpReason Reason
         );
+
+    VOID
+    PowerPolicyStopTrackingDevicePowerIrp(
+        VOID
+        )
+    {
+        m_PowerPolicyMachine.m_Owner->
+            m_DevicePowerIrpTracker.StopTrackingDevicePowerIrp();
+    }
 
     _Must_inspect_result_
     NTSTATUS
@@ -4060,10 +4140,12 @@ public:
     POWER_ACTION
     GetSystemPowerAction(
         VOID
-        )
-    {
-        return (POWER_ACTION) m_SystemPowerAction;
-    }
+        );
+
+    WDF_POWER_DEVICE_STATE
+    GetTargetDevicePowerStateFromPendingDevicePowerDownIrp(
+        VOID
+        );
 
     VOID
     ProcessDelayedDeletion(
@@ -4304,7 +4386,8 @@ private:
         //
         PowerPolicyBlockChildrenPowerUp();
 
-        return PowerPolicySendDevicePowerRequest(DxState, Action);
+        return PowerPolicySendDevicePowerRequest(DxState, Action,
+                    RequestDxForSx);
     }
 
     VOID
@@ -4329,12 +4412,12 @@ private:
         );
 
     VOID
-    FxPkgPnp::PowerPolDirectedTransitionTriggerDPR(
+    PowerPolDirectedTransitionTriggerDPR(
         VOID
         );
 
     VOID
-    FxPkgPnp::PowerPolDirectedTransitionTriggerDPNR(
+    PowerPolDirectedTransitionTriggerDPNR(
         VOID
         );
 
@@ -4602,6 +4685,7 @@ public:
     //
     D3COLD_SUPPORT_INTERFACE m_D3ColdInterface;
 
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
     //
     // Device companion target
     //
@@ -4615,6 +4699,8 @@ public:
     {
         return m_CompanionTarget;
     }
+#endif
+
 protected:
     //
     // Event that is set when processing a remove device is complete
@@ -4991,8 +5077,8 @@ private:
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolRestartingOtherStates[];
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolStoppingCancelWakeOtherStates[];
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolCancelUsbSSOtherStates[];
-    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeRevertArmWakeOtherStates[];
-    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeRevertArmWakeNPOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeCancelWakeOtherStates[];
+    static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolSleepingWakeCancelWakeNPOtherStates[];
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolRemovedOtherStates[];
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapableWakeInterruptArrivedOtherStates[];
     static const POWER_POLICY_EVENT_TARGET_STATE m_PowerPolTimerExpiredWakeCapablePowerDownFailedWakeInterruptArrivedOtherStates[];
@@ -5060,6 +5146,9 @@ public:
     FxPnpDeviceD0EntryPostInterruptsEnabled m_DeviceD0EntryPostInterruptsEnabled;
     FxPnpDeviceD0ExitPreInterruptsDisabled  m_DeviceD0ExitPreInterruptsDisabled;
     FxPnpDeviceD0Exit                       m_DeviceD0Exit;
+
+    FxPnpDeviceD0EntryPostHwEnabled     m_DeviceD0EntryPostHardwareEnabled;
+    FxPnpDeviceD0ExitPreHwDisabled      m_DeviceD0ExitPreHardwareDisabled;
 
     FxPnpDevicePrepareHardware          m_DevicePrepareHardware;
     FxPnpDeviceReleaseHardware          m_DeviceReleaseHardware;

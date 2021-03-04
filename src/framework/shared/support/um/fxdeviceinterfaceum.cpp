@@ -51,6 +51,10 @@ Return Value:
     m_Entry.Next = NULL;
 
     m_State = FALSE;
+
+    m_Device = NULL;
+
+    m_AutoEnableOnFirstStart = TRUE;
 }
 
 FxDeviceInterface::~FxDeviceInterface()
@@ -163,9 +167,9 @@ Return Value:
     else {
         status = FxDevice::NtStatusFromHr(pDeviceStack, hr);
         DoTraceLevelMessage(
-            FxDevice::GetFxDevice(m_Device)->GetDriverGlobals(), 
+            FxDevice::GetFxDevice(m_Device)->GetDriverGlobals(),
             TRACE_LEVEL_WARNING, TRACINGPNP,
-            "Failed to %s device interface %!STATUS!", 
+            "Failed to %s device interface %!STATUS!",
             (State ? "enable" : "disable"), status);
 
 
@@ -199,13 +203,13 @@ Return Value:
     IWudfDeviceStack *pDeviceStack;
 
     m_Device = DeviceObject;
-    
+
     //
     // Get the IWudfDeviceStack interface
     //
     pDeviceStack = m_Device->GetDeviceStackInterface();
 
-    hr = pDeviceStack->CreateDeviceInterface(&m_InterfaceClassGUID, 
+    hr = pDeviceStack->CreateDeviceInterface(&m_InterfaceClassGUID,
                                              m_ReferenceString.Buffer);
 
     if (SUCCEEDED(hr)) {
@@ -253,14 +257,14 @@ FxDeviceInterface::GetSymbolicLinkName(
         pDeviceStack = m_Device->GetDeviceStackInterface();
         HRESULT hrQI;
         HRESULT hr;
-        
-        hrQI = pDeviceStack->QueryInterface(IID_IWudfDeviceStack2, 
+
+        hrQI = pDeviceStack->QueryInterface(IID_IWudfDeviceStack2,
                                             (PVOID*)&pDeviceStack2);
         FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pDeviceStack2));
         pDeviceStack->Release();
 
         //
-        // Get the symbolic link 
+        // Get the symbolic link
         //
         hr = pDeviceStack2->GetInterfaceSymbolicLink(&m_InterfaceClassGUID,
                                                      m_ReferenceString.Buffer,
@@ -269,7 +273,7 @@ FxDeviceInterface::GetSymbolicLinkName(
             status = FxDevice::GetFxDevice(m_Device)->NtStatusFromHr(hr);
         }
         else {
-            RtlInitUnicodeString(&m_SymbolicLinkName, symLink);            
+            RtlInitUnicodeString(&m_SymbolicLinkName, symLink);
             status = STATUS_SUCCESS;
         }
     }

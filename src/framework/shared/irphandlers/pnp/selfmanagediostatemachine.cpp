@@ -189,7 +189,7 @@ FxSelfManagedIoMachine::_CreateAndInit(
     FxSelfManagedIoMachine * selfManagedIoMachine;
 
     *SelfManagedIoMachine = NULL;
-        
+
     selfManagedIoMachine = new (PkgPnp->GetDriverGlobals()) FxSelfManagedIoMachine(PkgPnp);
 
     if (selfManagedIoMachine == NULL) {
@@ -198,7 +198,7 @@ FxSelfManagedIoMachine::_CreateAndInit(
             "Self managed I/O state machine allocation failed for "
             "WDFDEVICE 0x%p",
             PkgPnp->GetDevice()->GetHandle());
-        
+
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -211,13 +211,13 @@ FxSelfManagedIoMachine::_CreateAndInit(
             PkgPnp->GetDevice()->GetHandle(),
             status);
 
-        delete selfManagedIoMachine;        
+        delete selfManagedIoMachine;
 
         return status;
     }
 
     *SelfManagedIoMachine = selfManagedIoMachine;
-    
+
     return status;
 }
 
@@ -239,15 +239,15 @@ Return Value:
 
   --*/
 {
-    m_DeviceSelfManagedIoCleanup.Initialize(m_PkgPnp, 
+    m_DeviceSelfManagedIoCleanup.Initialize(m_PkgPnp,
         Callbacks->EvtDeviceSelfManagedIoCleanup);
-    m_DeviceSelfManagedIoFlush.Initialize(m_PkgPnp, 
+    m_DeviceSelfManagedIoFlush.Initialize(m_PkgPnp,
         Callbacks->EvtDeviceSelfManagedIoFlush);
-    m_DeviceSelfManagedIoInit.Initialize(m_PkgPnp, 
+    m_DeviceSelfManagedIoInit.Initialize(m_PkgPnp,
         Callbacks->EvtDeviceSelfManagedIoInit);
-    m_DeviceSelfManagedIoSuspend.Initialize(m_PkgPnp, 
+    m_DeviceSelfManagedIoSuspend.Initialize(m_PkgPnp,
         Callbacks->EvtDeviceSelfManagedIoSuspend);
-    m_DeviceSelfManagedIoRestart.Initialize(m_PkgPnp, 
+    m_DeviceSelfManagedIoRestart.Initialize(m_PkgPnp,
         Callbacks->EvtDeviceSelfManagedIoRestart);
 }
 
@@ -373,19 +373,19 @@ Return Value:
   --*/
 {
     FxCxCallbackProgress progress;
-    
+
     *Status = This->m_DeviceSelfManagedIoInit.Invoke(This->GetDeviceHandle(), &progress);
 
     if (Progress) {
         *Progress = progress;
     }
-    
+
     if (NT_SUCCESS(*Status))  {
         return FxSelfManagedIoStarted;
     }
     else if (progress < FxCxCallbackProgressClientCalled) {
         //
-        // One of the Pre callback(s) failed so we go back to Created and wait 
+        // One of the Pre callback(s) failed so we go back to Created and wait
         // for cleanup
         //
         return FxSelfManagedIoCreated;
@@ -425,6 +425,10 @@ Return Value:
 {
     UNREFERENCED_PARAMETER(Progress);
 
+    //
+    // Invoked when receiving SelfManagedIoEventSuspend, i.e. somebody called
+    // FxSelfManagedIoMachine::Suspend(TargetDevicePowerState)
+    //
     *Status = This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
 
     if (NT_SUCCESS(*Status)) {
@@ -461,7 +465,7 @@ Return Value:
   --*/
 {
     FxCxCallbackProgress progress;
-    
+
     *Status = This->m_DeviceSelfManagedIoRestart.Invoke(This->GetDeviceHandle(),
                                                         &progress);
     if (Progress) {
@@ -575,6 +579,8 @@ Return Value:
     //
     ASSERT(!NT_SUCCESS(*Status));
 
+    This->m_DeviceSelfManagedIoSuspend.SetTargetState(WdfPowerDeviceD3Final);
+
     (VOID) This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
 
     return FxSelfManagedIoInitFailed;
@@ -611,6 +617,8 @@ Return Value:
     // Status should be set to failed by previous state
     //
     ASSERT(!NT_SUCCESS(*Status));
+
+    This->m_DeviceSelfManagedIoSuspend.SetTargetState(WdfPowerDeviceD3Final);
 
     (VOID) This->m_DeviceSelfManagedIoSuspend.Invoke(This->GetDeviceHandle());
 

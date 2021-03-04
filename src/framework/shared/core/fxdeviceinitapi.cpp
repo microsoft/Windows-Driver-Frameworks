@@ -28,108 +28,6 @@ extern "C" {
 #include "FxDeviceInitApi.tmh"
 }
 
-typedef struct _WDF_PNPPOWER_EVENT_CALLBACKS_V1_9 {
-    // 
-    // Size of this structure in bytes
-    // 
-    ULONG Size;
-
-    PFN_WDF_DEVICE_D0_ENTRY                 EvtDeviceD0Entry;
-
-    PFN_WDF_DEVICE_D0_ENTRY_POST_INTERRUPTS_ENABLED EvtDeviceD0EntryPostInterruptsEnabled;
-
-    PFN_WDF_DEVICE_D0_EXIT                  EvtDeviceD0Exit;
-
-    PFN_WDF_DEVICE_D0_EXIT_PRE_INTERRUPTS_DISABLED EvtDeviceD0ExitPreInterruptsDisabled;
-
-    PFN_WDF_DEVICE_PREPARE_HARDWARE         EvtDevicePrepareHardware;
-
-    PFN_WDF_DEVICE_RELEASE_HARDWARE         EvtDeviceReleaseHardware;
-
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_CLEANUP  EvtDeviceSelfManagedIoCleanup;
-
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_FLUSH    EvtDeviceSelfManagedIoFlush;
-
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_INIT     EvtDeviceSelfManagedIoInit;
-
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND  EvtDeviceSelfManagedIoSuspend;
-
-    PFN_WDF_DEVICE_SELF_MANAGED_IO_RESTART  EvtDeviceSelfManagedIoRestart;
-
-    PFN_WDF_DEVICE_SURPRISE_REMOVAL         EvtDeviceSurpriseRemoval;
-
-    PFN_WDF_DEVICE_QUERY_REMOVE             EvtDeviceQueryRemove;
-
-    PFN_WDF_DEVICE_QUERY_STOP               EvtDeviceQueryStop;
-
-    PFN_WDF_DEVICE_USAGE_NOTIFICATION       EvtDeviceUsageNotification;
-
-    PFN_WDF_DEVICE_RELATIONS_QUERY          EvtDeviceRelationsQuery;
-
-} WDF_PNPPOWER_EVENT_CALLBACKS_V1_9, *PWDF_PNPPOWER_EVENT_CALLBACKS_V1_9;
-
-
-typedef struct _WDF_POWER_POLICY_EVENT_CALLBACKS_V1_5 {
-    // 
-    // Size of this structure in bytes
-    // 
-    ULONG Size;
-
-    PFN_WDF_DEVICE_ARM_WAKE_FROM_S0         EvtDeviceArmWakeFromS0;
-
-    PFN_WDF_DEVICE_DISARM_WAKE_FROM_S0      EvtDeviceDisarmWakeFromS0;
-
-    PFN_WDF_DEVICE_WAKE_FROM_S0_TRIGGERED   EvtDeviceWakeFromS0Triggered;
-
-    PFN_WDF_DEVICE_ARM_WAKE_FROM_SX         EvtDeviceArmWakeFromSx;
-
-    PFN_WDF_DEVICE_DISARM_WAKE_FROM_SX      EvtDeviceDisarmWakeFromSx;
-
-    PFN_WDF_DEVICE_WAKE_FROM_SX_TRIGGERED   EvtDeviceWakeFromSxTriggered;
-
-} WDF_POWER_POLICY_EVENT_CALLBACKS_V1_5, *PWDF_POWER_POLICY_EVENT_CALLBACKS_V1_5;
-
-typedef struct _WDF_PDO_EVENT_CALLBACKS_V1_9 {
-    // 
-    // The size of this structure in bytes
-    // 
-    ULONG Size;
-
-    // 
-    // Called in response to IRP_MN_QUERY_RESOURCES
-    // 
-    PFN_WDF_DEVICE_RESOURCES_QUERY EvtDeviceResourcesQuery;
-
-    // 
-    // Called in response to IRP_MN_QUERY_RESOURCE_REQUIREMENTS
-    // 
-    PFN_WDF_DEVICE_RESOURCE_REQUIREMENTS_QUERY EvtDeviceResourceRequirementsQuery;
-
-    // 
-    // Called in response to IRP_MN_EJECT
-    // 
-    PFN_WDF_DEVICE_EJECT EvtDeviceEject;
-
-    // 
-    // Called in response to IRP_MN_SET_LOCK
-    // 
-    PFN_WDF_DEVICE_SET_LOCK EvtDeviceSetLock;
-
-    // 
-    // Called in response to the power policy owner sending a wait wake to the
-    // PDO.  Bus generic arming shoulding occur here.
-    // 
-    PFN_WDF_DEVICE_ENABLE_WAKE_AT_BUS       EvtDeviceEnableWakeAtBus;
-
-    // 
-    // Called in response to the power policy owner sending a wait wake to the
-    // PDO.  Bus generic disarming shoulding occur here.
-    // 
-    PFN_WDF_DEVICE_DISABLE_WAKE_AT_BUS      EvtDeviceDisableWakeAtBus;
-
-} WDF_PDO_EVENT_CALLBACKS_V1_9, *PWDF_PDO_EVENT_CALLBACKS_V1_9;
-
-
 //
 // Extern "C" the entire file
 //
@@ -145,7 +43,7 @@ WDFEXPORT(WdfDeviceInitFree)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     if (DeviceInit->CreatedOnStack == FALSE) {
@@ -165,7 +63,7 @@ WDFEXPORT(WdfDeviceInitSetIoType)(
     )
 {
     DDI_ENTRY();
-        
+
     WDF_IO_TYPE_CONFIG ioTypeConfig;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -189,7 +87,7 @@ WDFEXPORT(WdfDeviceInitSetIoTypeEx)(
     )
 {
     DDI_ENTRY();
-        
+
     NTSTATUS status;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
@@ -201,7 +99,7 @@ WDFEXPORT(WdfDeviceInitSetIoTypeEx)(
         status = STATUS_INFO_LENGTH_MISMATCH;
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                      "IoTypeConfig size (%d) incorrect, expected %d, %!STATUS!",
-                     IoTypeConfig->Size, 
+                     IoTypeConfig->Size,
                      sizeof(WDF_IO_TYPE_CONFIG), status);
         return;
     }
@@ -221,7 +119,7 @@ WDFEXPORT(WdfDeviceInitSetExclusive)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     DeviceInit->Exclusive = Exclusive;
@@ -239,7 +137,7 @@ WDFEXPORT(WdfDeviceInitSetDeviceType)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     DeviceInit->DeviceType = DeviceType;
@@ -255,7 +153,7 @@ WDFEXPORT(WdfDeviceInitSetPowerNotPageable)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     DeviceInit->PowerPageable = FALSE;
@@ -271,7 +169,7 @@ WDFEXPORT(WdfDeviceInitSetPowerPageable)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     DeviceInit->PowerPageable = TRUE;
@@ -287,7 +185,7 @@ WDFEXPORT(WdfDeviceInitSetPowerInrush)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     //
@@ -310,7 +208,7 @@ WDFEXPORT(WdfDeviceInitAssignName)(
     )
 {
     DDI_ENTRY();
-        
+
     NTSTATUS status;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -363,7 +261,7 @@ WDFEXPORT(WdfDeviceInitSetCharacteristics)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     if (OrInValues) {
@@ -412,7 +310,7 @@ Returns:
 
 {
     DDI_ENTRY();
-        
+
     NTSTATUS status;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     WDF_FILEOBJECT_CLASS normalizedFileClass;
@@ -471,12 +369,12 @@ Returns:
         FileObjectConfig->AutoForwardCleanupClose;
 
     fileClass = FileObjectConfig->FileObjectClass;
-        
+
     //
     // Remove bit flags and validate file object class value.
     //
     normalizedFileClass = FxFileObjectClassNormalize(fileClass);
-    
+
     if (normalizedFileClass == WdfFileObjectInvalid ||
         normalizedFileClass > WdfFileObjectWdfCannotUseFsContexts)  {
         DoTraceLevelMessage(
@@ -488,22 +386,22 @@ Returns:
     }
 
     //
-    // UMDF doesn't support storing object handle at FsContext or FxContxt2. 
+    // UMDF doesn't support storing object handle at FsContext or FxContxt2.
     // Update the class to WdfFileObjectWdfCannotUseFsContexts for UMDF.
     //
-    if (pFxDriverGlobals->IsUserModeDriver && 
+    if (pFxDriverGlobals->IsUserModeDriver &&
         (normalizedFileClass == WdfFileObjectWdfCanUseFsContext ||
          normalizedFileClass == WdfFileObjectWdfCanUseFsContext2)) {
 
         //
         // update the FileObjectClass value
         //
-        BOOLEAN canBeOptional = 
+        BOOLEAN canBeOptional =
             (fileClass & WdfFileObjectCanBeOptional) ? TRUE : FALSE;
-        
+
         fileClass = WdfFileObjectWdfCannotUseFsContexts;
         if (canBeOptional) {
-            fileClass = (WDF_FILEOBJECT_CLASS) 
+            fileClass = (WDF_FILEOBJECT_CLASS)
                 (fileClass | WdfFileObjectCanBeOptional);
         }
 
@@ -518,7 +416,7 @@ Returns:
         //
         normalizedFileClass = FxFileObjectClassNormalize(fileClass);
     }
-    
+
     //
     // The optional flag can only be combined with a subset of values.
     //
@@ -528,7 +426,7 @@ Returns:
         case WdfFileObjectWdfCanUseFsContext2:
         case WdfFileObjectWdfCannotUseFsContexts:
             break;
-            
+
         default:
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
@@ -565,7 +463,7 @@ WDFEXPORT(WdfDeviceInitSetRequestAttributes)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -605,7 +503,7 @@ WDFEXPORT(WdfDeviceInitAssignSDDLString)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -669,7 +567,7 @@ WDFEXPORT(WdfDeviceInitSetDeviceClass)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -695,7 +593,7 @@ WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -718,7 +616,7 @@ WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
     }
 
     //
-    // Make sure only one of the callbacks EvtDeviceUsageNotification or 
+    // Make sure only one of the callbacks EvtDeviceUsageNotification or
     // EvtDeviceUsageNotificationEx is provided by driver for >V1.9.
     //
     if (PnpPowerEventCallbacks->Size > sizeof(WDF_PNPPOWER_EVENT_CALLBACKS_V1_9) &&
@@ -736,8 +634,8 @@ WDFEXPORT(WdfDeviceInitSetPnpPowerEventCallbacks)(
     }
 
     //
-    // Driver's PnpPowerEventCallbacks structure may be from a previous 
-    // version and therefore may be different in size than the current version 
+    // Driver's PnpPowerEventCallbacks structure may be from a previous
+    // version and therefore may be different in size than the current version
     // that framework is using. Therefore, copy only PnpPowerEventCallbacks->Size
     // bytes and not sizeof(PnpPowerEventCallbacks) bytes.
     //
@@ -758,7 +656,7 @@ WDFEXPORT(WdfDeviceInitSetPowerPolicyEventCallbacks)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -819,7 +717,7 @@ WDFEXPORT(WdfDeviceInitSetPowerPolicyOwnership)(
     )
 {
     DDI_ENTRY();
-        
+
      FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
      DeviceInit->PnpPower.PowerPolicyOwner = IsPowerPolicyOwner ? WdfTrue : WdfFalse;
@@ -842,7 +740,7 @@ WDFEXPORT(WdfDeviceInitRegisterPnpStateChangeCallback)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPnpStateCallbackInfo* pCallback;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     ULONG normalizedState;
@@ -921,7 +819,7 @@ WDFEXPORT(WdfDeviceInitRegisterPowerStateChangeCallback)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPowerStateCallbackInfo* pCallback;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     ULONG normalizedState;
@@ -1001,7 +899,7 @@ WDFEXPORT(WdfDeviceInitRegisterPowerPolicyStateChangeCallback)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPowerPolicyStateCallbackInfo* pCallback;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     ULONG normalizedState;
@@ -1085,7 +983,7 @@ WDFEXPORT(WdfDeviceInitAssignWdmIrpPreprocessCallback)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -1203,7 +1101,7 @@ Routine Description:
 
 Arguments:
     DeviceInit - Device initialization structure
-    
+
     EvtIoInCallerContext - Pointer to driver supplied callback function
 
 Return Value:
@@ -1211,7 +1109,7 @@ Return Value:
 --*/
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), EvtIoInCallerContext);
 
@@ -1232,7 +1130,7 @@ WDFEXPORT(WdfDeviceInitSetRemoveLockOptions)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS fxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
     ULONG validFlags = WDF_REMOVE_LOCK_OPTION_ACQUIRE_FOR_IO;
 
@@ -1275,7 +1173,7 @@ WDFEXPORT(WdfDeviceInitSetRemoveLockOptions)(
         DoTraceLevelMessage(fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGAPIERROR,
                             "WdfDeviceInitSetRemoveLockOptions is not "
                             "supported on control devices");
-        
+
         FxVerifierDbgBreakPoint(fxDriverGlobals);
         goto Done;
     }
@@ -1297,16 +1195,16 @@ WDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
-    if ((ReleaseHardwareOrderOnFailure == 
-            WdfReleaseHardwareOrderOnFailureInvalid) || 
-        (ReleaseHardwareOrderOnFailure > 
+    if ((ReleaseHardwareOrderOnFailure ==
+            WdfReleaseHardwareOrderOnFailureInvalid) ||
+        (ReleaseHardwareOrderOnFailure >
             WdfReleaseHardwareOrderOnFailureAfterDescendants)) {
         DoTraceLevelMessage(
             DeviceInit->DriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-            "Out of range WDF_RELEASE_HARDWARE_ORDER_ON_FAILURE %d", 
+            "Out of range WDF_RELEASE_HARDWARE_ORDER_ON_FAILURE %d",
             ReleaseHardwareOrderOnFailure);
         FxVerifierDbgBreakPoint(DeviceInit->DriverGlobals);
         return;
@@ -1329,9 +1227,9 @@ Routine Description:
 
     A client or Cx calls this API to indicate that it would like to leverage an
     Self IO target.
- 
+
     For now the Self targets are not supported for PDOs, Miniport Device,
-    or non pnp Devices. 
+    or non pnp Devices.
 
 Arguments:
 
@@ -1344,7 +1242,7 @@ Returns:
 --*/
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     DeviceInit->RequiresSelfIoTarget = TRUE;
@@ -1366,7 +1264,7 @@ WDFEXPORT(WdfFdoInitWdmGetPhysicalDevice)(
     )
 {
     DDI_ENTRY();
-        
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
 
     if (DeviceInit->IsNotFdoInit()) {
@@ -1400,7 +1298,7 @@ WDFEXPORT(WdfFdoInitOpenRegistryKey)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -1443,7 +1341,7 @@ WDFEXPORT(WdfFdoInitSetFilter)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -1505,7 +1403,7 @@ Return Value:
   --*/
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -1581,7 +1479,7 @@ Return Value:
   --*/
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -1637,7 +1535,7 @@ WDFEXPORT(WdfFdoInitSetEventCallbacks)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -1700,7 +1598,7 @@ WDFEXPORT(WdfFdoInitSetDefaultChildListConfig)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
     size_t totalDescriptionSize;
@@ -1748,7 +1646,7 @@ WDFEXPORT(WdfFdoInitSetDefaultChildListConfig)(
     RtlCopyMemory(&DeviceInit->Fdo.ListConfig,
                   Config,
                   sizeof(WDF_CHILD_LIST_CONFIG));
-}    
+}
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1774,7 +1672,7 @@ WDFEXPORT(WdfFdoInitQueryPropertyEx)(
 
 Routine Description:
 
-    This routine queries device property.   
+    This routine queries device property.
 
 Arguments:
 
@@ -1782,35 +1680,35 @@ Arguments:
 
     DeviceInit - WDF DeviceInit structure pointer.
 
-    DeviceProperty - A pointer to WDF_DEVICE_PROPERTY_DATA structure. 
-    
-    BufferLength - The size, in bytes, of the buffer that is pointed to by 
+    DeviceProperty - A pointer to WDF_DEVICE_PROPERTY_DATA structure.
+
+    BufferLength - The size, in bytes, of the buffer that is pointed to by
                    PropertyBuffer.
-                   
+
     PropertyBuffer - A caller-supplied pointer to a caller-allocated buffer that
-                  receives the requested information. The pointer can be NULL 
+                  receives the requested information. The pointer can be NULL
                   if the BufferLength parameter is zero.
-                  
-    ResultLength - A caller-supplied location that, on return, contains the 
-                  size, in bytes, of the information that the method stored in 
-                  PropertyBuffer. If the function's return value is 
-                  STATUS_BUFFER_TOO_SMALL, this location receives the required 
+
+    ResultLength - A caller-supplied location that, on return, contains the
+                  size, in bytes, of the information that the method stored in
+                  PropertyBuffer. If the function's return value is
+                  STATUS_BUFFER_TOO_SMALL, this location receives the required
                   buffer size.
-                  
+
     Type - A pointer to a DEVPROPTYPE variable. If method successfully retrieves
                   the property data, the routine writes the property type value
-                  to this variable. This value indicates the type of property 
+                  to this variable. This value indicates the type of property
                   data that is in the Data buffer.
 
 Return Value:
 
-    Method returns an NTSTATUS value. This routine might return one of the 
-    following values. 
+    Method returns an NTSTATUS value. This routine might return one of the
+    following values.
 
-    STATUS_BUFFER_TOO_SMALL - The supplied buffer is too small to receive the 
+    STATUS_BUFFER_TOO_SMALL - The supplied buffer is too small to receive the
                             information. The ResultLength member receives the
                             size of buffer required.
-    STATUS_SUCCESS  - The operation succeeded. 
+    STATUS_SUCCESS  - The operation succeeded.
     STATUS_INVALID_PARAMETER - One of the parameters is incorrect.
 
     The method might return other NTSTATUS values.
@@ -1819,7 +1717,7 @@ Return Value:
 
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -1832,7 +1730,7 @@ Return Value:
         status = STATUS_INFO_LENGTH_MISMATCH;
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                      "PropertyData size (%d) incorrect, expected %d, %!STATUS!",
-                     DeviceProperty->Size, 
+                     DeviceProperty->Size,
                      sizeof(WDF_DEVICE_PROPERTY_DATA), status);
         return status;
     }
@@ -1865,7 +1763,7 @@ Return Value:
                                         ResultLength,
                                         Type);
     return status;
-}    
+}
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1892,7 +1790,7 @@ WDFEXPORT(WdfFdoInitAllocAndQueryPropertyEx)(
 
 Routine Description:
 
-    This routine queries device property.   
+    This routine queries device property.
 
 Arguments:
 
@@ -1900,36 +1798,36 @@ Arguments:
 
     DeviceInit - WDF DeviceInit pointer.
 
-    PropertyData - A pointer to WDF_DEVICE_PROPERTY_ DATA structure. 
-    
-    PoolType - A POOL_TYPE-typed enumerator that specifies the type of memory 
+    PropertyData - A pointer to WDF_DEVICE_PROPERTY_ DATA structure.
+
+    PoolType - A POOL_TYPE-typed enumerator that specifies the type of memory
                to be allocated.
 
-    PropertyMemoryAttributes - optional, A pointer to a caller-allocated 
+    PropertyMemoryAttributes - optional, A pointer to a caller-allocated
                WDF_OBJECT_ATTRIBUTES structure that describes object attributes
-               for the memory object that the function will allocate. This 
+               for the memory object that the function will allocate. This
                parameter is optional and can be WDF_NO_OBJECT_ATTRIBUTES.
 
-    PropertyMemory - A pointer to a WDFMEMORY-typed location that receives a 
+    PropertyMemory - A pointer to a WDFMEMORY-typed location that receives a
                handle to a framework memory object.
 
     Type - A pointer to a DEVPROPTYPE variable. If method successfully retrieves
                the property data, the routine writes the property type value to
-               this variable. This value indicates the type of property data 
+               this variable. This value indicates the type of property data
                that is in the Data buffer.
 
 Return Value:
 
-    Method returns an NTSTATUS value. This routine might return one of the 
+    Method returns an NTSTATUS value. This routine might return one of the
     following values. It might return other NTSTATUS-codes as well.
 
-    STATUS_SUCCESS  The operation succeeded. 
+    STATUS_SUCCESS  The operation succeeded.
     STATUS_INVALID_PARAMETER    One of the parameters is incorrect.
 
 --*/
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -1942,7 +1840,7 @@ Return Value:
         status = STATUS_INFO_LENGTH_MISMATCH;
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                      "PropertyData size (%d) incorrect, expected %d, %!STATUS!",
-                     DeviceProperty->Size, 
+                     DeviceProperty->Size,
                      sizeof(WDF_DEVICE_PROPERTY_DATA), status);
         return status;
     }
@@ -2003,7 +1901,7 @@ WDFEXPORT(WdfPdoInitAllocate)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     PWDFDEVICE_INIT pInit;
     FxDevice* pDevice;
@@ -2060,7 +1958,7 @@ WDFEXPORT(WdfPdoInitSetEventCallbacks)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -2106,7 +2004,7 @@ WDFEXPORT(WdfPdoInitAssignDeviceID)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -2164,7 +2062,7 @@ WDFEXPORT(WdfPdoInitAssignInstanceID)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -2222,7 +2120,7 @@ WDFEXPORT(WdfPdoInitAddHardwareID)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxString* pID;
     NTSTATUS status;
@@ -2287,7 +2185,7 @@ WDFEXPORT(WdfPdoInitAddCompatibleID)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxString* pID;
     NTSTATUS status;
@@ -2352,7 +2250,7 @@ WDFEXPORT(WdfPdoInitAssignContainerID)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -2380,7 +2278,7 @@ WDFEXPORT(WdfPdoInitAssignContainerID)(
     }
 
     if (DeviceInit->Pdo.ContainerID == NULL) {
-        DeviceInit->Pdo.ContainerID = new(pFxDriverGlobals, 
+        DeviceInit->Pdo.ContainerID = new(pFxDriverGlobals,
                                           WDF_NO_OBJECT_ATTRIBUTES)
             FxString(pFxDriverGlobals);
 
@@ -2416,7 +2314,7 @@ WDFEXPORT(WdfPdoInitAddDeviceText)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDeviceText *pDeviceText;
     NTSTATUS status;
@@ -2515,7 +2413,7 @@ WDFEXPORT(WdfPdoInitSetDefaultLocale)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
@@ -2550,7 +2448,7 @@ WDFEXPORT(WdfPdoInitAssignRawDevice)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
 
@@ -2591,10 +2489,10 @@ WDFEXPORT(WdfPdoInitAllowForwardingRequestToParent)(
     )
 {
     DDI_ENTRY();
-        
-    PFX_DRIVER_GLOBALS pFxDriverGlobals;   
+
+    PFX_DRIVER_GLOBALS pFxDriverGlobals;
     NTSTATUS status;
-    
+
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);
     pFxDriverGlobals = DeviceInit->DriverGlobals;
 
@@ -2603,7 +2501,7 @@ WDFEXPORT(WdfPdoInitAllowForwardingRequestToParent)(
         return;
     }
 
-    if (DeviceInit->IsNotPdoInit()) {        
+    if (DeviceInit->IsNotPdoInit()) {
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
                             "Not a PWDFDEVICE_INIT for a PDO, %!STATUS!",
                             status);
@@ -2669,7 +2567,7 @@ WDFEXPORT(WdfControlDeviceInitAllocate)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxDriver* pDriver;
     NTSTATUS status;
@@ -2709,7 +2607,7 @@ WDFEXPORT(WdfControlDeviceInitSetShutdownNotification)(
     )
 {
     DDI_ENTRY();
-        
+
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     FxPointerNotNull(GetFxDriverGlobals(DriverGlobals), DeviceInit);

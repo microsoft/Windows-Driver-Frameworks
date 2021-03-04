@@ -271,7 +271,7 @@ public:
 
     _Must_inspect_result_
     NTSTATUS
-    FxInterrupt::CreateWakeInterruptMachine(
+    CreateWakeInterruptMachine(
         VOID
         );
     

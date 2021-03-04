@@ -31,158 +31,6 @@ extern "C" {
 }
 
 //
-// At this time we are unable to include wdf19.h in the share code, thus for 
-// now we simply cut and paste the needed structures.
-//
-typedef struct _WDF_INTERRUPT_CONFIG_V1_9 {
-    ULONG              Size;
-
-    // 
-    // If this interrupt is to be synchronized with other interrupt(s) assigned
-    // to the same WDFDEVICE, create a WDFSPINLOCK and assign it to each of the
-    // WDFINTERRUPTs config.
-    // 
-    WDFSPINLOCK        SpinLock;
-
-    WDF_TRI_STATE      ShareVector;
-
-    BOOLEAN            FloatingSave;
-
-    // 
-    // Automatic Serialization of the DpcForIsr
-    // 
-    BOOLEAN            AutomaticSerialization;
-
-    // Event Callbacks
-    PFN_WDF_INTERRUPT_ISR         EvtInterruptIsr;
-
-    PFN_WDF_INTERRUPT_DPC         EvtInterruptDpc;
-
-    PFN_WDF_INTERRUPT_ENABLE      EvtInterruptEnable;
-
-    PFN_WDF_INTERRUPT_DISABLE     EvtInterruptDisable;
-
-} WDF_INTERRUPT_CONFIG_V1_9, *PWDF_INTERRUPT_CONFIG_V1_9;
-
-//
-// The interrupt config structure has changed post win8-Beta. This is a 
-// temporary definition to allow beta drivers to load on post-beta builds.
-// Note that size of win8-beta and win8-postbeta structure is different only on 
-// non-x64 platforms, but the fact that size is same on amd64 is harmless because
-// the struture gets zero'out by init macro, and the default value of the new
-// field is 0 on amd64.
-//
-typedef struct _WDF_INTERRUPT_CONFIG_V1_11_BETA {
-    ULONG              Size;
-
-    //
-    // If this interrupt is to be synchronized with other interrupt(s) assigned
-    // to the same WDFDEVICE, create a WDFSPINLOCK and assign it to each of the
-    // WDFINTERRUPTs config.
-    //
-    WDFSPINLOCK                     SpinLock;
-
-    WDF_TRI_STATE                   ShareVector;
-
-    BOOLEAN                         FloatingSave;
-
-    //
-    // DIRQL handling: automatic serialization of the DpcForIsr/WaitItemForIsr.
-    // Passive-level handling: automatic serialization of all callbacks.
-    //
-    BOOLEAN                         AutomaticSerialization;
-
-    //
-    // Event Callbacks
-    //
-    PFN_WDF_INTERRUPT_ISR           EvtInterruptIsr;
-    PFN_WDF_INTERRUPT_DPC           EvtInterruptDpc;
-    PFN_WDF_INTERRUPT_ENABLE        EvtInterruptEnable;
-    PFN_WDF_INTERRUPT_DISABLE       EvtInterruptDisable;
-    PFN_WDF_INTERRUPT_WORKITEM      EvtInterruptWorkItem;
-
-    //
-    // These fields are only used when interrupt is created in 
-    // EvtDevicePrepareHardware callback.
-    //
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptRaw;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptTranslated;
-
-    //
-    // Optional passive lock for handling interrupts at passive-level.
-    //
-    WDFWAITLOCK                     WaitLock;
-    
-    //
-    // TRUE: handle interrupt at passive-level.
-    // FALSE: handle interrupt at DIRQL level. This is the default.
-    //
-    BOOLEAN                         PassiveHandling;
-
-} WDF_INTERRUPT_CONFIG_V1_11_BETA, *PWDF_INTERRUPT_CONFIG_V1_11_BETA;
-
-//
-// Interrupt Configuration Structure
-// 
-typedef struct _WDF_INTERRUPT_CONFIG_V1_11 {
-    ULONG              Size;
-
-    //
-    // If this interrupt is to be synchronized with other interrupt(s) assigned
-    // to the same WDFDEVICE, create a WDFSPINLOCK and assign it to each of the
-    // WDFINTERRUPTs config.
-    //
-    WDFSPINLOCK                     SpinLock;
-
-    WDF_TRI_STATE                   ShareVector;
-
-    BOOLEAN                         FloatingSave;
-
-    //
-    // DIRQL handling: automatic serialization of the DpcForIsr/WaitItemForIsr.
-    // Passive-level handling: automatic serialization of all callbacks.
-    //
-    BOOLEAN                         AutomaticSerialization;
-
-    //
-    // Event Callbacks
-    //
-    PFN_WDF_INTERRUPT_ISR           EvtInterruptIsr;
-    PFN_WDF_INTERRUPT_DPC           EvtInterruptDpc;
-    PFN_WDF_INTERRUPT_ENABLE        EvtInterruptEnable;
-    PFN_WDF_INTERRUPT_DISABLE       EvtInterruptDisable;
-    PFN_WDF_INTERRUPT_WORKITEM      EvtInterruptWorkItem;
-
-    //
-    // These fields are only used when interrupt is created in 
-    // EvtDevicePrepareHardware callback.
-    //
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptRaw;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptTranslated;
-
-    //
-    // Optional passive lock for handling interrupts at passive-level.
-    //
-    WDFWAITLOCK                     WaitLock;
-    
-    //
-    // TRUE: handle interrupt at passive-level.
-    // FALSE: handle interrupt at DIRQL level. This is the default.
-    //
-    BOOLEAN                         PassiveHandling;
-
-    //
-    // TRUE: Interrupt is reported inactive on explicit power down
-    //       instead of disconnecting it.
-    // FALSE: Interrupt is disconnected instead of reporting inactive 
-    //        on explicit power down.
-    // DEFAULT: Framework decides the right value.
-    // 
-    WDF_TRI_STATE                   ReportInactiveOnPowerDown;                   
-
-} WDF_INTERRUPT_CONFIG_V1_11, *PWDF_INTERRUPT_CONFIG_V1_11;
-  
-//
 // extern "C" the entire file
 //
 extern "C" {
@@ -254,7 +102,7 @@ Returns:
     } else {
         expectedConfigSize = sizeof(WDF_INTERRUPT_CONFIG_V1_9);
     }
-    
+
 
     //
     // We could check if Configuration->Size != expectedConfigSize, but
@@ -264,7 +112,7 @@ Returns:
         Configuration->Size != sizeof(WDF_INTERRUPT_CONFIG_V1_11) &&
         Configuration->Size != sizeof(WDF_INTERRUPT_CONFIG_V1_11_BETA) &&
         Configuration->Size != sizeof(WDF_INTERRUPT_CONFIG_V1_9)) {
-    
+
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
             "WDF_INTERRUPT_CONFIG size 0x%x incorrect, expected 0x%x",
@@ -280,7 +128,7 @@ Returns:
         //
         // Init new fields to default values.
         //
-        WDF_INTERRUPT_CONFIG_INIT(&intConfig, 
+        WDF_INTERRUPT_CONFIG_INIT(&intConfig,
                                   Configuration->EvtInterruptIsr,
                                   Configuration->EvtInterruptDpc);
         //
@@ -288,7 +136,7 @@ Returns:
         //
         RtlCopyMemory(&intConfig, Configuration, Configuration->Size);
         intConfig.Size = sizeof(intConfig);
-        
+
         //
         // Use new config structure from now on.
         //
@@ -303,8 +151,8 @@ Returns:
     //
     // Ensure access to interrupts is allowed
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED, 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK(ERROR_STRING_HW_ACCESS_NOT_ALLOWED,
         (pDevice->IsInterruptAccessAllowed() == TRUE)),
         DriverGlobals->DriverName);
 
@@ -312,8 +160,8 @@ Returns:
     // PassiveHandling member must be set to TRUE. INIT macro does that for
     // UMDF. This check ensures the field is not overriden by caller.
     //
-    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO), 
-        CHECK("PassiveHandling not set to TRUE in WDF_INTERRUPT_CONFIG structure", 
+    FX_VERIFY_WITH_NAME(DRIVER(BadArgument, TODO),
+        CHECK("PassiveHandling not set to TRUE in WDF_INTERRUPT_CONFIG structure",
         (Configuration->PassiveHandling == TRUE)),
         DriverGlobals->DriverName);
 #endif
@@ -343,16 +191,16 @@ Returns:
         FxObjectHandleGetPtr(pFxDriverGlobals,
                              Attributes->ParentObject,
                              FX_TYPE_OBJECT,
-                            (PVOID*)&pParent);        
+                            (PVOID*)&pParent);
     }
     else {
         pParent = (FxObject*)pDevice;
     }
-        
+
     devicePnpState = pDevice->GetDevicePnpState();
-    
-    if (devicePnpState != WdfDevStatePnpInit && 
-        0x0 == (pDevice->GetCallbackFlags() & 
+
+    if (devicePnpState != WdfDevStatePnpInit &&
+        0x0 == (pDevice->GetCallbackFlags() &
                     FXDEVICE_CALLBACK_IN_PREPARE_HARDWARE)) {
 
         status = STATUS_INVALID_DEVICE_STATE;
@@ -371,16 +219,16 @@ Returns:
     // CM resources b/c driver doesn't known them yet.
     //
     if (devicePnpState == WdfDevStatePnpInit) {
-        
+
         if (Configuration->InterruptRaw != NULL ||
             Configuration->InterruptTranslated != NULL) {
-         
+
             status = STATUS_INVALID_PARAMETER;
 
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Not NULL InterruptRaw or InterruptTranslated in "
-                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
+                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
                 Configuration, status);
 
             return status;
@@ -396,7 +244,7 @@ Returns:
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "CanWakeDevice set in WDF_INTERRUPT_CONFIG structure  0x%p"
-                "during EvtDriverDeviceAdd, %!STATUS!", 
+                "during EvtDriverDeviceAdd, %!STATUS!",
                 Configuration, status);
 
             return status;
@@ -412,13 +260,13 @@ Returns:
         //
         if (Configuration->InterruptRaw == NULL ||
             Configuration->InterruptTranslated == NULL) {
-         
+
             status = STATUS_INVALID_DEVICE_STATE;
 
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "NULL InterruptRaw or InterruptTranslated in "
-                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
+                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
                 Configuration, status);
 
             return status;
@@ -434,7 +282,7 @@ Returns:
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Driver cannot specify ShareVector different from "
                 "WdfUseDefault in EvtDevicePrepareHardware callback,"
-                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
+                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
                 Configuration, status);
 
             return status;
@@ -451,15 +299,15 @@ Returns:
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Driver cannot specify an interrupt as CanWakeDevice if "
                 "the CM_RESOURCE_INTERRUPT_WAKE_HINT is not present."
-                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
-                Configuration, status);     
+                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
+                Configuration, status);
 
             return status;
         }
 
         //
-        // Driver is allowed to create wake interrupt only if it 
-        // is the power policy owner so that the we can wake the 
+        // Driver is allowed to create wake interrupt only if it
+        // is the power policy owner so that the we can wake the
         // stack when the interrupt fires
         //
         if (pDevice->m_PkgPnp->IsPowerPolicyOwner() == FALSE) {
@@ -468,12 +316,12 @@ Returns:
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Driver cannot specify an interrupt as CanWakeDevice if "
                 "it is not power policy powner. WDF_INTERRUPT_CONFIG "
-                "structure 0x%p passed, %!STATUS!", 
-                Configuration, status);     
+                "structure 0x%p passed, %!STATUS!",
+                Configuration, status);
 
             return status;
         }
-        
+
         //
         // Declaring an interrupt as wake capable allows it to
         // take ownership of interrupt from ACPI. It does not
@@ -484,12 +332,12 @@ Returns:
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Driver cannot specify an interrupt as CanWakeDevice for a PDO "
-                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
-                Configuration, status);     
+                "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
+                Configuration, status);
 
             return status;
         }
-    }    
+    }
 
     if (Configuration->EvtInterruptDpc != NULL &&
         Configuration->EvtInterruptWorkItem != NULL) {
@@ -498,12 +346,12 @@ Returns:
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
             "Driver can provide either EvtInterruptDpc or "
             "EvtInterruptWorkItem callback but not both. "
-            "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
+            "WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
             Configuration, status);
-    
+
         return status;
     }
-    
+
     if (Configuration->PassiveHandling == FALSE) {
         //
         // DIRQL handling validations.
@@ -513,7 +361,7 @@ Returns:
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Driver cannot specify WaitLock when handling interrupts at "
-                "DIRQL, WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!", 
+                "DIRQL, WDF_INTERRUPT_CONFIG structure 0x%p passed, %!STATUS!",
                 Configuration, status);
 
             return status;
@@ -529,7 +377,7 @@ Returns:
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
                 "CanWakeDevice set in WDF_INTERRUPT_CONFIG structure for an"
-                "interrupt not marked as passive 0x%p, %!STATUS!", 
+                "interrupt not marked as passive 0x%p, %!STATUS!",
                 Configuration, status);
 
             return status;
@@ -549,7 +397,7 @@ Returns:
 
             return status;
         }
-        
+
         if (Configuration->SpinLock) {
             status = STATUS_INVALID_PARAMETER;
             DoTraceLevelMessage(
@@ -564,9 +412,9 @@ Returns:
 
     //
     // Make sure the specified resources are valid.
-    // Do this check only under verifier b/c if the driver has a lot of 
+    // Do this check only under verifier b/c if the driver has a lot of
     // interrupts/resources, this verification can slow down power up.
-    // Note that if InterruptRaw is != NULL, it implies that 
+    // Note that if InterruptRaw is != NULL, it implies that
     // InterruptTranslated is != NULL from the checks above.
     //
     if (pFxDriverGlobals->FxVerifierOn) {
@@ -671,7 +519,7 @@ Returns:
                          Interrupt,
                          FX_TYPE_INTERRUPT,
                          (PVOID*)&pFxInterrupt);
-   
+
     return pFxInterrupt->QueueWorkItemForIsr();
 }
 
@@ -718,9 +566,9 @@ Returns:
                          Interrupt,
                          FX_TYPE_INTERRUPT,
                          (PVOID*)&pFxInterrupt);
-    
+
     if (pFxInterrupt->IsPassiveHandling()) {
-        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(), 
+        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(),
                                           PASSIVE_LEVEL);
         if (!NT_SUCCESS(status)) {
             return FALSE;
@@ -767,9 +615,9 @@ Returns:
                          Interrupt,
                          FX_TYPE_INTERRUPT,
                          (PVOID*)&pFxInterrupt);
-    
+
     if (pFxInterrupt->IsPassiveHandling()) {
-        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(), 
+        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(),
                                           PASSIVE_LEVEL);
         if (!NT_SUCCESS(status)) {
             return;
@@ -814,9 +662,9 @@ Returns:
                          Interrupt,
                          FX_TYPE_INTERRUPT,
                          (PVOID*)&pFxInterrupt);
-    
+
     if (pFxInterrupt->IsPassiveHandling()) {
-        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(), 
+        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(),
                                           PASSIVE_LEVEL);
         if (!NT_SUCCESS(status)) {
             return;
@@ -860,7 +708,7 @@ Returns:
                          FX_TYPE_INTERRUPT,
                          (PVOID*)&pFxInterrupt);
 
-    status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(), 
+    status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(),
                                       PASSIVE_LEVEL);
     if (!NT_SUCCESS(status)) {
         return;
@@ -906,7 +754,7 @@ Returns:
                          FX_TYPE_INTERRUPT,
                          (PVOID*)&pFxInterrupt);
 
-    status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(), 
+    status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(),
                                       PASSIVE_LEVEL);
     if (!NT_SUCCESS(status)) {
         return;
@@ -985,7 +833,7 @@ Returns:
 
     PFX_DRIVER_GLOBALS  pFxDriverGlobals    = NULL;
     FxInterrupt*        pFxInterrupt        = NULL;
-    ULONG               size                = 0; 
+    ULONG               size                = 0;
 
     FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
                                    Interrupt,
@@ -1117,7 +965,7 @@ Returns:
 
     RtlZeroMemory(&processorSet, sizeof(processorSet));
     processorSet.Mask = TargetProcessorSet;
-    
+
     pFxInterrupt->SetPolicy(Policy, Priority, &processorSet);
 }
 
@@ -1143,7 +991,7 @@ Routine Description:
 Arguments:
 
     Interrupt - Handle to WDFINTERUPT object created with WdfInterruptCreate.
-    
+
     PolicyAndGroup - Driver preference for policy, priority and group affinity.
 
 Returns:
@@ -1166,13 +1014,13 @@ Returns:
                                    FX_TYPE_INTERRUPT,
                                    (PVOID*)&pFxInterrupt,
                                    &pFxDriverGlobals);
-    
+
     if (PolicyAndGroup->Size != sizeof(WDF_INTERRUPT_EXTENDED_POLICY)) {
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
             "WDF_INTERRUPT_EXTENDED_POLICY %p Size %d invalid, expected %d",
             PolicyAndGroup,
-            PolicyAndGroup->Size, 
+            PolicyAndGroup->Size,
             sizeof(WDF_INTERRUPT_EXTENDED_POLICY));
         FxVerifierDbgBreakPoint(pFxDriverGlobals);
         return;
@@ -1237,9 +1085,9 @@ Arguments:
 Returns:
 
     TRUE:  function was able to successfully acquire the lock.
-    
+
     FALSE: function was unable to acquire the lock.
-    
+
 --*/
 
 {
@@ -1264,13 +1112,13 @@ Returns:
             return FALSE;
         }
 
-        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(), 
+        status = FxVerifierCheckIrqlLevel(pFxInterrupt->GetDriverGlobals(),
                                           PASSIVE_LEVEL);
         if (!NT_SUCCESS(status)) {
             return FALSE;
         }
     }
-    
+
     return pFxInterrupt->TryToAcquireLock();
 }
 
@@ -1290,17 +1138,17 @@ Routine Description:
     This DDI informs the system that the interrupt is active and expecting
     interrupt requests on the associated lines. This is typically called after
     having reported the lines as inactive via WdfInterruptReportInactive.
-    The DDI doesn't do anything if this DDI is called before 
+    The DDI doesn't do anything if this DDI is called before
     WdfInterruptReportInactive while the interrupt is connected.
 
 Arguments:
 
     Interrupt - Handle to WDFINTERUPT object created with WdfInterruptCreate.
-    
+
 Returns:
 
     VOID
-    
+
 --*/
 {
     DDI_ENTRY();
@@ -1315,7 +1163,7 @@ Returns:
                                    &pFxDriverGlobals);
 
     pFxInterrupt->ReportActive();
-        
+
     return;
 }
 
@@ -1333,16 +1181,16 @@ WDFEXPORT(WdfInterruptReportInactive)(
 Routine Description:
 
     This DDI informs the system that the the interrupt is no longer active
-    and is not expecting interrupt requests on the associated lines. 
-    
+    and is not expecting interrupt requests on the associated lines.
+
 Arguments:
 
     Interrupt - Handle to WDFINTERUPT object created with WdfInterruptCreate.
-    
+
 Returns:
 
     VOID
-    
+
 --*/
 {
     DDI_ENTRY();

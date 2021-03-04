@@ -103,7 +103,7 @@ protected:
 private:
     PFN_WDF_DEVICE_D0_ENTRY m_Method;
     WDFDEVICE               m_Device;
-    WDF_POWER_DEVICE_STATE  m_PreviousState;   
+    WDF_POWER_DEVICE_STATE  m_PreviousState;
 };
 
 class FxPnpDeviceD0EntryPostInterruptsEnabled : public FxCallback {
@@ -123,6 +123,75 @@ public:
         __in WDFDEVICE  Device,
         __in WDF_POWER_DEVICE_STATE PreviousState
         );
+};
+
+class FxPnpDeviceD0EntryPostHwEnabled : public FxPrePostCallback {
+
+public:
+    FxPnpDeviceD0EntryPostHwEnabled(
+        VOID
+        )
+    {
+    }
+
+    _When_(!NT_SUCCESS(return), _At_(Progress, _Must_inspect_result_))
+    _Must_inspect_result_
+    NTSTATUS
+    Invoke(
+        _In_ WDFDEVICE  Device,
+        _In_ WDF_POWER_DEVICE_STATE PreviousState,
+        _Out_ FxCxCallbackProgress *Progress
+        )
+    {
+        m_Device = Device;
+        m_PreviousState = PreviousState;
+
+        //
+        // PreHwDisabled will be called if PostHwEnabled fails. Thus the cleanup
+        // callback will be needed only if the pre-callback fails.
+        //
+        return FxPrePostCallback::InvokeStateful(Progress,
+                                                 FxCxCleanupAfterPreFailure);
+    }
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp
+        )
+    {
+        m_PkgPnp = PkgPnp;
+        m_CallbackType = FxCxCallbackD0EntryPostHwEnabled;
+    }
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        )
+    {
+        //
+        // There is no plan to publish client driver callback yet.
+        // Thus InvokeClient is a no-op.
+        //
+        return STATUS_SUCCESS;
+    }
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+    VOID
+    InvokeCxCleanupCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context
+        );
+
+private:
+    WDFDEVICE               m_Device;
+    WDF_POWER_DEVICE_STATE  m_PreviousState;
 };
 
 class FxPnpDeviceD0Exit : public FxPrePostCallback {
@@ -191,6 +260,64 @@ public:
         );
 };
 
+class FxPnpDeviceD0ExitPreHwDisabled : public FxPrePostCallback {
+
+public:
+    FxPnpDeviceD0ExitPreHwDisabled(
+        VOID
+        )
+    {
+    }
+
+    _When_(!NT_SUCCESS(return), _At_(Progress, _Must_inspect_result_))
+    _Must_inspect_result_
+    NTSTATUS
+    Invoke(
+        _In_ WDFDEVICE  Device,
+        _In_ WDF_POWER_DEVICE_STATE TargetState
+        )
+    {
+        m_Device = Device;
+        m_TargetState = TargetState;
+
+        return FxPrePostCallback::InvokeStateless();
+    }
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp
+        )
+    {
+        m_PkgPnp = PkgPnp;
+        m_CallbackType = FxCxCallbackD0ExitPreHwDisabled;
+    }
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        )
+    {
+        //
+        // There is no plan to publish client driver callback yet.
+        // Thus InvokeClient is a no-op.
+        //
+        return STATUS_SUCCESS;
+    }
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+private:
+    WDFDEVICE               m_Device;
+    WDF_POWER_DEVICE_STATE  m_TargetState;
+};
+
 class FxPnpDevicePrepareHardware : public FxPrePostCallback {
 
 public:
@@ -209,7 +336,7 @@ public:
         _In_ WDFCMRESLIST ResourcesTranslated,
         _Out_ FxCxCallbackProgress *Progress
         );
-    
+
     VOID
     Initialize(
         _In_ FxPkgPnp* PkgPnp,
@@ -246,7 +373,7 @@ private:
     WDFDEVICE                       m_Device;
     WDFCMRESLIST                    m_ResourcesRaw;
     WDFCMRESLIST                    m_ResourcesTranslated;
-    
+
 };
 
 class FxPnpDeviceReleaseHardware : public FxPrePostCallback {
@@ -277,7 +404,7 @@ protected:
     InvokeClient(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -295,7 +422,7 @@ private:
     PFN_WDF_DEVICE_RELEASE_HARDWARE m_Method;
     WDFDEVICE                       m_Device;
     WDFCMRESLIST                    m_ResourcesTranslated;
-    
+
 };
 
 class FxPnpDeviceRemoveAddedResources : public FxCallback {
@@ -344,7 +471,7 @@ protected:
     InvokeClient(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -355,7 +482,7 @@ protected:
 private:
     PFN_WDF_DEVICE_SELF_MANAGED_IO_CLEANUP m_Method;
     WDFDEVICE                              m_Device;
-    
+
 };
 
 class FxPnpDeviceSelfManagedIoFlush : public FxPrePostCallback {
@@ -384,7 +511,7 @@ protected:
     InvokeClient(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -395,7 +522,7 @@ protected:
 private:
     PFN_WDF_DEVICE_SELF_MANAGED_IO_FLUSH m_Method;
     WDFDEVICE                            m_Device;
-    
+
 };
 
 class FxPnpDeviceSelfManagedIoInit : public FxPrePostCallback {
@@ -427,7 +554,7 @@ protected:
     InvokeClient(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -466,13 +593,21 @@ public:
         _In_ PFN_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND Method
         );
 
+    VOID
+    SetTargetState(
+        _In_ WDF_POWER_DEVICE_STATE TargetState
+        )
+    {
+        m_TargetState = TargetState;
+    }
+
 protected:
     _Must_inspect_result_
     NTSTATUS
     InvokeClient(
         VOID
         );
-        
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -483,6 +618,7 @@ protected:
 private:
     PFN_WDF_DEVICE_SELF_MANAGED_IO_SUSPEND m_Method;
     WDFDEVICE  m_Device;
+    WDF_POWER_DEVICE_STATE m_TargetState;
 };
 
 class FxPnpDeviceSelfManagedIoRestart : public FxPrePostCallback {
@@ -514,7 +650,7 @@ protected:
     InvokeClient(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -651,7 +787,7 @@ protected:
     InvokeClient(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     InvokeCxCallback(
@@ -793,30 +929,55 @@ public:
         );
 };
 
-class FxPowerDeviceArmWakeFromS0 :  public FxCallback {
+class FxPowerDeviceArmWakeFromS0 :  public FxPrePostCallback {
 
 public:
-    PFN_WDF_DEVICE_ARM_WAKE_FROM_S0 m_Method;
-
     FxPowerDeviceArmWakeFromS0(
         VOID
         ) : m_Method(NULL)
     {
     }
 
+    __drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
     _Must_inspect_result_
     NTSTATUS
     Invoke(
-        __in WDFDEVICE Device
+        _In_ WDFDEVICE  Device,
+        _Out_ FxCxCallbackProgress *Progress
         );
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp,
+        _In_ PFN_WDF_DEVICE_ARM_WAKE_FROM_S0 Method
+        );
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+    VOID
+    InvokeCxCleanupCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context
+        );
+
+    PFN_WDF_DEVICE_ARM_WAKE_FROM_S0 m_Method;
+    WDFDEVICE                       m_Device;
 };
 
-class FxPowerDeviceArmWakeFromSx :  public FxCallback {
+class FxPowerDeviceArmWakeFromSx :  public FxPrePostCallback {
 
 public:
-    PFN_WDF_DEVICE_ARM_WAKE_FROM_SX m_Method;
-    PFN_WDF_DEVICE_ARM_WAKE_FROM_SX_WITH_REASON m_MethodWithReason;
-
     FxPowerDeviceArmWakeFromSx(
         VOID
         ) : m_Method(NULL),
@@ -824,82 +985,209 @@ public:
     {
     }
 
+    __drv_when(!NT_SUCCESS(return), __drv_arg(Progress, _Must_inspect_result_))
     _Must_inspect_result_
     NTSTATUS
     Invoke(
-        __in WDFDEVICE Device,
-        __in BOOLEAN DeviceWakeEnabled,
-        __in BOOLEAN ChildrenArmedForWake
+        _In_ WDFDEVICE  Device,
+        _In_ BOOLEAN DeviceWakeEnabled,
+        _In_ BOOLEAN ChildrenArmedForWake,
+        _Out_ FxCxCallbackProgress *Progress
         );
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp,
+        _In_ PFN_WDF_DEVICE_ARM_WAKE_FROM_SX Method,
+        _In_ PFN_WDF_DEVICE_ARM_WAKE_FROM_SX_WITH_REASON MethodWithReason
+        );
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+    VOID
+    InvokeCxCleanupCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context
+        );
+
+    PFN_WDF_DEVICE_ARM_WAKE_FROM_SX m_Method;
+    PFN_WDF_DEVICE_ARM_WAKE_FROM_SX_WITH_REASON m_MethodWithReason;
+    WDFDEVICE                       m_Device;
+    BOOLEAN                         m_DeviceWakeEnabled;
+    BOOLEAN                         m_ChildrenArmedForWake;
 };
 
-class FxPowerDeviceDisarmWakeFromS0 :  public FxCallback {
+class FxPowerDeviceDisarmWakeFromS0 :  public FxPrePostCallback {
 
 public:
-    PFN_WDF_DEVICE_DISARM_WAKE_FROM_S0 m_Method;
-
     FxPowerDeviceDisarmWakeFromS0(
         VOID
         ) : m_Method(NULL)
     {
     }
 
-    VOID
+    _Must_inspect_result_
+    NTSTATUS
     Invoke(
-        __in WDFDEVICE Device
+        _In_ WDFDEVICE  Device
         );
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp,
+        _In_ PFN_WDF_DEVICE_DISARM_WAKE_FROM_S0 Method
+        );
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+private:
+    PFN_WDF_DEVICE_DISARM_WAKE_FROM_S0  m_Method;
+    WDFDEVICE                           m_Device;
 };
 
-class FxPowerDeviceDisarmWakeFromSx :  public FxCallback {
+class FxPowerDeviceDisarmWakeFromSx :  public FxPrePostCallback {
 
 public:
-    PFN_WDF_DEVICE_DISARM_WAKE_FROM_SX m_Method;
-
     FxPowerDeviceDisarmWakeFromSx(
         VOID
         ) : m_Method(NULL)
     {
     }
 
-    VOID
+    _Must_inspect_result_
+    NTSTATUS
     Invoke(
-        __in WDFDEVICE Device
+        _In_ WDFDEVICE  Device
         );
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp,
+        _In_ PFN_WDF_DEVICE_DISARM_WAKE_FROM_SX Method
+        );
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+private:
+    PFN_WDF_DEVICE_DISARM_WAKE_FROM_SX  m_Method;
+    WDFDEVICE                           m_Device;
 };
 
-class FxPowerDeviceWakeFromSxTriggered :  public FxCallback {
+class FxPowerDeviceWakeFromSxTriggered :  public FxPrePostCallback {
 
 public:
-    PFN_WDF_DEVICE_WAKE_FROM_SX_TRIGGERED m_Method;
-
     FxPowerDeviceWakeFromSxTriggered(
         VOID
         ) : m_Method(NULL)
     {
     }
 
-    VOID
+    _Must_inspect_result_
+    NTSTATUS
     Invoke(
-        __in WDFDEVICE Device
+        _In_ WDFDEVICE  Device
         );
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp,
+        _In_ PFN_WDF_DEVICE_WAKE_FROM_SX_TRIGGERED Method
+        );
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+private:
+    PFN_WDF_DEVICE_WAKE_FROM_SX_TRIGGERED   m_Method;
+    WDFDEVICE                               m_Device;
 };
 
-class FxPowerDeviceWakeFromS0Triggered :  public FxCallback {
+class FxPowerDeviceWakeFromS0Triggered :  public FxPrePostCallback {
 
 public:
-    PFN_WDF_DEVICE_WAKE_FROM_S0_TRIGGERED m_Method;
-
     FxPowerDeviceWakeFromS0Triggered(
         VOID
         ) : m_Method(NULL)
     {
     }
 
-    VOID
+    _Must_inspect_result_
+    NTSTATUS
     Invoke(
-        __in WDFDEVICE Device
+        _In_ WDFDEVICE  Device
         );
+
+    VOID
+    Initialize(
+        _In_ FxPkgPnp* PkgPnp,
+        _In_ PFN_WDF_DEVICE_WAKE_FROM_S0_TRIGGERED Method
+        );
+
+protected:
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeClient(
+        VOID
+        );
+
+    _Must_inspect_result_
+    NTSTATUS
+    InvokeCxCallback(
+        _In_ PFxCxPnpPowerCallbackContext Context,
+        _In_ FxCxInvokeCallbackSubType PrePost
+        );
+
+private:
+    PFN_WDF_DEVICE_WAKE_FROM_S0_TRIGGERED   m_Method;
+    WDFDEVICE                               m_Device;
 };
+
 
 struct FxPnpStateCallbackInfo {
     //

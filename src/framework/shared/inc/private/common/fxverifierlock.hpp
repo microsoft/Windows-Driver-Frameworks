@@ -303,7 +303,7 @@ private:
         );
 
     void
-    FxVerifierLock::FxVerifierLockDumpDetails(
+    FxVerifierLockDumpDetails(
         __in FxVerifierLock* Lock,
         __in PVOID           curThread,
         __in FxVerifierLock* PerThreadList

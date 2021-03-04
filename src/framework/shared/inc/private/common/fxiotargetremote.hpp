@@ -317,7 +317,7 @@ protected:
 
     _Must_inspect_result_
     NTSTATUS
-    FxIoTargetRemote::OpenLocalTargetByFile(
+    OpenLocalTargetByFile(
         _In_ PWDF_IO_TARGET_OPEN_PARAMS OpenParams
         );
 

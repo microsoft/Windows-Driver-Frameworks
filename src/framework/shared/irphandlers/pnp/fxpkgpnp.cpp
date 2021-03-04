@@ -2865,6 +2865,9 @@ FxPkgPnp::RegisterCallbacks(
     m_DeviceSurpriseRemoval.Initialize(this,
                 DispatchTable->EvtDeviceSurpriseRemoval);
 
+    m_DeviceD0EntryPostHardwareEnabled.Initialize(this);
+    m_DeviceD0ExitPreHardwareDisabled.Initialize(this);
+
     m_DeviceD0EntryPostInterruptsEnabled.m_Method =
         DispatchTable->EvtDeviceD0EntryPostInterruptsEnabled;
     m_DeviceD0ExitPreInterruptsDisabled.m_Method =
@@ -2913,22 +2916,25 @@ FxPkgPnp::RegisterPowerPolicyCallbacks(
     __in PWDF_POWER_POLICY_EVENT_CALLBACKS Callbacks
     )
 {
-    m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromS0.m_Method =
-        Callbacks->EvtDeviceArmWakeFromS0;
-    m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromSx.m_Method =
-        Callbacks->EvtDeviceArmWakeFromSx;
-    m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromSx.m_MethodWithReason =
-        Callbacks->EvtDeviceArmWakeFromSxWithReason;
+    FxPowerPolicyOwnerSettings* owner;
 
-    m_PowerPolicyMachine.m_Owner->m_DeviceDisarmWakeFromS0.m_Method =
-        Callbacks->EvtDeviceDisarmWakeFromS0;
-    m_PowerPolicyMachine.m_Owner->m_DeviceDisarmWakeFromSx.m_Method =
-        Callbacks->EvtDeviceDisarmWakeFromSx;
+    owner = m_PowerPolicyMachine.m_Owner;
 
-    m_PowerPolicyMachine.m_Owner->m_DeviceWakeFromS0Triggered.m_Method =
-        Callbacks->EvtDeviceWakeFromS0Triggered;
-    m_PowerPolicyMachine.m_Owner->m_DeviceWakeFromSxTriggered.m_Method =
-        Callbacks->EvtDeviceWakeFromSxTriggered;
+    owner->m_DeviceArmWakeFromS0.Initialize(this,
+        Callbacks->EvtDeviceArmWakeFromS0);
+    owner->m_DeviceArmWakeFromSx.Initialize(this,
+        Callbacks->EvtDeviceArmWakeFromSx,
+        Callbacks->EvtDeviceArmWakeFromSxWithReason);
+
+    owner->m_DeviceDisarmWakeFromS0.Initialize(this,
+        Callbacks->EvtDeviceDisarmWakeFromS0);
+    owner->m_DeviceDisarmWakeFromSx.Initialize(this,
+        Callbacks->EvtDeviceDisarmWakeFromSx);
+
+    owner->m_DeviceWakeFromS0Triggered.Initialize(this,
+        Callbacks->EvtDeviceWakeFromS0Triggered);
+    owner->m_DeviceWakeFromSxTriggered.Initialize(this,
+        Callbacks->EvtDeviceWakeFromSxTriggered);
 }
 
 NTSTATUS
@@ -3003,6 +3009,16 @@ Return Value:
     overridable = FALSE;
     firstTime = TRUE;
     directedTransitions = FxLibraryGlobals.WdfDirectedPowerTransitionEnabled;
+
+    if (
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+        GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1, 31)
+#else
+        GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(2, 31)
+#endif
+        ) {
+        directedTransitions = TRUE;
+    }
 
     if (Settings->Enabled == WdfTrue) {
         enabled = TRUE;
@@ -6820,4 +6836,38 @@ FxPkgPnp::PowerPolicyGetDeviceDeepestDeviceWakeState(
     }
 
     return dxState;
+}
+
+POWER_ACTION
+FxPkgPnp::GetSystemPowerAction(
+    VOID
+    )
+{
+    //
+    // Before WDF v31 this function returns m_SystemPowerAction from D-IRP.
+    // That has known limitation as ntoskrnl does not always know whether the
+    // D-IRP and in-flight S-IRP are related. Only PPO knows about it.
+    //
+    // Since v31 it is changed to return info from FxDevicePowerIrpTracker.
+    // Drivers need to be recompiled against v31 or above to get the new behavior.
+    // Existing drivers still get the old behavior for compatibility reason.
+    //
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    if (!GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1, 31)) {
+#else
+    if (!GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(2, 31)) {
+#endif
+        return (POWER_ACTION) m_SystemPowerAction;
+    }
+
+    //
+    // Non-PPO cannot determine whether the D-IRP is related to S-IRP. Fall back
+    // to pre-WDF-v31 behavior.
+    //
+    if (!IsPowerPolicyOwner()) {
+        return (POWER_ACTION) m_SystemPowerAction;
+    }
+
+    return m_PowerPolicyMachine.m_Owner->
+                m_DevicePowerIrpTracker.GetSystemPowerAction();
 }

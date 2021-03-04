@@ -42,21 +42,6 @@ extern "C" {
 #include "wdfldr.h"
 
 #include <FxDynamicsWrapper.h>
-
-#include "wdf10.h"
-#include "wdf11.h"
-#include "wdf15.h"
-#include "wdf17.h"
-#include "wdf19.h"
-#include "wdf111.h"
-#include "wdf113.h"
-#include "wdf115.h"
-#include "wdf117.h"
-#include "wdf119.h"
-#include "wdf121.h"
-#include "wdf123.h"
-#include "wdf125.h"
-#include "wdf127.h"
 }
 
 #define KMDF_ONLY_CODE_PATH_ASSERT()

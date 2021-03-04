@@ -23,6 +23,8 @@ Revision History:
 #ifndef __FXDEVICEINIT_HPP__
 #define __FXDEVICEINIT_HPP__
 
+#include "FxUserObject.hpp"
+
 enum FxDeviceInitType {
     FxDeviceInitTypeFdo = 0,
     FxDeviceInitTypePdo,
@@ -311,6 +313,19 @@ public:
         _In_ PWDF_IO_TYPE_CONFIG IoTypeConfig
         );
 
+    NTSTATUS
+    AllocateCxContext(
+        _In_  PFX_DRIVER_GLOBALS     CxDriverGlobals,
+        _In_  PWDF_OBJECT_ATTRIBUTES ContextAttributes,
+        _Outptr_opt_
+              PVOID*                 Context
+        );
+
+    PVOID
+    GetCxTypedContext(
+        _In_ PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+        );
+
 public:
     PFX_DRIVER_GLOBALS DriverGlobals;
 
@@ -364,6 +379,11 @@ public:
     // Class extension's device init.
     //
     LIST_ENTRY      CxDeviceInitListHead;
+
+    //
+    // Hold contexts allocated by class extensions.
+    //
+    FxUserObject*           CxContextObject;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 

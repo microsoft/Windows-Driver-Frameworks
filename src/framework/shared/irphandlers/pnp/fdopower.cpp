@@ -166,7 +166,7 @@ FxPkgFdo::_SystemPowerS0Completion(
     FxPkgPnp* pPkgPnp;
     KIRQL irql;
     FxIrp irp(OriginalIrp);
-    
+
     pPkgPnp = (FxPkgPnp*) Context;
 
     //
@@ -246,6 +246,10 @@ FxPkgFdo::DispatchSystemSetPower(
                                Irp->GetParameterPowerState());
 
     if (IsPowerPolicyOwner()) {
+
+        m_PowerPolicyMachine.m_Owner->
+            m_DevicePowerIrpTracker.SaveStateFromSystemPowerIrp(Irp);
+
         //
         // If we are going to S0, we just notify the power policy state machine
         // and then let the request go (per the fast resume spec).  Otherwise,
@@ -258,8 +262,8 @@ FxPkgFdo::DispatchSystemSetPower(
             // detail as to why.
             //
             Irp->CopyCurrentIrpStackLocationToNext();
-            Irp->SetCompletionRoutineEx(deviceObject.GetObject(), 
-                                        _SystemPowerS0Completion, 
+            Irp->SetCompletionRoutineEx(deviceObject.GetObject(),
+                                        _SystemPowerS0Completion,
                                         this);
 
             return Irp->PoCallDriver(m_Device->GetAttachedDevice());
@@ -274,7 +278,7 @@ FxPkgFdo::DispatchSystemSetPower(
 
             Irp->CopyCurrentIrpStackLocationToNext();
             Irp->SetCompletionRoutineEx(deviceObject.GetObject(),
-                                        _SystemPowerSxCompletion, 
+                                        _SystemPowerSxCompletion,
                                         this);
 
             Irp->PoCallDriver(m_Device->GetAttachedDevice());
@@ -305,7 +309,7 @@ FxPkgFdo::DispatchDeviceSetPower(
     NTSTATUS status;
 
     if (IsPowerPolicyOwner()) {
-        if (m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp == FALSE && 
+        if (m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp == FALSE &&
             m_PowerPolicyMachine.m_Owner->m_RequestedPowerDownIrp == FALSE) {
             //
             // A power irp arrived, but we did not request it.  log and bugcheck
@@ -314,7 +318,7 @@ FxPkgFdo::DispatchDeviceSetPower(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Received set device power irp 0x%p on WDFDEVICE 0x%p !devobj 0x%p, "
                 "but the irp was not requested by the device (the power policy owner)",
-                Irp->GetIrp(), m_Device->GetHandle(), 
+                Irp->GetIrp(), m_Device->GetHandle(),
                 m_Device->GetDeviceObject());
 
             FxVerifierBugCheck(GetDriverGlobals(),  // globals
@@ -327,7 +331,7 @@ FxPkgFdo::DispatchDeviceSetPower(
 
         //
         // We are no longer requesting a power irp because we received the one
-        // we requested. 
+        // we requested.
         //
         if (m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp) {
             m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp = FALSE;
@@ -357,8 +361,8 @@ FxPkgFdo::RaiseDevicePower(
 {
     Irp->MarkIrpPending();
     Irp->CopyCurrentIrpStackLocationToNext();
-    Irp->SetCompletionRoutineEx(m_Device->GetDeviceObject(), 
-                                RaiseDevicePowerCompletion, 
+    Irp->SetCompletionRoutineEx(m_Device->GetDeviceObject(),
+                                RaiseDevicePowerCompletion,
                                 this);
 
     Irp->PoCallDriver(m_Device->GetAttachedDevice());
@@ -366,7 +370,7 @@ FxPkgFdo::RaiseDevicePower(
     return STATUS_PENDING;
 }
 
-_Must_inspect_result_ 
+_Must_inspect_result_
 NTSTATUS
 FxPkgFdo::RaiseDevicePowerCompletion(
     __in MdDeviceObject DeviceObject,
@@ -449,7 +453,7 @@ FxPkgFdo::DispatchDeviceQueryPower(
 {
     //
     // Either the framework is the power policy owner and we wouldn't be sending
-    // a device query power or we are a subordinate will do what the power 
+    // a device query power or we are a subordinate will do what the power
     // policy owner wants 100% of the time.
     //
     Irp->SetStatus(STATUS_SUCCESS);

@@ -119,7 +119,7 @@ public:
         _Inout_ FxSelfManagedIoMachine** SelfManagedIoMachine,
         _In_ FxPkgPnp* PkgPnp
         );
-        
+
 
     //
     // Sets event callbacks
@@ -141,9 +141,11 @@ public:
     _Must_inspect_result_
     NTSTATUS
     Suspend(
-        VOID
+        _In_ WDF_POWER_DEVICE_STATE TargetDevicePowerState
         )
     {
+        m_DeviceSelfManagedIoSuspend.SetTargetState(TargetDevicePowerState);
+
         return ProcessEvent(SelfManagedIoEventSuspend, NULL);
     }
 
@@ -219,7 +221,7 @@ protected:
         _Inout_opt_ FxCxCallbackProgress* Progress
         );
 
-    static 
+    static
     FxSelfManagedIoStates
     RestartedFailedPost(
         _In_  FxSelfManagedIoMachine* This,

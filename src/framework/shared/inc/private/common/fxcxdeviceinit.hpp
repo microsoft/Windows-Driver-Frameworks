@@ -39,7 +39,8 @@ struct CxFileObjectInit {
 };
 
 struct CxPnpPowerCallbacksInit {
-    WDFCX_PNPPOWER_EVENT_CALLBACKS Callbacks;
+    WDFCX_PNPPOWER_EVENT_CALLBACKS PnpPowerCallbacks;
+    WDFCX_POWER_POLICY_EVENT_CALLBACKS PowerPolicyCallbacks;
 
     BOOLEAN Set;
 };

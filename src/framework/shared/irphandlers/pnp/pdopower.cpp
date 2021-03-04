@@ -107,6 +107,10 @@ FxPkgPdo::DispatchSystemSetPower(
                                Irp->GetParameterPowerState());
 
     if (IsPowerPolicyOwner()) {
+
+        m_PowerPolicyMachine.m_Owner->
+            m_DevicePowerIrpTracker.SaveStateFromSystemPowerIrp(Irp);
+
         if (m_SystemPowerState == PowerSystemWorking) {
             //
             // Ideally we would like to complete the S0 irp before we start
@@ -170,8 +174,8 @@ FxPkgPdo::DispatchDeviceSetPower(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
                 "Received set device power irp 0x%p on WDFDEVICE 0x%p !devobj 0x%p, "
                 "but the irp was not requested by the device (the power policy owner)",
-                Irp->GetIrp(), 
-                m_Device->GetHandle(), 
+                Irp->GetIrp(),
+                m_Device->GetHandle(),
                 m_Device->GetDeviceObject());
 
             ASSERTMSG("Received set device power irp but the irp was not "
@@ -185,7 +189,7 @@ FxPkgPdo::DispatchDeviceSetPower(
         //
         if (m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp) {
             m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp = FALSE;
-        } 
+        }
         else {
             m_PowerPolicyMachine.m_Owner->m_RequestedPowerDownIrp = FALSE;
         }
@@ -258,7 +262,7 @@ FxPkgPdo::PowerReleasePendingDeviceIrp(
 
     if (pIrp != NULL) {
         FxIrp irp(pIrp);
-        
+
         CompletePowerRequest(&irp, STATUS_SUCCESS);
     }
 }

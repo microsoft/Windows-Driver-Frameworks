@@ -235,6 +235,12 @@ FxObjectAllocateContext(
     __deref_opt_out PVOID*              Context
     );
 
+PVOID
+FxObjectGetTypedContext(
+    _In_ FxObject*                      Object,
+    _In_ PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+    );
+
 __inline
 BOOLEAN
 FxObjectCheckType(
@@ -244,10 +250,10 @@ FxObjectCheckType(
 /*++
 
 Routine Description:
-    Checks if the FxObject is of a the Type. 
+    Checks if the FxObject is of a the Type.
 
 Arguments:
-    FxObject - the object being checked 
+    FxObject - the object being checked
     Type - The type value to be checked
 
 Returns:
@@ -258,18 +264,18 @@ Returns:
     NTSTATUS status;
     PVOID tmpObject;
     FxQueryInterfaceParams params = {&tmpObject, Type, 0};
-   
+
     //
     // Do a quick non virtual call for the type and only do the slow QI if
     // the first types do not match
     //
-    
+
     if (Object->GetType() == Type) {
         return TRUE;
     }
-        
+
     status = Object->QueryInterface(&params);
-    
+
     if (!NT_SUCCESS(status)) {
         return FALSE;
     }
@@ -458,7 +464,7 @@ FxObjectHandleGetGlobals(
 /*++
 
 Routine Description:
-    Converts an externally facing WDF handle into its internal object and 
+    Converts an externally facing WDF handle into its internal object and
     returns its globals.
 
 Arguments:
@@ -469,9 +475,9 @@ Arguments:
   --*/
 {
     PVOID pObject;
-    
-    FxObjectHandleGetPtrAndGlobals(CallersGlobals, 
-                                   Handle, 
+
+    FxObjectHandleGetPtrAndGlobals(CallersGlobals,
+                                   Handle,
                                    FX_TYPE_OBJECT,
                                    &pObject,
                                    ObjectGlobals);

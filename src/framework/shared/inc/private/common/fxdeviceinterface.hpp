@@ -38,9 +38,11 @@ public:
 
     BOOLEAN m_State;
 
+    BOOLEAN m_AutoEnableOnFirstStart;
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
     //
-    // This is needed in UM to get hold of host interface 
+    // This is needed in UM to get hold of host interface
     //
     MdDeviceObject m_Device;
 
@@ -76,7 +78,7 @@ public:
     SetState(
         __in BOOLEAN State
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     Register(

@@ -27,6 +27,46 @@ extern "C" {
 #include "FxDmaEnablerAPI.tmh"
 }
 
+
+
+
+
+
+
+
+typedef struct _WDF_DMA_ENABLER_CONFIG_V1_9 {
+    //
+    // Size of this structure in bytes
+    //
+    ULONG                Size;
+
+    //
+    // One of the above WDF_DMA_PROFILES
+    //
+    WDF_DMA_PROFILE      Profile;
+
+    //
+    // Maximum DMA Transfer handled in bytes.
+    //
+    size_t               MaximumLength;
+
+    //
+    // The various DMA PnP/Power event callbacks
+    //
+    PFN_WDF_DMA_ENABLER_FILL                  EvtDmaEnablerFill;
+
+    PFN_WDF_DMA_ENABLER_FLUSH                 EvtDmaEnablerFlush;
+
+    PFN_WDF_DMA_ENABLER_DISABLE               EvtDmaEnablerDisable;
+
+    PFN_WDF_DMA_ENABLER_ENABLE                EvtDmaEnablerEnable;
+
+    PFN_WDF_DMA_ENABLER_SELFMANAGED_IO_START  EvtDmaEnablerSelfManagedIoStart;
+
+    PFN_WDF_DMA_ENABLER_SELFMANAGED_IO_STOP   EvtDmaEnablerSelfManagedIoStop;
+
+} WDF_DMA_ENABLER_CONFIG_V1_9, *PWDF_DMA_ENABLER_CONFIG_V1_9;
+
 //
 // Extern "C" the entire file
 //
@@ -76,7 +116,7 @@ WDFEXPORT(WdfDmaEnablerCreate)(
     *DmaEnablerHandle = NULL;
 
     status = FxValidateObjectAttributes(pFxDriverGlobals, Attributes);
-            
+
     if (!NT_SUCCESS(status)) {
         return status;
     }
@@ -91,9 +131,9 @@ WDFEXPORT(WdfDmaEnablerCreate)(
             FxDeviceBase * pSearchDevice;
 
             //
-            // If a parent object is passed-in it must be descendent of device. 
-            // DmaEnabler stores device and uses it during dispose 
-            // (to remove it from dmaenabler list maintained at device level), 
+            // If a parent object is passed-in it must be descendent of device.
+            // DmaEnabler stores device and uses it during dispose
+            // (to remove it from dmaenabler list maintained at device level),
             // so DmaEnabler cannot outlive device.
             //
 
@@ -128,8 +168,8 @@ WDFEXPORT(WdfDmaEnablerCreate)(
             //
             // For < 1.11 drivers we only allow pDevice to be the parent
             // since that is what we were blindly setting the parent to.
-            // 
-            // Using the passed-in parent for such drivers could cause 
+            //
+            // Using the passed-in parent for such drivers could cause
             // side-effects such as earlier deletion of DmaEnabler object. So
             // we don't do that.
             //
@@ -148,10 +188,10 @@ WDFEXPORT(WdfDmaEnablerCreate)(
                     Attributes->ParentObject, Device);
 
                 if (pFxDriverGlobals->IsDownlevelVerificationEnabled()) {
-                    FxVerifierDbgBreakPoint(pFxDriverGlobals);  
-                }                
+                    FxVerifierDbgBreakPoint(pFxDriverGlobals);
+                }
             }
-            
+
             pParent = pDevice;
         }
     }
@@ -160,10 +200,10 @@ WDFEXPORT(WdfDmaEnablerCreate)(
     }
 
     {
-        ULONG expectedSize = pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,11) ? 
+        ULONG expectedSize = pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,11) ?
             sizeof(WDF_DMA_ENABLER_CONFIG) :
             sizeof(WDF_DMA_ENABLER_CONFIG_V1_9);
-    
+
         if (Config->Size != expectedSize) {
             status = STATUS_INFO_LENGTH_MISMATCH;
 
@@ -183,8 +223,8 @@ WDFEXPORT(WdfDmaEnablerCreate)(
             //
             // Init new fields to default values.
             //
-            WDF_DMA_ENABLER_CONFIG_INIT(&dmaConfig, 
-                                        Config->Profile, 
+            WDF_DMA_ENABLER_CONFIG_INIT(&dmaConfig,
+                                        Config->Profile,
                                         Config->MaximumLength);
             //
             // Copy over existing fields and readjust the struct size.
@@ -449,7 +489,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFEXPORT(WdfDmaEnablerConfigureSystemProfile)(
-    __in 
+    __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
     WDFDMAENABLER DmaEnabler,
@@ -491,9 +531,9 @@ WDFEXPORT(WdfDmaEnablerConfigureSystemProfile)(
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDMA,
                             "WDF_DMA_SYSTEM_PROFILE_CONFIG Size 0x%x, expected 0x%x, %!STATUS!",
                             ProfileConfig->Size, sizeof(WDF_DMA_SYSTEM_PROFILE_CONFIG), status);
-        
-        FxVerifierDbgBreakPoint(pFxDriverGlobals);  
-        
+
+        FxVerifierDbgBreakPoint(pFxDriverGlobals);
+
         return status;
     }
 
@@ -502,7 +542,7 @@ WDFEXPORT(WdfDmaEnablerConfigureSystemProfile)(
         status = STATUS_INVALID_PARAMETER;
 
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDMA,
-                            "ProfileConfig (%p) may not have NULL DmaDescriptor, %!STATUS!", 
+                            "ProfileConfig (%p) may not have NULL DmaDescriptor, %!STATUS!",
                             ProfileConfig, status);
 
         FxVerifierDbgBreakPoint(pFxDriverGlobals);
@@ -520,7 +560,7 @@ WDFEXPORT(WdfDmaEnablerConfigureSystemProfile)(
         return status;
     }
 
-    status = pDmaEnabler->ConfigureSystemAdapter(ProfileConfig, 
+    status = pDmaEnabler->ConfigureSystemAdapter(ProfileConfig,
                                                  ConfigDirection);
     return status;
 }

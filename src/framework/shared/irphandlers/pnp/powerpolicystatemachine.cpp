@@ -109,7 +109,7 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolIdleCapableDeviceIdleO
     { PwrPolSx, WdfDevStatePwrPolDeviceIdleSleeping DEBUGGED_EVENT },
     { PwrPolStop, WdfDevStatePwrPolDeviceIdleStopping DEBUGGED_EVENT },
     { PwrPolSurpriseRemove,WdfDevStatePwrPolDeviceIdleStopping DEBUGGED_EVENT },
-    { PwrPolS0IdlePolicyChanged, WdfDevStatePwrPolDeviceIdleReturnToActive TRAP_ON_EVENT },
+    { PwrPolS0IdlePolicyChanged, WdfDevStatePwrPolDeviceIdleReturnToActive DEBUGGED_EVENT },
     { PwrPolIoPresent, WdfDevStatePwrPolDeviceIdleReturnToActive DEBUGGED_EVENT },
     { PwrPolDeviceDirectedPowerDown, WdfDevStatePwrPolIdleCapableDirectedDownTriggerDPNR DEBUGGED_EVENT },
     { PwrPolNull, WdfDevStatePwrPolNull },
@@ -542,13 +542,13 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolCancelUsbSSOtherStates
     { PwrPolNull,        WdfDevStatePwrPolNull },
 };
 
-const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSleepingWakeRevertArmWakeOtherStates[] =
+const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSleepingWakeCancelWakeOtherStates[] =
 {
     { PwrPolWakeSuccess,    WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
     { PwrPolNull,           WdfDevStatePwrPolNull },
 };
 
-const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSleepingWakeRevertArmWakeNPOtherStates[] =
+const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSleepingWakeCancelWakeNPOtherStates[] =
 {
     { PwrPolWakeSuccess,    WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
     { PwrPolNull,           WdfDevStatePwrPolNull },
@@ -568,7 +568,7 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolWaitingArmedWakeInterr
 
 const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeInterruptFiredOtherStates[] =
 {
-    { PwrPolWakeSuccess, WdfDevStatePwrPolSystemWakeDeviceWakeTriggered TRAP_ON_EVENT },
+    { PwrPolWakeSuccess, WdfDevStatePwrPolSystemWakeDeviceWakeTriggered DEBUGGED_EVENT },
     { PwrPolNull, WdfDevStatePwrPolNull },
 };
 
@@ -801,8 +801,8 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
 
     // WdfDevStatePwrPolSleepingWakeRevertArmWake
     { FxPkgPnp::PowerPolSleepingWakeRevertArmWake,
-      { PwrPolWakeFailed, WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
-      FxPkgPnp::m_PowerPolSleepingWakeRevertArmWakeOtherStates,
+      { PwrPolNull, WdfDevStatePwrPolNull },
+      NULL,
       { FALSE,
         0 },
     },
@@ -895,8 +895,8 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
 
     // WdfDevStatePwrPolSleepingWakeRevertArmWakeNP,
     { FxPkgPnp::PowerPolSleepingWakeRevertArmWakeNP,
-      { PwrPolWakeFailed, WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
-      FxPkgPnp::m_PowerPolSleepingWakeRevertArmWakeNPOtherStates,
+      { PwrPolNull, WdfDevStatePwrPolNull },
+      NULL,
       { FALSE,
         0 },
     },
@@ -1713,6 +1713,12 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
         PwrPolS0 | // If the device failed D0Exit while the machine was going into
                    // Sx, then we will get this event when the machine comes back up
 
+        PwrPolSx | // Device is in Dx unarmed (WaitingUnarmed) with system managed
+                   // timeout. On Sx transition PoFx will activate the component
+                   // (PwrPolDevicePowerRequired) before Sx IRP is seen. Power up
+                   // fails and then PwrPolSx event is dropped. IRP will be completed
+                   // at the end of PwrPolProcessEventInner
+
         PwrPolWakeArrived | // wake was completed before PwrPolWakeArrived was
                             // sent.  On immediate power down or up, the power
                             // operation failed
@@ -1927,7 +1933,10 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
       { PwrPolDevicePowerNotRequired, WdfDevStatePwrPolTimerExpiredNoWake DEBUGGED_EVENT },
       FxPkgPnp::m_PowerPolIdleCapableDeviceIdleOtherStates,
       { TRUE,
-        0 },
+        PwrPolDevicePowerRequired // The device-power-required event arrived, but we had already
+                                  // powered-up the device proactively because we detected that
+                                  // power was needed. The event is ignored in this case.
+      },
     },
 
     // WdfDevStatePwrPolDeviceIdleReturnToActive
@@ -2395,6 +2404,30 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
     { FxPkgPnp::PowerPolUsbSSCancelled,
       { PwrPolNull, WdfDevStatePwrPolNull },
       NULL,
+      { FALSE,
+        0 },
+    },
+
+    // WdfDevStatePwrPolTimerExpiredWakeCapableRevertArmWake
+    { FxPkgPnp::PowerPolTimerExpiredWakeCapableRevertArmWake,
+      { PwrPolNull, WdfDevStatePwrPolNull },
+      NULL,
+      { FALSE,
+        0 },
+    },
+
+    // WdfDevStatePwrPolSleepingWakeCancelWake
+    { FxPkgPnp::PowerPolSleepingWakeCancelWake,
+      { PwrPolWakeFailed, WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
+      FxPkgPnp::m_PowerPolSleepingWakeCancelWakeOtherStates,
+      { FALSE,
+        0 },
+    },
+
+    // WdfDevStatePwrPolSleepingWakeCancelWakeNP
+    { FxPkgPnp::PowerPolSleepingWakeCancelWakeNP,
+      { PwrPolWakeFailed, WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
+      FxPkgPnp::m_PowerPolSleepingWakeCancelWakeNPOtherStates,
       { FALSE,
         0 },
     },
@@ -4087,6 +4120,11 @@ FxPkgPnp::PowerPolStartingDecideS0Wake(
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolStartingDecideS0Wake);
 
+    //
+    // PwrPolPowerUp received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
+
     This->PowerPolicyChildrenCanPowerUp();
 
     //
@@ -4385,7 +4423,8 @@ FxPkgPnp::PowerPolS0NoWakePowerUp(
     //
     This->m_PowerPolicyMachine.m_Owner->
             m_PoxInterface.RequestComponentActive();
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForOther);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -4477,7 +4516,8 @@ FxPkgPnp::PowerPolSystemSleepNeedWake(
     ASSERT(result);
     UNREFERENCED_PARAMETER(result);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForSx);
 
     //
     // We are currently in Dx and not armed for wake.  While the current Dx
@@ -4552,6 +4592,11 @@ Return Value:
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemSleepPowerRequestFailed);
 
+    //
+    // PwrPolPowerDownFailed received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
+
     This->PowerPolicyCompleteSystemPowerIrp();
 
     return WdfDevStatePwrPolDevicePowerRequestFailed;
@@ -4617,6 +4662,7 @@ Return Value:
 {
     NTSTATUS status;
     ULONG wakeReason;
+    FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
 
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSleepingWakeWakeArrived);
@@ -4630,10 +4676,21 @@ Return Value:
     status = This->m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromSx.Invoke(
         This->m_Device->GetHandle(),
         FLAG_TO_BOOL(wakeReason, FxPowerPolicySxWakeDeviceEnabledFlag),
-        FLAG_TO_BOOL(wakeReason, FxPowerPolicySxWakeChildrenArmedFlag)
+        FLAG_TO_BOOL(wakeReason, FxPowerPolicySxWakeChildrenArmedFlag),
+        &progress
         );
 
     if (!NT_SUCCESS(status)) {
+
+        if (progress == FxCxCallbackProgressFailedInPreCalls) {
+            DoTraceLevelMessage(
+                This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "WDFDEVICE %p Failed in EvtCxDevicePreArmWakeFromSx/WithReason, %!STATUS!",
+                This->m_Device->GetHandle(), status);
+
+            return WdfDevStatePwrPolSleepingWakeCancelWake;
+        }
+
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
             "WDFDEVICE %p Failed to arm for wake from Sx, %!STATUS!",
@@ -4685,6 +4742,17 @@ FxPkgPnp::PowerPolSleepingWakeRevertArmWake(
     //
     This->PowerPolicyDisarmWakeFromSx();
 
+    return WdfDevStatePwrPolSleepingWakeCancelWake;
+}
+
+WDF_DEVICE_POWER_POLICY_STATE
+FxPkgPnp::PowerPolSleepingWakeCancelWake(
+    __inout FxPkgPnp* This
+    )
+{
+    ASSERT_PWR_POL_STATE(
+        This, WdfDevStatePwrPolSleepingWakeCancelWake);
+
     //
     // attempt to cancel ww
     //
@@ -4696,12 +4764,19 @@ FxPkgPnp::PowerPolSleepingWakeRevertArmWake(
     return WdfDevStatePwrPolNull;
 }
 
+
 WDF_DEVICE_POWER_POLICY_STATE
 FxPkgPnp::PowerPolSystemAsleepWakeArmed(
     __inout FxPkgPnp* This
     )
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemAsleepWakeArmed);
+
+    //
+    // PwrPolPowerDown received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
+
     This->PowerPolicyCompleteSystemPowerIrp();
 
     return WdfDevStatePwrPolNull;
@@ -4756,7 +4831,8 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeEnabledWakeCanceled(
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSystemWakeDeviceWakeEnabledWakeCanceled);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForS0);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -4797,7 +4873,8 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeTriggeredS0(
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSystemWakeDeviceWakeTriggeredS0);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForS0);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -4853,6 +4930,7 @@ Return Value:
 {
     NTSTATUS status;
     ULONG wakeReason;
+    FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
 
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSleepingWakeWakeArrivedNP);
@@ -4866,10 +4944,22 @@ Return Value:
     status = This->m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromSx.Invoke(
         This->m_Device->GetHandle(),
         FLAG_TO_BOOL(wakeReason, FxPowerPolicySxWakeDeviceEnabledFlag),
-        FLAG_TO_BOOL(wakeReason, FxPowerPolicySxWakeChildrenArmedFlag)
+        FLAG_TO_BOOL(wakeReason, FxPowerPolicySxWakeChildrenArmedFlag),
+        &progress
         );
 
     if (!NT_SUCCESS(status)) {
+
+        if (progress == FxCxCallbackProgressFailedInPreCalls) {
+            DoTraceLevelMessage(
+                This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "WDFDEVICE %p a framework extension failed in "
+                "EvtCxDevicePreArmWakeFromSx(WithReason), %!STATUS!",
+                This->m_Device->GetHandle(), status);
+
+            return WdfDevStatePwrPolSleepingWakeCancelWakeNP;
+        }
+
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
             "WDFDEVICE %p Failed to arm for wake from Sx, %!STATUS!",
@@ -4921,6 +5011,17 @@ FxPkgPnp::PowerPolSleepingWakeRevertArmWakeNP(
     //
     This->PowerPolicyDisarmWakeFromSx();
 
+    return WdfDevStatePwrPolSleepingWakeCancelWakeNP;
+}
+
+WDF_DEVICE_POWER_POLICY_STATE
+FxPkgPnp::PowerPolSleepingWakeCancelWakeNP(
+    __inout FxPkgPnp* This
+    )
+{
+    ASSERT_PWR_POL_STATE(
+        This, WdfDevStatePwrPolSleepingWakeCancelWakeNP);
+
     //
     // attempt to cancel ww
     //
@@ -4953,6 +5054,11 @@ Return Value:
 {
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSleepingWakePowerDownFailed);
+
+    //
+    // PwrPolPowerDownFailed received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
 
     if (This->PowerPolicyCancelWaitWake() == FALSE &&
         This->m_PowerPolicyMachine.m_Owner->m_WakeCompletionEventDropped) {
@@ -4994,6 +5100,11 @@ FxPkgPnp::PowerPolSystemAsleepWakeArmedNP(
     )
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemAsleepWakeArmedNP);
+
+    //
+    // PwrPolPowerDown received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
 
     This->PowerPolicyCompleteSystemPowerIrp();
 
@@ -5047,7 +5158,8 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeEnabledWakeCanceledNP(
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSystemWakeDeviceWakeEnabledWakeCanceledNP);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForS0);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -5086,7 +5198,8 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeTriggeredS0NP(
 
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDeviceWakeTriggeredS0NP);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForS0);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -5450,6 +5563,11 @@ FxPkgPnp::PowerPolSystemAsleepNoWake(
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemAsleepNoWake);
 
+    //
+    // PwrPolPowerDown received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
+
     This->PowerPolicyCompleteSystemPowerIrp();
 
     return WdfDevStatePwrPolNull;
@@ -5510,7 +5628,9 @@ FxPkgPnp::PowerPolSystemWakeDeviceToD0(
 
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDeviceToD0);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForS0);
+
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
         return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
@@ -5919,15 +6039,33 @@ Return Value:
   --*/
 {
     NTSTATUS status;
+    FxCxCallbackProgress progress = FxCxCallbackProgressInitialized;
 
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolTimerExpiredWakeCapableWakeArrived);
 
     status = This->m_PowerPolicyMachine.m_Owner->m_DeviceArmWakeFromS0.Invoke(
-        This->m_Device->GetHandle()
+        This->m_Device->GetHandle(),
+        &progress
         );
 
     if (!NT_SUCCESS(status)) {
+
+        if (progress == FxCxCallbackProgressFailedInPostCalls) {
+            DoTraceLevelMessage(
+                This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+                "WDFDEVICE %p a framework extension failed in "
+                "EvtCxDevicePostArmWakeFromS0, %!STATUS!",
+                This->m_Device->GetHandle(), status);
+
+            return WdfDevStatePwrPolTimerExpiredWakeCapableRevertArmWake;
+        }
+
+        DoTraceLevelMessage(
+            This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+            "WDFDEVICE %p EvtDeviceArmWakeFromS0 Failed, %!STATUS!",
+            This->m_Device->GetHandle(), status);
+
         return WdfDevStatePwrPolTimerExpiredWakeCapableCancelWake;
     }
 
@@ -5950,6 +6088,38 @@ Return Value:
     This->PowerProcessEvent(PowerCompleteDx);
 
     return WdfDevStatePwrPolNull;
+}
+
+WDF_DEVICE_POWER_POLICY_STATE
+FxPkgPnp::PowerPolTimerExpiredWakeCapableRevertArmWake(
+    _Inout_ FxPkgPnp* This
+    )
+/*++
+
+Routine Description:
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    new state
+
+  --*/
+{
+    ASSERT_PWR_POL_STATE(
+        This, WdfDevStatePwrPolTimerExpiredWakeCapableRevertArmWake);
+
+    DoTraceLevelMessage(
+        This->GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+        "WDFDEVICE %p Calling EvtDeviceDisarmWakeFromS0 because "
+        "a framework extension failed EvtCxDevicePostArmWakeFromS0",
+        This->m_Device->GetHandle());
+
+    This->m_PowerPolicyMachine.m_Owner->m_DeviceDisarmWakeFromS0.Invoke(
+        This->m_Device->GetHandle()
+        );
+
+    return WdfDevStatePwrPolTimerExpiredWakeCapableCancelWake;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE
@@ -6310,7 +6480,8 @@ Return Value:
     ASSERT(result);
     UNREFERENCED_PARAMETER(result);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForArmWakeFail);
 
     if (!NT_SUCCESS(status)) {
         //
@@ -6547,7 +6718,8 @@ FxPkgPnp::PowerPolIoPresentArmedWakeCanceled(
     This->m_PowerPolicyMachine.m_Owner->
             m_PoxInterface.RequestComponentActive();
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForOther);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -6851,7 +7023,8 @@ FxPkgPnp::PowerPolCancelingWakeForSystemSleepWakeCanceled(
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolCancelingWakeForSystemSleepWakeCanceled);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, NoRetry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, NoRetry,
+                        RequestD0ForSx);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -7230,7 +7403,9 @@ FxPkgPnp::PowerPolWokeFromS0(
     This->m_PowerPolicyMachine.m_Owner->
             m_PoxInterface.RequestComponentActive();
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForDeviceWake);
+
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
         return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
@@ -7273,7 +7448,7 @@ FxPkgPnp::PowerPolStoppingResetDevice(
 /*++
 
 Routine Description:
-    The device was in a Dx state, unarmed for wake.  The device is not being
+    The device was in a Dx state, unarmed for wake.  The device is now being
     removed, so we must disable the idle timer and power up the device so that
     we can implicitly power it down.
 
@@ -7297,7 +7472,8 @@ Return Value:
     ASSERT(result);
     UNREFERENCED_PARAMETER(result);
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForPnpStop);
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
@@ -7387,7 +7563,9 @@ FxPkgPnp::PowerPolStoppingD0(
 
     This->m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.DisableTimer();
 
-    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry);
+    status = This->PowerPolicySendDevicePowerRequest(PowerDeviceD0, Retry,
+                        RequestD0ForPnpStop);
+
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
         return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
@@ -8555,6 +8733,11 @@ Return Value:
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolDevicePowerRequestFailed);
 
     //
+    // PwrPolPowerUpFailed received.
+    //
+    This->PowerPolicyStopTrackingDevicePowerIrp();
+
+    //
     // In the failure path we still need to notify the children that they can
     // power up so that they will unblock.
     //
@@ -9218,7 +9401,8 @@ _Must_inspect_result_
 NTSTATUS
 FxPkgPnp::PowerPolicySendDevicePowerRequest(
     __in DEVICE_POWER_STATE DeviceState,
-    __in SendDeviceRequestAction Action
+    __in SendDeviceRequestAction Action,
+    __in RequestDIrpReason Reason
     )
 /*++
 
@@ -9249,6 +9433,10 @@ Arguments:
 
     Action - Whether to retry upon failure to allocate the request
 
+    Reason - The reason why the D-IRP is requested. Only two values are used:
+             RequestD0ForS0 and RequestDxForSx. Others are simply stored for
+             debugging purpose only.
+
 Return Value:
     NT_SUCCESS if the request was allocated, !NT_SUCCESS otherwise
 
@@ -9259,6 +9447,7 @@ Return Value:
     NTSTATUS status;
     POWER_STATE state;
     ULONG i;
+    FxDevicePowerIrpTracker *devicePowerIrpTracker;
 
     status = STATUS_UNSUCCESSFUL;
     interval.QuadPart = WDF_REL_TIMEOUT_IN_MS(500);
@@ -9280,6 +9469,14 @@ Return Value:
         // machine takes care of it.
         //
         pCompletionRoutine = _PowerPolDevicePowerDownComplete;
+    }
+
+    devicePowerIrpTracker = &m_PowerPolicyMachine.m_Owner->m_DevicePowerIrpTracker;
+
+    devicePowerIrpTracker->LogRequestDIrpReason(Reason);
+
+    if (Reason == RequestD0ForS0 || Reason == RequestDxForSx) {
+        devicePowerIrpTracker->StartTrackingDevicePowerIrp(Reason);
     }
 
     //
@@ -9314,6 +9511,12 @@ Return Value:
         //
         // We are no longer requesting a power irp
         //
+        devicePowerIrpTracker->LogRequestDIrpReason(RequestDIrpFailed);
+
+        if (Reason == RequestD0ForS0 || Reason == RequestDxForSx) {
+            devicePowerIrpTracker->StopTrackingDevicePowerIrp();
+        }
+
         if (DeviceState == PowerDeviceD0) {
             m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp = FALSE;
         }
@@ -9681,7 +9884,8 @@ Return Value:
     if (powerDown) {
         NTSTATUS status;
 
-        status = PowerPolicySendDevicePowerRequest(DxState, NoRetry);
+        status = PowerPolicySendDevicePowerRequest(DxState, NoRetry,
+                        RequestDxForIdleOut);
 
         if (!NT_SUCCESS(status)) {
             //
@@ -10224,4 +10428,3 @@ Return Value:
 
     return;
 }
-

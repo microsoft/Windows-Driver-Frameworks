@@ -62,6 +62,8 @@ WDFDEVICE_INIT::WDFDEVICE_INIT(
 
     ReleaseHardwareOrderOnFailure = WdfReleaseHardwareOrderOnFailureEarly;
 
+    CxContextObject = NULL;
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 
     DeviceControlIoType = WdfDeviceIoBuffered;
@@ -119,6 +121,10 @@ WDFDEVICE_INIT::~WDFDEVICE_INIT()
     }
     if (PreprocessInfo != NULL) {
         delete PreprocessInfo;
+    }
+
+    if (CxContextObject != NULL) {
+        CxContextObject->DeleteObject();
     }
 
     while(!IsListEmpty(&CxDeviceInitListHead)) {
@@ -297,3 +303,46 @@ WDFDEVICE_INIT::AddCxDeviceInit(
     InsertHeadList(&CxDeviceInitListHead, &CxDeviceInit->ListEntry);
 }
 
+NTSTATUS
+WDFDEVICE_INIT::AllocateCxContext(
+    _In_  PFX_DRIVER_GLOBALS     CxDriverGlobals,
+    _In_  PWDF_OBJECT_ATTRIBUTES ContextAttributes,
+    _Outptr_opt_
+          PVOID*                 Context
+    )
+{
+    NTSTATUS status;
+
+    //
+    // This is thread safe. The caller WdfCxDeviceInitAllocateContext are
+    // already serialized since they can only be called from EvtDeviceAdd.
+    //
+    if (CxContextObject == NULL) {
+        status = FxUserObject::_Create(CxDriverGlobals,
+                                       WDF_NO_OBJECT_ATTRIBUTES,
+                                       &CxContextObject);
+        if (!NT_SUCCESS(status)) {
+            goto Done;
+        }
+    }
+
+    status = FxObjectAllocateContext(CxContextObject,
+                                     ContextAttributes,
+                                     FALSE, // AllowCallbacksOnly
+                                     Context);
+Done:
+    return status;
+}
+
+PVOID
+WDFDEVICE_INIT::GetCxTypedContext(
+    _In_ PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
+    )
+{
+    if (CxContextObject == NULL) {
+        return NULL;
+    }
+
+    return FxObjectGetTypedContext(CxContextObject,
+                                   TypeInfo);
+}

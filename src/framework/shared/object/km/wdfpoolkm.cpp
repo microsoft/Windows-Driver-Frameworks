@@ -121,9 +121,8 @@ FxMdlAllocateDebug(
 
         if (pAllocated != NULL) {
             //
-            // Zero out the new buffer and link it in to the list
+            // Link the new buffer to the list
             //
-            RtlZeroMemory(pAllocated, sizeof(*pAllocated));
             *ppNext = pAllocated;
         }
         else {

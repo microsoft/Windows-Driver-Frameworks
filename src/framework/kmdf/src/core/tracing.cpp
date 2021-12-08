@@ -249,8 +249,6 @@ Routine Description:
         return;
     }
 
-    RtlZeroMemory(pHeader, size);
-
     //
     // Initialize the header.
     // Base will be where the IFR records are placed.

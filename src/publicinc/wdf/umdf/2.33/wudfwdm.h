@@ -584,6 +584,10 @@ typedef struct _PO_FX_DEVICE_V2 {
 //     device completes its D0-IRP before the system will complete the S0-IRP
 //     when resuming from a system state transition.
 //
+// PO_FX_DEVICE_FLAG_ENABLE_FAST_RESUME - When set this enforces that the device
+//     does not wait for the D0-IRP to be completed before the system allows
+//     the S0-IRP to be completed when resuming from a system state transition.
+//
 
 #define PO_FX_DEVICE_FLAG_RESERVED_1                   (0x0000000000000001ull)
 #define PO_FX_DEVICE_FLAG_DFX_DIRECT_CHILDREN_OPTIONAL (0x0000000000000002ull)
@@ -593,6 +597,7 @@ typedef struct _PO_FX_DEVICE_V2 {
              PO_FX_DEVICE_FLAG_DFX_POWER_CHILDREN_OPTIONAL)
 
 #define PO_FX_DEVICE_FLAG_DISABLE_FAST_RESUME          (0x0000000000000008ull)
+#define PO_FX_DEVICE_FLAG_ENABLE_FAST_RESUME           (0x0000000000000010ull)
 
 #define PO_FX_DIRECTED_FX_DEFAULT_IDLE_TIMEOUT    (0ul)
 #define PO_FX_DIRECTED_FX_IMMEDIATE_IDLE_TIMEOUT  ((ULONG)-1)
@@ -1407,7 +1412,7 @@ WRITE_REGISTER_BUFFER_ULONG64 (
 
 // begin_halextenv
 
-#if defined(_ARM64_)
+#if defined(_ARM64_) || defined(_ARM64EC_)
 
 //
 // I/O space read and write macros.
@@ -3559,7 +3564,9 @@ __emit(
 #define FILE_SESSION_AWARE                      0x00040000
 #endif /* NTDDI_VERSION >= NTDDI_WIN8 */
 
-
+//
+//  CreateOptions flag to pass in call to CreateFile to allow the write through xro.sys
+//
 
 #define FILE_RESERVE_OPFILTER                   0x00100000
 #define FILE_OPEN_REPARSE_POINT                 0x00200000
@@ -3574,10 +3581,53 @@ typedef struct _IO_STATUS_BLOCK {
     union {
         NTSTATUS Status;
         PVOID Pointer;
-    } DUMMYUNIONNAME;
+    };
 
     ULONG_PTR Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+//
+// Define 64 bit version of IO_STATUS_BLOCK to simplify WOW support when kernel
+// and user mode communicates using shared memory (like IoRing).
+//
+
+#if defined(_WIN64)
+
+typedef IO_STATUS_BLOCK IO_STATUS_BLOCK64;
+
+#define Iosb64ToIosb(_iosb, _iosb64) {  \
+    (_iosb) = (_iosb64);                \
+}
+
+#define IosbToIosb64(_iosb64, _iosb) {  \
+    (_iosb64) = (_iosb);                \
+}
+
+#else
+
+typedef struct _IO_STATUS_BLOCK64 {
+    union {
+        NTSTATUS Status;
+        PVOID64 Pointer;
+    } DUMMYUNIONNAME;
+
+    ULONG64 Information;
+} IO_STATUS_BLOCK64;
+
+#define Iosb64ToIosb(_iosb, _iosb64) {                      \
+    (_iosb).Pointer = Ptr64ToPtr( (_iosb64).Pointer );      \
+    (_iosb).Information = (ULONG_PTR)(_iosb64).Information; \
+}
+
+#define IosbToIosb64(_iosb64, _iosb) {                      \
+    (_iosb64).Pointer = PtrToPtr64( (_iosb).Pointer );      \
+    (_iosb64).Information = (ULONG64)(_iosb).Information;   \
+}
+
+#endif
+
+typedef IO_STATUS_BLOCK64 *PIO_STATUS_BLOCK64;
+
 
 //
 // Define the I/O bus interface types.

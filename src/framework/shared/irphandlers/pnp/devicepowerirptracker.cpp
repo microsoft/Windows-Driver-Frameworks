@@ -147,19 +147,19 @@ Return Value:
 
     device = owner->m_PkgPnp->GetDevice();
 
-#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-    MICROSOFT_TELEMETRY_ASSERT_WITH_ARGS_KM(
-            m_DIrpRequestedForSIrp == RequestDIrpReasonInvalid,
-            device->GetDevicePowerPolicyState(),
-            device->GetDevicePowerState(),
-            "wdf01000.sys");
-#else
-    MICROSOFT_TELEMETRY_ASSERT_WITH_ARGS(
-            m_DIrpRequestedForSIrp == RequestDIrpReasonInvalid,
-            "wudfx02000.dll",
-            device->GetDevicePowerPolicyState(),
-            device->GetDevicePowerState());
-#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     switch (Reason) {
 

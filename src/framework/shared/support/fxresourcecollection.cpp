@@ -402,8 +402,6 @@ Return Value:
             PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
             FxCollectionEntry *cur, *end;
 
-            RtlZeroMemory(pWdmResourceList, size);
-
             pWdmResourceList->Count = 1;  // We only return one full descriptor
 
             pWdmResourceList->List[0].PartialResourceList.Version  = 1;
@@ -676,11 +674,6 @@ Return Value:
             FxResourceIo *pResource;
 
             pList = pRequirementsList->List;
-
-            //
-            // Start by zero initializing our structure
-            //
-            RtlZeroMemory(pRequirementsList, size);
 
             //
             // InterfaceType and BusNumber are unused for WDM, but InterfaceType

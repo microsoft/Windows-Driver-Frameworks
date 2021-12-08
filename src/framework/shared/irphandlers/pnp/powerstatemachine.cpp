@@ -2326,7 +2326,7 @@ Return Value:
 
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "EvtDeviceD0EntryPostInterruptsEnabed WDFDEVICE 0x%p !devobj 0x%p, "
+            "EvtDeviceD0EntryPostInterruptsEnabled WDFDEVICE 0x%p !devobj 0x%p, "
             "old state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
             This->m_Device->GetHandle(),
             This->m_Device->GetDeviceObject(),
@@ -3661,7 +3661,7 @@ Return Value:
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "EvtDeviceD0EntryPostInterruptsEnabed WDFDEVICE 0x%p !devobj 0x%p, "
+            "EvtDeviceD0EntryPostInterruptsEnabled WDFDEVICE 0x%p !devobj 0x%p, "
             "old state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
             This->m_Device->GetHandle(),
             This->m_Device->GetDeviceObject(),
@@ -3710,7 +3710,7 @@ Return Value:
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             This->GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "EvtDeviceD0EntryPostInterruptsEnabed WDFDEVICE 0x%p !devobj 0x%p, "
+            "EvtDeviceD0EntryPostInterruptsEnabled WDFDEVICE 0x%p !devobj 0x%p, "
             "old state %!WDF_POWER_DEVICE_STATE! failed, %!STATUS!",
             This->m_Device->GetHandle(),
             This->m_Device->GetDeviceObject(),

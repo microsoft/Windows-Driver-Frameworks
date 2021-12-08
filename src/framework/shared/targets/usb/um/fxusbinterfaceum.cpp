@@ -106,8 +106,6 @@ FxUsbInterface::MakeAndConfigurePipes(
         goto Done;
     }
 
-    RtlZeroMemory(ppPipes, size);
-
     for (iPipe = 0; iPipe < NumPipes; iPipe++) {
         ppPipes[iPipe] = new (GetDriverGlobals(), PipesAttributes)
             FxUsbPipe(GetDriverGlobals(), m_UsbDevice);

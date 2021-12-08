@@ -333,7 +333,6 @@ Returns:
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Done;
     }
-    RtlZeroMemory(offsetList, maxIfrRecords*sizeof(USHORT));
 
     //
     // Check if the IFR records are valid and read them in the reverse order they

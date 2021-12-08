@@ -439,8 +439,6 @@ FxUsbDevice::CreateConfigRequest(
         //
         // now all we have to do is initialize the urb
         //
-        RtlZeroMemory(urb, size);
-
         pList = InterfaceList;
 
         pCur = (PUCHAR) &urb->UrbSelectConfiguration.Interface;

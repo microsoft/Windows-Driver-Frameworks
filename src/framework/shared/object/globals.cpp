@@ -225,8 +225,6 @@ Return Value:
         if (pInfo == NULL) {
             return STATUS_MEMORY_NOT_ALLOCATED;
         }
-
-        RtlZeroMemory(pInfo, length);
     }
 
     ASSERT(pInfo != NULL);
@@ -333,8 +331,6 @@ FxDriverGlobalsInitializeDebugExtension(
     if (pExtension == NULL) {
         return;
     }
-
-    RtlZeroMemory(pExtension, sizeof(*pExtension));
 
     pExtension->AllocatedTagTrackersLock.Initialize();
 
@@ -1221,8 +1217,6 @@ FxAllocateDriverGlobals(
         return NULL;
     }
 
-    RtlZeroMemory(pFxDriverGlobals, sizeof(FX_DRIVER_GLOBALS));
-
     pFxDriverGlobals->Refcnt = 1;
 
     status = pFxDriverGlobals->DestroyEvent.Initialize(NotificationEvent, FALSE);
@@ -1418,28 +1412,24 @@ Return Value:
     }
 
     //
-    // See if we are tracking object counts for leak detection
+    // To enable leak detection, a reg key must be present and not equal to 0xFFFFFFFF
     //
     DECLARE_CONST_UNICODE_STRING(valueName, L"ObjectLeakDetectionLimit");
-
     ULONG Limit;
-    if (!NT_SUCCESS(FxRegKey::_QueryULong(Key, &valueName, &Limit))) {
+    if (!NT_SUCCESS(FxRegKey::_QueryULong(Key, &valueName, &Limit))
+        || Limit == FX_OBJECT_LEAK_DETECTION_DISABLED) {
 
-        Limit = (ULONG) FX_OBJECT_LEAK_DETECTION_DISABLED;
+        return pInfo;
     }
 
-    if (Limit != FX_OBJECT_LEAK_DETECTION_DISABLED) {
-        FxDriverGlobals->FxVerifyLeakDetection = (FxObjectDebugLeakDetection*)
+    FxDriverGlobals->FxVerifyLeakDetection = (FxObjectDebugLeakDetection*)
                             MxMemory::MxAllocatePool2(POOL_FLAG_NON_PAGED,
                                 sizeof(FxObjectDebugLeakDetection),
                                 FxDriverGlobals->Tag);
-    }
-
     if (FxDriverGlobals->FxVerifyLeakDetection == NULL) {
         return pInfo;
     }
 
-    RtlZeroMemory(FxDriverGlobals->FxVerifyLeakDetection, sizeof(FxObjectDebugLeakDetection));
     FxDriverGlobals->FxVerifyLeakDetection->Limit = Limit;
     FxDriverGlobals->FxVerifyLeakDetection->LimitScaled = Limit;
     FxDriverGlobals->FxVerifyLeakDetection->ObjectCnt = 0;

@@ -91,10 +91,6 @@ FxDeviceDescriptionEntry::operator new(
 
     p = FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_NON_PAGED, TotalDescriptionSize);
 
-    if (p != NULL) {
-        RtlZeroMemory(p, TotalDescriptionSize);
-    }
-
     return p;
 }
 
@@ -2703,8 +2699,6 @@ FxChildList::ProcessBusRelations(
 
         goto Done;
     }
-
-    RtlZeroMemory(pNewRelations, size);
 
     if (pPriorRelations != NULL && pPriorRelations->Count > 0) {
         DoTraceLevelMessage(

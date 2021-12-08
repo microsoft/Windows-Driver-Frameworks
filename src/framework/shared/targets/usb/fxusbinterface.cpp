@@ -256,8 +256,6 @@ Return Value:
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(m_Settings, size);
-
     //
     // Add all the settings for this interface
     //
@@ -700,8 +698,6 @@ Return Value:
             , status);
         goto Done;
     }
-
-    RtlZeroMemory(ppPipes, size);
 
     for (iPipe = 0; iPipe < numPipes; iPipe++) {
         ppPipes[iPipe] = new (GetDriverGlobals(), PipesAttributes)

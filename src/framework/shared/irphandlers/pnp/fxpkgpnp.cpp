@@ -1243,8 +1243,6 @@ Return Value:
         goto Done;
     }
 
-    RtlZeroMemory(pNewRelations, size);
-
     //
     // If there was an existing device relations structure, copy
     // the entries to the new structure.
@@ -4141,7 +4139,7 @@ FxPkgPnp::SetDeviceFailedAttemptRestart(
         // if parent doesn't support re-enumerate self interface
         //
         if (m_SetDeviceFailedAttemptRestartWorkItem != NULL) {
-            m_SetDeviceFailedAttemptRestartWorkItem->Enqueue(
+            m_SetDeviceFailedAttemptRestartWorkItem->TryToEnqueue(
                     ReenumerateAlways ? _WorkItemSetDeviceFailedRestartAlways :
                                         _WorkItemSetDeviceFailedAttemptRestart, this);
             return;

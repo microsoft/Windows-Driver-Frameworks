@@ -952,11 +952,10 @@ FxVerifierLock::AllocateThreadTable(
     // Table must be kept as a power of 2 for hash algorithm
     newEntries = VERIFIER_THREAD_HASHTABLE_SIZE;
 
-    newTable = (PLIST_ENTRY) FxPoolAllocateWithTag2(
+    newTable = (PLIST_ENTRY) FxPoolAllocate2(
         FxDriverGlobals,
         POOL_FLAG_NON_PAGED,
-        sizeof(LIST_ENTRY) * newEntries,
-        FxDriverGlobals->Tag);
+        sizeof(LIST_ENTRY) * newEntries);
 
     if( newTable == NULL ) {
         FxDriverGlobals->ThreadTableLock.Release(oldIrql);

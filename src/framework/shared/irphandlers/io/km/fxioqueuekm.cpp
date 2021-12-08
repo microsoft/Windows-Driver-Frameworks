@@ -511,8 +511,6 @@ Routine Description:
         return status;
     }
 
-    RtlZeroMemory(m_FwdProgContext, sizeof(FXIO_FORWARD_PROGRESS_CONTEXT));
-
     //
     // Initialize the things which will not fail first
     //

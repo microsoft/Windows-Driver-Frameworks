@@ -1714,8 +1714,10 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
       { TRUE,
         PwrPolUsbSelectiveSuspendCompleted | // Device was suspened and surprise
                                              // removed while in Dx
-        PwrPolS0 | // If the device failed D0Exit while the machine was going into
-                   // Sx, then we will get this event when the machine comes back up
+
+        PwrPolS0 | // PwrPolS0 is special handled in PowerPolicyProcessEventInner
+                   // when no valid response is specified. It is still marked as
+                   // a known drop event here to avoid an error trace message.
 
         PwrPolSx | // Device is in Dx unarmed (WaitingUnarmed) with system managed
                    // timeout. On Sx transition PoFx will activate the component
@@ -1937,6 +1939,8 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
       { PwrPolDevicePowerNotRequired, WdfDevStatePwrPolTimerExpiredNoWake DEBUGGED_EVENT },
       FxPkgPnp::m_PowerPolIdleCapableDeviceIdleOtherStates,
       { TRUE,
+        PwrPolS0 | // If the machine sends a query Sx and it fails, it will send
+                   // an S0 while in the running state (w/out ever sending a true set Sx irp)
         PwrPolDevicePowerRequired // The device-power-required event arrived, but we had already
                                   // powered-up the device proactively because we detected that
                                   // power was needed. The event is ignored in this case.
@@ -1980,6 +1984,8 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
       { PwrPolDevicePowerNotRequired, WdfDevStatePwrPolTimerExpiredDecideUsbSS DEBUGGED_EVENT },
       FxPkgPnp::m_PowerPolWakeCapableDeviceIdleOtherStates,
       { TRUE,
+        PwrPolS0 | // If the machine sends a query Sx and it fails, it will send
+                   // an S0 while in the running state (w/out ever sending a true set Sx irp)
         PwrPolDevicePowerRequired // The device-power-required event arrived, but we had already
                                   // powered-up the device proactively because we detected that
                                   // power was needed. And after we powered up, we become idle
@@ -3014,6 +3020,63 @@ FxPowerPolicyMachine::InitUsbSS(
     return STATUS_SUCCESS;
 }
 
+VOID
+FxPowerPolicyMachine::SimulateDevicePowerRequiredForS0(
+    VOID
+    )
+{
+    //
+    // An S0-IRP is essentially equivalent to a device-power-required
+    // notification.
+    //
+
+    //
+    // The reflector maintains state around pending PoFx callbacks/events
+    // and then notifies the host/fx asynchronously. It will reflect the
+    // corresponding calls from the Fx/Host to PoFx IFF there is a
+    // pending callback.So we must simulate a device power required event in both
+    // the Fx state machine and reflector.
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+    m_Owner->m_PoxInterface.SimulateDevicePowerRequiredInReflector();
+#endif
+
+    //
+    // Simulate a device-power-required notification from the power framework.
+    //
+    m_Owner->m_PoxInterface.SimulateDevicePowerRequired();
+}
+
+VOID
+FxPowerPolicyMachine::AcknowledgeS0(
+    VOID
+    )
+{
+    if (FALSE == m_Owner->m_IdleSettings.m_TimeoutMgmt.UsingSystemManagedIdleTimeout()) {
+        //
+        // Driver-managed idle timeout. Nothing to do.
+        //
+        return;
+    }
+
+    //
+    // This is needed for states that do not explicitly handle PwrPolS0. For those
+    // that do handle PwrPolS0, use SimulateDevicePowerRequiredForS0 instead.
+    //
+
+    //
+    // Notify the reflector that we're going to call PoFxReportDevicePoweredOn
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+    m_Owner->m_PoxInterface.SimulateDevicePowerRequiredInReflector();
+#endif
+
+    //
+    // Call PoFxReportDevicePoweredOn directly without moving state machine forward
+    //
+    m_Owner->m_PoxInterface.PoxReportDevicePoweredOn();
+}
+
 FxPowerPolicyOwnerSettings::FxPowerPolicyOwnerSettings(
     __in FxPkgPnp* PkgPnp
     ) : m_PoxInterface(PkgPnp)
@@ -3590,7 +3653,7 @@ FxPkgPnp::PowerPolicyProcessEventInner(
             if (newState == WdfDevStatePwrPolNull) {
                 //
                 // This state doesn't respond to the event.  Just throw the event
-                // away.
+                // away, except for several events which do get special treatment.
                 //
                 DoTraceLevelMessage(
                     GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGPNP,
@@ -3640,6 +3703,68 @@ FxPkgPnp::PowerPolicyProcessEventInner(
                 // Failsafes for events which have required processing in them.
                 //
                 switch (event) {
+                case PwrPolS0:
+                    //
+                    // After receiving Set/S0, devices using system managed idle
+                    // timeout must call PoFxReportDevicePoweredOn. This is esp
+                    // important when fast-resume is disabled and PoFx waits for
+                    // this call to continue S0 IRP completion. Not making this
+                    // call will block S0 power transition and cause bugcheck.
+                    //
+                    // Note PwrPolS0 is only sent to PowerPolicyOwner.
+                    //
+                    switch (state) {
+
+                    case WdfDevStatePwrPolDevicePowerRequestFailed:
+                        //
+                        // If a device fails either D0 or Dx during system sleep,
+                        // when system wakes up, the device will stay in this
+                        // state and need to acknowledge S0 properly.
+                        //
+                        m_PowerPolicyMachine.AcknowledgeS0();
+                        break;
+
+                    case WdfDevStatePwrPolStarted:
+                    case WdfDevStatePwrPolStartedIdleCapable:
+                    case WdfDevStatePwrPolStartedWakeCapable:
+                    case WdfDevStatePwrPolWaitingUnarmed:
+                    case WdfDevStatePwrPolWaitingArmed:
+                    case WdfDevStatePwrPolIdleCapableDeviceIdle:
+                    case WdfDevStatePwrPolWakeCapableDeviceIdle:
+                        //
+                        // If Query/Sx fails, the device will receive a Set/S0
+                        // even if it is already in working state. Forgetting to
+                        // acknowledge S0 will leak a PoFx power reference and
+                        // the device will no longer be able to idle out.
+                        //
+                        m_PowerPolicyMachine.AcknowledgeS0();
+                        break;
+
+                    case WdfDevStatePwrPolObjectCreated:
+                    case WdfDevStatePwrPolRemoved:
+                        //
+                        // Drop event. Device no longer registers with PoFx.
+                        //
+                        break;
+
+                    default:
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        break;
+                    }
+                    break;
+
                 case PwrPolSx:
                     //
                     // The Sx handling code expects that the state machine
@@ -5276,25 +5401,7 @@ Return Value:
     ASSERT_PWR_POL_STATE(This,
                          WdfDevStatePwrPolSystemWakeDeviceWakeCompletePowerUp);
 
-    //
-    // Simulate a device-power-required notification from the power framework.
-    // An S0-IRP is essentially equivalent to a device-power-required
-    // notification.
-    //
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequired();
-
-    //
-    // The reflector maintains state around pending PoFx callbacks/events
-    // and then notifies the host/fx asynchronously. It will reflect the
-    // corresponding calls from the Fx/Host to PoFx IFF there is a
-    // pending callback.So we must simulate a device power required event in both
-    // the Fx state machine and reflector.
-    //
-#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
-#endif
+    This->m_PowerPolicyMachine.SimulateDevicePowerRequiredForS0();
 
     //
     // Notify the device-power-requirement state machine that we are powered on
@@ -5682,18 +5789,7 @@ Return Value:
     ASSERT_PWR_POL_STATE(
         This, WdfDevStatePwrPolSystemWakeDeviceToD0CompletePowerUp);
 
-    //
-    // Simulate a device-power-required notification from the power
-    // framework. An S0-IRP is essentially equivalent to a device-power-required
-    // notification.
-    //
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequired();
-
-#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
-#endif
+    This->m_PowerPolicyMachine.SimulateDevicePowerRequiredForS0();
 
     //
     // Notify the device-power-requirement state machine that we are powered on
@@ -8809,25 +8905,7 @@ Return Value:
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed);
 
-    //
-    // Simulate a device-power-required notification from the power framework.
-    // An S0-IRP is essentially equivalent to a device-power-required
-    // notification.
-    //
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequired();
-
-    //
-    // The reflector maintains state around pending PoFx callbacks/events
-    // and then notifies the host/fx asynchronously. It will reflect the
-    // corresponding calls from the Fx/Host to PoFx IFF there is a
-    // pending callback.So we must simulate a device power required event in both
-    // the Fx state machine and reflector.
-    //
-#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
-#endif
+    This->m_PowerPolicyMachine.SimulateDevicePowerRequiredForS0();
 
     return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
 }
@@ -8851,25 +8929,7 @@ Return Value:
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed);
 
-    //
-    // Simulate a device-power-required notification from the power framework.
-    // An S0-IRP is essentially equivalent to a device-power-required
-    // notification.
-    //
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequired();
-
-    //
-    // The reflector maintains state around pending PoFx callbacks/events
-    // and then notifies the host/fx asynchronously. It will reflect the
-    // corresponding calls from the Fx/Host to PoFx IFF there is a
-    // pending callback.So we must simulate a device power required event in both
-    // the Fx state machine and reflector.
-    //
-#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-    This->m_PowerPolicyMachine.m_Owner->
-        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
-#endif
+    This->m_PowerPolicyMachine.SimulateDevicePowerRequiredForS0();
 
     return WdfDevStatePwrPolDevicePowerRequestFailed;
 }

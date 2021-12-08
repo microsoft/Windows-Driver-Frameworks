@@ -576,7 +576,6 @@ Return Value:
         goto cleanUp;
     }
 
-    RtlZeroMemory(ImageName->Buffer, size);
     ImageName->Length = 0x0;
     ImageName->MaximumLength = size;
 
@@ -645,8 +644,6 @@ QueryAndAllocString(
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
-
-    RtlZeroMemory(dataBuffer, dataLength);
 
     //
     // Query registry for the data under ValueName

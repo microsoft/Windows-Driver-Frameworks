@@ -108,7 +108,7 @@ const PNP_EVENT_TARGET_STATE FxPkgPnp::m_PnpRemovedPdoWaitOtherStates[] =
 
 const PNP_EVENT_TARGET_STATE FxPkgPnp::m_PnpRestartingOtherStates[] =
 {
-    { PnpEventPwrPolStartFailed, WdfDevStatePnpFailedOwnHardware DEBUGGED_EVENT },
+    { PnpEventPwrPolStartFailed, WdfDevStatePnpHardwareAvailablePowerPolicyFailed DEBUGGED_EVENT },
     { PnpEventNull, WdfDevStatePnpNull },
 };
 
@@ -1057,6 +1057,41 @@ Routine Description:
             }
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         m_PnpMachine.IncrementHead();
         m_PnpMachine.Unlock(oldIrql);
 
@@ -1511,7 +1546,7 @@ Routine Description:
     path.
 
 Arguments:
-    This - instance of the state machien
+    This - instance of the state machine
 
 Return Value:
     WdfDevStatePnpFailedOwnHardware

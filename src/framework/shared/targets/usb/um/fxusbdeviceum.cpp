@@ -362,7 +362,6 @@ FxUsbDevice::GetString(
             goto Done;
         }
 
-        RtlZeroMemory(buffer, length);
         pDescriptor = (PUSB_STRING_DESCRIPTOR) buffer;
     }
     else {

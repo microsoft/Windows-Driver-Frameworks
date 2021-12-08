@@ -758,8 +758,6 @@ Return Value:
         goto Done;
     }
 
-    RtlZeroMemory(sleepStudy, sizeof(SLEEP_STUDY_INTERFACE));
-
     //
     // m_SleepStudy may be accessed asynchronously, so first we must ensure
     // its initialized prior to assigning it to m_SleepStudy

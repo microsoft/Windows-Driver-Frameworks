@@ -399,7 +399,6 @@ Return Value:
         goto cleanUp;
     }
 
-    RtlZeroMemory(ImageName->Buffer, size);
     ImageName->Length = 0x0;
     ImageName->MaximumLength = size;
 

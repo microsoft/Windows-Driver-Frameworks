@@ -207,8 +207,6 @@ FxUsbDevice::InitDevice(
         goto Done;
     }
 
-    RtlZeroMemory(m_ConfigDescriptor, paddedSize);
-
     UsbBuildGetDescriptorRequest(&urb,
                                  sizeof(_URB_CONTROL_DESCRIPTOR_REQUEST),
                                  USB_CONFIGURATION_DESCRIPTOR_TYPE,
@@ -422,7 +420,6 @@ FxUsbDevice::GetString(
             goto Done;
         }
 
-        RtlZeroMemory(buffer, length);
         pDescriptor = (PUSB_STRING_DESCRIPTOR) buffer;
     }
     else {
@@ -947,8 +944,6 @@ Return Value:
     if (pList == NULL) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    RtlZeroMemory(pList, size);
 
     if (Params->Type == WdfUsbTargetDeviceSelectConfigTypeMultiInterface) {
         for (i = 0; i < m_NumInterfaces; i++) {

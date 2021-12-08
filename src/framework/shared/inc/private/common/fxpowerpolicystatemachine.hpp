@@ -1040,6 +1040,16 @@ struct FxPowerPolicyMachine : public FxThreadedEventQueue {
         }
     }
 
+    VOID
+    SimulateDevicePowerRequiredForS0(
+        VOID
+        );
+
+    VOID
+    AcknowledgeS0(
+        VOID
+        );
+
 public:
     FxPowerPolicyEvent m_Queue[FxPowerPolicyEventQueueDepth];
 

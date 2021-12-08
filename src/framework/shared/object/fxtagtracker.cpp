@@ -66,12 +66,12 @@ Return Value:
 {
     KIRQL irql;
     FxTagTrackingBlock *current, *next;
-    
+
     if (m_TrackerType == FxTagTrackerTypeHandle) {
         FxDriverGlobalsDebugExtension* pExtension;
-        
+
         CheckForAbandondedTags();
-    
+
         pExtension = GetDriverGlobals()->DebugExtension;
 
         //
@@ -122,12 +122,12 @@ FxTagTracker::CopyStackFrames(
         if (stackFrames == NULL) {
             return;
         }
-        
+
         *StackFrames = stackFrames;
     }
-    
+
     stackFrames->NumFrames = NumFrames;
-    
+
     for (int i = 0; i < NumFrames; i++) {
         stackFrames->Frames[i] = (ULONG64)Frames[i];
     }
@@ -167,7 +167,7 @@ Return Value:
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     FxTagHistory* pTagHistory;
     FxTagTrackingBlock* pBlock;
-    LONG pos;
+    ULONG pos;
     KIRQL irql;
     USHORT numFrames = 0;
     PVOID frames[FRAMES_TO_CAPTURE];
@@ -176,13 +176,6 @@ Return Value:
 
     pos = InterlockedIncrement(&m_CurRefHistory) - 1;
     pos %= TAG_HISTORY_DEPTH;
-
-    //
-    // Prefast reports that m_CurRefHistory can be negative which can lead to
-    // underflow. But we know that m_CurRefHistory would never be negative.
-    // Hence we assert for the condition below and assume that it would be true.
-    //
-    FX_ASSERT_AND_ASSUME_FOR_PREFAST(pos >= 0 && pos < TAG_HISTORY_DEPTH);
 
     pTagHistory = m_TagHistory + pos;
 
@@ -226,7 +219,7 @@ Return Value:
             pBlock->Next = m_Next;
             m_Next = pBlock;
             m_SpinLock.Release(irql);
-            
+
             if (m_CaptureStack && numFrames > 0) {
                 CopyStackFrames(&pBlock->StackFrames, numFrames, frames);
             }

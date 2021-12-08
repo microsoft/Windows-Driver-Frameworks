@@ -836,7 +836,7 @@ Routine Description:
 
 Arguments:
 
-    DeviceInit – A pointer to an opaque WDFDEVICE_INIT structure. The client
+    DeviceInit - A pointer to an opaque WDFDEVICE_INIT structure. The client
                 driver typically gets such a pointer in its EvtDriverDeviceAdd
                 callback, and then passes it to the extension driver when calling
                 extension-specific APIs.
@@ -852,7 +852,7 @@ Return Value:
 
     STATUS_SUCCESS upon success.
 
-    STATUS_OBJECT_NAME_EXISTS (0x40000000) – The extension driver has already
+    STATUS_OBJECT_NAME_EXISTS (0x40000000) - The extension driver has already
                 allocated a context of the same type. In this case, the call
                 returns a pointer to the existing typed context and does not
                 allocate a duplicated one.
@@ -968,7 +968,7 @@ Routine Description:
 
 Arguments:
 
-    DeviceInit – A pointer to an opaque WDFDEVICE_INIT structure. The client
+    DeviceInit - A pointer to an opaque WDFDEVICE_INIT structure. The client
                 driver typically gets such a pointer in its EvtDriverDeviceAdd
                 callback, and then passes it to the extension driver when calling
                 extension-specific APIs.

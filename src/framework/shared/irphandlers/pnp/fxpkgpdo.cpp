@@ -1446,9 +1446,6 @@ FxPkgPdo::_PnpQueryId(
             if (pSrc != NULL) {
                 RtlCopyMemory(pBuffer, pSrc, cbLength);
             }
-            else {
-                RtlZeroMemory(pBuffer, cbLength);
-            }
 
             Irp->SetInformation((ULONG_PTR) pBuffer);
             status = STATUS_SUCCESS;

@@ -334,8 +334,6 @@ FxUsbDeviceStringContext::AllocateDescriptor(
         FxPoolFree(m_StringDescriptor);
     }
 
-    RtlZeroMemory(pDescriptor, length);
-
     m_StringDescriptor = pDescriptor;
 
     status = RtlSizeTToULong(length, &m_StringDescriptorLength);
@@ -991,8 +989,6 @@ FxUsbDevice::CreateInterfaces(
 
         goto Done;
     }
-
-    RtlZeroMemory(m_Interfaces, size);
     m_NumInterfaces = m_ConfigDescriptor->bNumInterfaces;
 
     //
@@ -1373,8 +1369,6 @@ FxUsbDevice::SelectConfigDescriptor(
         return status;
     }
 
-    RtlZeroMemory(pInterfaces, size);
-
     for (i = 0; i < numInterfaces; i++) {
         pInterfaces[i].InterfaceDescriptor = interfaceDescriptors[i];
     }
@@ -1529,8 +1523,6 @@ Return Value:
         goto Done;
     }
 
-    RtlZeroMemory(pPipeInfo, size);
-
     //
     // The following code and the one in select setting have a lot in common
     // but can't leverage on that as that sends the select interface URB down
@@ -1609,8 +1601,6 @@ Return Value:
             goto Done;
         }
 
-        RtlZeroMemory(ppPipes, size);
-
         //
         // We store the pointer to the newly allocated arary in a temporary b/c
         // we can still fail and we don't want a half baked interface.
@@ -1688,8 +1678,6 @@ Return Value:
                 "Could not allocate a select interface URB, %!STATUS!", status);
             goto Done;
         }
-
-        RtlZeroMemory(pSelectUrb, size);
     }
 
     //
@@ -1977,8 +1965,6 @@ FxUsbDevice::SelectConfigInterfaces(
 
         return status;
     }
-
-    RtlZeroMemory(pInterfaces, size);
 
     for (i = 0; i < NumInterfaces; i++) {
         pInterfaces[i].InterfaceDescriptor = InterfaceDescriptors[i];

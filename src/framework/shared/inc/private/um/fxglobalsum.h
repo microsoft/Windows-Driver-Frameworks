@@ -15,7 +15,7 @@ Abstract:
     FxGlobals.h
 
 Author:
-    
+
 Environment:
 
     kernel mode only
@@ -53,11 +53,11 @@ VOID
 FX_TRACK_DRIVER(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
     )
-{  
+{
     UNREFERENCED_PARAMETER(FxDriverGlobals);
     //
     // Not yet supported for UMDF
-    // 
+    //
 }
 
 _Must_inspect_result_
@@ -82,11 +82,13 @@ FxAllocateFromNPagedLookasideList (
     UNREFERENCED_PARAMETER(Lookaside);
 
     //
-    // UMDF doesn't yet use a look-aside list, so just alloc memory from pool.  
+    // UMDF doesn't yet use a look-aside list, so just alloc memory from pool.
     //
-    return MxMemory::MxAllocatePoolWithTag(NonPagedPool, // not used 
+    // Used by WdfLookasideListCreate. Keep POOL_TYPE for compat
+    //
+    return MxMemory::MxAllocatePoolWithTag(NonPagedPool, // not used
                                           ElementSize,
-                                          0             // not used 
+                                          0             // not used
                                           );
 }
 
@@ -137,8 +139,8 @@ FxFreeToNPagedLookasideList (
     MxMemory::MxFreePool(Entry);
 }
 
-__inline 
-BOOL 
+__inline
+BOOL
 IsCurrentThreadImpersonated( )
 {
     return g_IWudfHost2->IsCurrentThreadImpersonated();
@@ -157,12 +159,12 @@ GetActivationList(
 // This has to be a macro (as opposed an inline function) beacause of the activation frame is
 // allocated in the caller's stack.
 //
-// NOTE: This must not be wrapped in {}'s since that puts the activation frame in a very 
+// NOTE: This must not be wrapped in {}'s since that puts the activation frame in a very
 //       short lived scope.  It's destructor will be called when control leaves the block
-//       rather than when the function returns and that defeats the entire purpose of the 
+//       rather than when the function returns and that defeats the entire purpose of the
 //       activation frame (which is to live for the life of the DDI call).
 //
-// NOTE 2: 
+// NOTE 2:
 // WDF_ACTIVATION constructor includes a default argument which is the _ReturnAddress()
 // instrinsic. This macro should be placed in methods such that the _ReturnAddress
 // points to calling driver code.

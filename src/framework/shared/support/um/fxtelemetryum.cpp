@@ -53,7 +53,7 @@ AllocAndInitializeTelemetryContext(
     PFX_TELEMETRY_CONTEXT context = NULL;
     RPC_STATUS status;
 
-    context = (PFX_TELEMETRY_CONTEXT)MxMemory::MxAllocatePoolWithTag(NonPagedPool,
+    context = (PFX_TELEMETRY_CONTEXT)MxMemory::MxAllocatePool2(POOL_FLAG_NON_PAGED,
                                             sizeof(FX_TELEMETRY_CONTEXT),
                                             FX_TAG);
     if (NULL == context) {
@@ -309,7 +309,7 @@ Return Value:
     // Pool can be paged b/c we are running at PASSIVE_LEVEL and we are going
     // to free it at the end of this function.
     //
-    dataBuffer = FxPoolAllocate(FxDriverGlobals, PagedPool, length);
+    dataBuffer = FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_PAGED, length);
     if (dataBuffer == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDRIVER,
@@ -390,7 +390,7 @@ Return Value:
     //
     // allocate a buffer to hold Unicode string + null char.
     //
-    ImageName->Buffer = (PWCH) FxPoolAllocate(FxDriverGlobals, PagedPool, size);
+    ImageName->Buffer = (PWCH) FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_PAGED, size);
 
     if (ImageName->Buffer == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;

@@ -77,6 +77,8 @@ Revision History:
 
 
 
+
+
 class FxRegKey : public FxPagedObject {
 
 public:
@@ -313,6 +315,8 @@ public:
         __in_bcount(DataLength) PWCHAR DataString,
         __in ULONG DataLength
         );
+
+
 
 
 

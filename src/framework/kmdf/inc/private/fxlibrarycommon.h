@@ -66,8 +66,7 @@ FxLibraryCommonUnregisterClient(
 
 VOID
 GetEnhancedVerifierOptions(
-    __in PCLIENT_INFO ClientInfo,
-    __out PULONG Options
+    _Inout_ PFX_DRIVER_GLOBALS FxDriverGlobals
     );
 
 VOID

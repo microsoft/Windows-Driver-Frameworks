@@ -269,7 +269,6 @@ public:
     {
     }
 
-    _When_(!NT_SUCCESS(return), _At_(Progress, _Must_inspect_result_))
     _Must_inspect_result_
     NTSTATUS
     Invoke(

@@ -105,7 +105,7 @@ Return Value:
         return status;
     }
 
-    pDeviceInterface = new(pFxDriverGlobals, PagedPool) FxDeviceInterface();
+    pDeviceInterface = new(pFxDriverGlobals, POOL_FLAG_PAGED) FxDeviceInterface();
 
     if (pDeviceInterface == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;

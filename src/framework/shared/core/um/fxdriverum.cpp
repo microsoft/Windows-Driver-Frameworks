@@ -450,8 +450,6 @@ Returns:
 
     UMINT::WDF_PROPERTY_STORE_ROOT rootSpecifier;
     UMINT::WDF_PROPERTY_STORE_RETRIEVE_FLAGS flags;
-    CANSI_STRING serviceNameA;
-    DECLARE_UNICODE_STRING_SIZE(serviceNameW, WDF_DRIVER_GLOBALS_NAME_LEN);
     HKEY hKey;
 
     if (ServiceKeyType != UMINT::WdfPropertyStoreRootDriverParametersKey &&
@@ -459,31 +457,29 @@ Returns:
         return STATUS_INVALID_PARAMETER;
     }
 
-    RtlInitAnsiString(&serviceNameA, FxDriverGlobals->Public.DriverName);
-    status = RtlAnsiStringToUnicodeString(&serviceNameW,
-                                          &serviceNameA,
-                                          FALSE);
+    if (m_ServiceName == NULL) {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
+    rootSpecifier.RootClass = ServiceKeyType;
+    rootSpecifier.Qualifier.ParametersKey.ServiceName = m_ServiceName;
+
+    flags = UMINT::WdfPropertyStoreCreateIfMissing;
+
+    hr = pDevStack->CreateRegistryEntry(&rootSpecifier,
+                                        flags,
+                                        GENERIC_ALL & ~(GENERIC_WRITE | KEY_CREATE_SUB_KEY | WRITE_DAC),
+                                        NULL,
+                                        &hKey,
+                                        NULL);
+    status = FxDevice::NtStatusFromHr(pDevStack, hr);
     if (NT_SUCCESS(status)) {
-        rootSpecifier.LengthCb = sizeof(UMINT::WDF_PROPERTY_STORE_ROOT);
-        rootSpecifier.RootClass = ServiceKeyType;
-        rootSpecifier.Qualifier.ParametersKey.ServiceName = serviceNameW.Buffer;
-
-        flags = UMINT::WdfPropertyStoreCreateIfMissing;
-
-        hr = pDevStack->CreateRegistryEntry(&rootSpecifier,
-                                            flags,
-                                            GENERIC_ALL & ~(GENERIC_WRITE | KEY_CREATE_SUB_KEY | WRITE_DAC),
-                                            NULL,
-                                            &hKey,
-                                            NULL);
-        status = FxDevice::NtStatusFromHr(pDevStack, hr);
-        if (NT_SUCCESS(status)) {
-            if (ServiceKeyType == UMINT::WdfPropertyStoreRootDriverParametersKey) {
-                m_DriverParametersKey = hKey;
-            }
-            else {
-                m_DriverPersistentStateKey = hKey;
-            }
+        if (ServiceKeyType == UMINT::WdfPropertyStoreRootDriverParametersKey) {
+            m_DriverParametersKey = hKey;
+        }
+        else {
+            m_DriverPersistentStateKey = hKey;
         }
     }
 

@@ -30,8 +30,8 @@ FxFormatUsbRequest(
     __in FxRequestBase* Request,
     __in PURB Urb,
     __in FX_URB_TYPE FxUrbType,
-    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)     
-    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt) 
+    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)
+    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt)
          USBD_HANDLE UsbdHandle
     )
 {
@@ -50,7 +50,7 @@ FxFormatUsbRequest(
 
     if (FxUrbType == FxUrbTypeUsbdAllocated) {
         USBD_AssignUrbToIoStackLocation(UsbdHandle, irp->GetNextIrpStackLocation(), Urb);
-    } 
+    }
     else {
         irp->SetNextStackParameterOthersArgument1(Urb);
     }
@@ -65,8 +65,8 @@ FxFormatUrbRequest(
     __in FxRequestBase* Request,
     __in FxRequestBuffer* Buffer,
     __in FX_URB_TYPE FxUrbType,
-    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)     
-    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt) 
+    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)
+    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt)
          USBD_HANDLE UsbdHandle
     )
 {
@@ -121,7 +121,7 @@ FxUsbValidateConfigDescriptorHeaders(
 
     while (pCur < pEnd) {
         PUSB_COMMON_DESCRIPTOR pDescriptor = (PUSB_COMMON_DESCRIPTOR) pCur;
-            
+
         //
         // Make sure we can safely deref bLength, bDescriptorType
         //
@@ -130,22 +130,22 @@ FxUsbValidateConfigDescriptorHeaders(
                 FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIOTARGET,
                 "USB Configuration packet contains bad data, expected "
                 "at least %d remaining bytes in config descriptor at "
-                "offset %I64d, total size is %I64d", 
-                sizeof(USB_COMMON_DESCRIPTOR), pCur-(PUCHAR)ConfigDescriptor, 
+                "offset %I64d, total size is %I64d",
+                sizeof(USB_COMMON_DESCRIPTOR), pCur-(PUCHAR)ConfigDescriptor,
                 ConfigDescriptorLength
                 );
             return STATUS_INVALID_PARAMETER;
         }
 
         //
-        // Make sure bLength is within bounds of the config descriptor 
+        // Make sure bLength is within bounds of the config descriptor
         //
         if ((pCur + pDescriptor->bLength) > pEnd) {
             DoTraceLevelMessage(
                 FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIOTARGET,
                 "USB Configuration packet contains bad data, descriptor at offset "
                 "%I64d specified bLength %d, only %I64d bytes remaining in config "
-                "descriptor, total size is %I64d", 
+                "descriptor, total size is %I64d",
                 pCur-(PUCHAR)ConfigDescriptor, pDescriptor->bLength, pEnd-pCur,
                 ConfigDescriptorLength
                 );
@@ -217,8 +217,8 @@ FxUsbValidateDescriptorType(
 /*++
 
 Routine Description:
-    Validates the size of all descriptors within [Start, End] are of the correct 
-    size.  Correct can either be == or >= SizeToValidate. Furthermore, the caller 
+    Validates the size of all descriptors within [Start, End] are of the correct
+    size.  Correct can either be == or >= SizeToValidate. Furthermore, the caller
     can specify that validation only occur for the first N descriptors found
 
 Arguments:
@@ -247,7 +247,7 @@ Return Value:
                                                   pCur,
                                                   DescriptorType
                                                   )) != NULL) {
-        // 
+        //
         // Make sure bLength is the correct value
         //
         if (Op == FxUsbValidateDescriptorOpEqual) {
@@ -279,12 +279,12 @@ Return Value:
         //
         // No need to validate WDF_PTR_ADD_OFFSET(pDescriptor, pDescriptor->bLength) > End
         // because FxUsbValidateConfigDescriptorHeaders already has done so. End is either
-        // 1) == end of the config descriptor, in which case FxUsbValidateConfigDescriptorHeaders 
+        // 1) == end of the config descriptor, in which case FxUsbValidateConfigDescriptorHeaders
         //    directly validated bLength
         // or
         // 2) End is somewere in the middle of the config descriptor and ASSUMED to be the start
-        //    of a common descriptor header. To find that value of End, we would have had to use 
-        //    pDescriptor->bLength to get to End, we would not overrun 
+        //    of a common descriptor header. To find that value of End, we would have had to use
+        //    pDescriptor->bLength to get to End, we would not overrun
         //
 
         //
@@ -298,7 +298,7 @@ Return Value:
 
         pCur = WDF_PTR_ADD_OFFSET(pDescriptor, pDescriptor->bLength);
         i++;
-    }  
+    }
 
     return STATUS_SUCCESS;
 }
@@ -361,11 +361,9 @@ FxUsbParseConfigurationDescriptor(
 }
 
 PURB
-FxUsbCreateConfigRequest(
-    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
-    __in PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
-    __in PUSBD_INTERFACE_LIST_ENTRY InterfaceList,
-    __in ULONG DefaultMaxPacketSize
+FxUsbDevice::CreateConfigRequest(
+    _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
+    _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList
     )
 {
     PURB urb;
@@ -406,21 +404,21 @@ FxUsbCreateConfigRequest(
 
         while (pList->InterfaceDescriptor != NULL) {
             NTSTATUS status;
-            
+
             status = RtlUShortAdd(size,
                                   GET_USBD_INTERFACE_SIZE(
                                         pList->InterfaceDescriptor->bNumEndpoints),
                                   &size);
             if (!NT_SUCCESS(status)) {
                 DoTraceLevelMessage(
-                    FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIOTARGET,
+                    GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
                     "InterfaceList %p, NumEndPoints 0x%x, "
                     "Integer overflow while calculating interface size, %!STATUS!",
-                    InterfaceList, 
-                    pList->InterfaceDescriptor->bNumEndpoints, 
+                    InterfaceList,
+                    pList->InterfaceDescriptor->bNumEndpoints,
                     status);
                 return NULL;
-            }            
+            }
             pList++;
         }
     }
@@ -433,7 +431,7 @@ FxUsbCreateConfigRequest(
     //
     ASSERT(size <= 0xFFFF);
 
-    urb = (PURB) FxPoolAllocate(FxDriverGlobals, NonPagedPool, size);
+    urb = (PURB) FxPoolAllocate2(GetDriverGlobals(), POOL_FLAG_NON_PAGED, size);
 
     if (urb != NULL) {
         PUCHAR pCur;
@@ -461,8 +459,11 @@ FxUsbCreateConfigRequest(
                 GET_USBD_INTERFACE_SIZE(pInterfaceDesc->bNumEndpoints);
 
             for (LONG j = 0; j < pInterfaceDesc->bNumEndpoints; j++) {
-                pInterfaceInfo->Pipes[j].PipeFlags = 0;
-                pInterfaceInfo->Pipes[j].MaximumTransferSize = DefaultMaxPacketSize;
+                pInterfaceInfo->Pipes[j].PipeFlags =
+                    m_SspIsochPipeFlags
+                        ? USBD_PF_HANDLES_SSP_HIGH_BANDWIDTH_ISOCH
+                        : 0;
+                pInterfaceInfo->Pipes[j].MaximumTransferSize = GetDefaultMaxTransferSize();
             }
 
             ASSERT(pCur + pInterfaceInfo->Length <= ((PUCHAR) urb) + size);
@@ -503,7 +504,7 @@ Arguments:
           that SAL checkers don't complain on bigger size usage than what's passed in
           (Total size of the URB union can be more than the the specific member that is passed in)
     File - The host file used for internal I/O.
-    
+
 Return Value:
     None
 
@@ -513,7 +514,7 @@ Return Value:
     FX_VERIFY(INTERNAL, CHECK_NOT_NULL(Urb));
     FX_VERIFY(INTERNAL, CHECK_TODO(Urb->Length >= sizeof(_UMURB_HEADER)));
     FX_VERIFY(INTERNAL, CHECK_NOT_NULL(HostFile));
-    
+
     IWudfIoIrp* pIoIrp = NULL;
     IWudfIrp* pIrp = Request->GetSubmitIrp();
 
@@ -525,7 +526,7 @@ Return Value:
         Request->GetSubmitFxIrp()->Reuse(STATUS_SUCCESS);
         Request->ClearFieldsForReuse();
     }
-    
+
     HRESULT hrQI = pIrp->QueryInterface(IID_IWudfIoIrp, (PVOID*)&pIoIrp);
     FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pIoIrp));
 
@@ -609,6 +610,6 @@ FxUsbUmInitInformationUrb(
     UmUrb->UmUrbDeviceInformation.InformationType = DEVICE_SPEED;
     UmUrb->UmUrbDeviceInformation.BufferLength = BufferLength;
     UmUrb->UmUrbDeviceInformation.Buffer = Buffer;
-}    
+}
 #endif
 

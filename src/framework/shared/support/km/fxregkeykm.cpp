@@ -172,7 +172,7 @@ FxRegKey::_QueryValue(
     else {
         length = _ComputePartialSize(ValueLength);
         pPartial = (PKEY_VALUE_PARTIAL_INFORMATION)
-            MxMemory::MxAllocatePoolWithTag(PagedPool, length, tag);
+            MxMemory::MxAllocatePool2(POOL_FLAG_PAGED, length, tag);
 
         if (pPartial == NULL) {
             return STATUS_INSUFFICIENT_RESOURCES;

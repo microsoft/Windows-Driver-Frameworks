@@ -259,9 +259,9 @@ FxIoTargetRemote::Open(
             }
             if (OpenParams->EaBuffer != NULL && OpenParams->EaBufferLength > 0) {
 
-                pEa = FxPoolAllocate(GetDriverGlobals(),
-                                     PagedPool,
-                                     OpenParams->EaBufferLength);
+                pEa = FxPoolAllocate2(GetDriverGlobals(),
+                                      POOL_FLAG_PAGED,
+                                      OpenParams->EaBufferLength);
 
                 if (pEa == NULL) {
                     DoTraceLevelMessage(
@@ -440,7 +440,7 @@ FxIoTargetRemote::Open(
     }
 
     //
-    // UMDF only. Bind handle to remote dispatcher. 
+    // UMDF only. Bind handle to remote dispatcher.
     //
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
     if (NT_SUCCESS(status) && type != WdfIoTargetOpenLocalTargetByFile) {
@@ -454,7 +454,7 @@ FxIoTargetRemote::Open(
     Lock(&irql);
 
     if (NT_SUCCESS(status)) {
-        
+
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
         m_TargetStackSize = m_TargetDevice->StackSize;
         m_TargetIoType = GetTargetIoType();
@@ -542,7 +542,7 @@ FxIoTargetRemote::Close(
     wait = FALSE;
 
     //
-    // Pick a value that is not used anywhere in the function and make sure that 
+    // Pick a value that is not used anywhere in the function and make sure that
     // we have changed it, before we go to the Remove state
     //
 #pragma prefast(suppress: __WARNING_UNUSED_ASSIGNMENT, "PFD is warning that the following assignement is unused. Suppress it to prevent changing any logic.")
@@ -589,19 +589,19 @@ CheckState:
             removeState = WdfIoTargetClosedForQueryRemove;
         }
         else {
-                       
+
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
                 "Closing WDFIOTARGET %p, reason:   close", GetObjectHandle());
-            
+
             if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,9)) {
                 removeState = WdfIoTargetClosed;
             }
             else {
                 removeState = WdfIoTargetClosedForQueryRemove;
-            }            
+            }
         }
-               
+
         //
         // Either way, we are no longer open for business
         //
@@ -679,7 +679,7 @@ CheckState:
         m_SentIoEvent.Clear();
         break;
     }
-    
+
     if (removeState == WdfIoTargetDeleted) {
        WaitForDisposeEvent();
     }

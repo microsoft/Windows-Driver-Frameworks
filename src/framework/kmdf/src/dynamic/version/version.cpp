@@ -660,8 +660,8 @@ WdfWriteKmdfVersionToRegistry(
         goto out;
     }
 
-    driverExtension->ParametersRegistryPath.Buffer = (PWCHAR) ExAllocatePoolWithTag(
-                                                                PagedPool,
+    driverExtension->ParametersRegistryPath.Buffer = (PWCHAR) ExAllocatePool2(
+                                                                POOL_FLAG_PAGED,
                                                                 RegistryPath->MaximumLength,
                                                                 FX_TAG);
     if (driverExtension->ParametersRegistryPath.Buffer == NULL) {

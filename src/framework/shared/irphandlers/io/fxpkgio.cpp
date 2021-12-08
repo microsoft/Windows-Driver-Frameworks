@@ -64,15 +64,15 @@ FxPkgIo::FxPkgIo(
     m_PowerStateOn = FALSE;
 
     m_QueuesAreShuttingDown = FALSE;
-    
+
     InitializeListHead(&m_IoQueueListHead);
-    
+
     InitializeListHead(&m_DynamicDispatchInfoListHead);
 
     Mx::MxQueryTickCount(&tickCount);
 
     m_RandomSeed = tickCount.LowPart;
- 
+
     DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
                         "Constructed FxPkgIo 0x%p",this);
 }
@@ -84,7 +84,7 @@ FxPkgIo::~FxPkgIo()
     m_DefaultQueue = NULL;
 
     m_Device = NULL;
-    
+
     while (!IsListEmpty(&m_DynamicDispatchInfoListHead)) {
         next = RemoveHeadList(&m_DynamicDispatchInfoListHead);
         FxIrpDynamicDispatchInfo* info;
@@ -107,14 +107,14 @@ FxPkgIo::Dispatch(
 {
     FxIrp fxIrp(Irp);
     FX_TRACK_DRIVER(GetDriverGlobals());
-    
+
     DoTraceLevelMessage(
         GetDriverGlobals(), TRACE_LEVEL_VERBOSE, TRACINGIO,
         "WDFDEVICE 0x%p !devobj 0x%p %!IRPMJ!, IRP_MN %x, IRP 0x%p",
         m_Device->GetHandle(), m_Device->GetDeviceObject(),
         fxIrp.GetMajorFunction(),
         fxIrp.GetMinorFunction(), Irp);
-    
+
     return DispatchStep1(Irp, m_DynamicDispatchInfoListHead.Flink);
 }
 
@@ -130,12 +130,12 @@ FX_VF_METHOD(FxPkgIo, VerifyDispatchContext) (
     PLIST_ENTRY next;
 
     PAGED_CODE_LOCKED();
-    
+
     //
     // Make sure context is valid.
     //
-    ctxValid = (PLIST_ENTRY)DispatchContext == 
-                    &m_DynamicDispatchInfoListHead ? 
+    ctxValid = (PLIST_ENTRY)DispatchContext ==
+                    &m_DynamicDispatchInfoListHead ?
                         TRUE : FALSE;
 
     for (next = m_DynamicDispatchInfoListHead.Flink;
@@ -155,7 +155,7 @@ FX_VF_METHOD(FxPkgIo, VerifyDispatchContext) (
                 DispatchContext, status);
         FxVerifierDbgBreakPoint(FxDriverGlobals);
     }
-    
+
     return status;
 }
 
@@ -172,7 +172,7 @@ FxPkgIo::DispatchStep1(
     Routine Description:
 
     Checks for any registered dynamic dispatch callbacks that handles this type of request, else
-    selects the default queue based on the IRP's major code. 
+    selects the default queue based on the IRP's major code.
 
 Arguments:
 
@@ -186,23 +186,23 @@ Return Value:
 
 --*/
 
-{       
+{
     NTSTATUS                status;
     FxIrp                   fxIrp(Irp);
 
     ASSERT(((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
-    
+
     ASSERT(fxIrp.GetMajorFunction() <= IRP_MJ_MAXIMUM_FUNCTION);
-    
+
     //
     // Look for I/O dynamic dispatch callbacks.
     //
     if ((PLIST_ENTRY)DispatchContext != &m_DynamicDispatchInfoListHead) {
         int     index;
         index = FxIrpDynamicDispatchInfo::Mj2Index(fxIrp.GetMajorFunction());
-        
+
         //
-        // Only read/writes/ctrls/internal_ctrls IRPs are allowed, i.e., request cannot 
+        // Only read/writes/ctrls/internal_ctrls IRPs are allowed, i.e., request cannot
         // IRP type in its callback.
         //
         if (index >= (int)FxIrpDynamicDispatchInfo::DynamicDispatchMax) {
@@ -212,12 +212,12 @@ Return Value:
                     "Driver cannot change the IRP type in its dispatch "
                     "callback Irp 0x%p, %!IRPMJ!, IRP_MN %x, Device 0x%p, "
                     "%!STATUS!",
-                    Irp, fxIrp.GetMajorFunction(), fxIrp.GetMinorFunction(), 
+                    Irp, fxIrp.GetMajorFunction(), fxIrp.GetMinorFunction(),
                     m_Device->GetHandle(), status);
             FxVerifierDbgBreakPoint(GetDriverGlobals());
             goto CompleteIrp;
         }
-        
+
         //
         // Verifier checks.
         //
@@ -228,43 +228,43 @@ Return Value:
 
         do {
             FxIrpDynamicDispatchInfo* info;
-                
-            info = CONTAINING_RECORD(DispatchContext, 
-                                     FxIrpDynamicDispatchInfo, 
+
+            info = CONTAINING_RECORD(DispatchContext,
+                                     FxIrpDynamicDispatchInfo,
                                      ListEntry);
             //
             // Advance to next node.
             //
             DispatchContext = (WDFCONTEXT)(((PLIST_ENTRY)DispatchContext)->Flink);
             ASSERT(((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
-            
+
             ASSERT(fxIrp.GetMajorFunction() == IRP_MJ_READ ||
                    fxIrp.GetMajorFunction() == IRP_MJ_WRITE ||
                    fxIrp.GetMajorFunction() == IRP_MJ_DEVICE_CONTROL ||
                    fxIrp.GetMajorFunction() == IRP_MJ_INTERNAL_DEVICE_CONTROL);
-            
+
             //
             // If registered, invoke dispatch callback for this major function.
             //
             ASSERT(index < (int)FxIrpDynamicDispatchInfo::DynamicDispatchMax);
             if (NULL != info->Dispatch[index].EvtDeviceDynamicDispatch){
                 return info->Dispatch[index].EvtDeviceDynamicDispatch(
-                                m_Device->GetHandle(), 
+                                m_Device->GetHandle(),
                                 fxIrp.GetMajorFunction(),
                                 fxIrp.GetMinorFunction(),
                                 fxIrp.GetParameterIoctlCode(),
                                 info->Dispatch[index].DriverContext,
                                 reinterpret_cast<PIRP> (fxIrp.GetIrp()),
-                                (WDFCONTEXT)((ULONG_PTR)DispatchContext | 
+                                (WDFCONTEXT)((ULONG_PTR)DispatchContext |
                                               FX_IN_DISPATCH_CALLBACK)
                                 );
             }
-         } while ((PLIST_ENTRY)DispatchContext != 
+         } while ((PLIST_ENTRY)DispatchContext !=
                                 &m_DynamicDispatchInfoListHead);
     }
 
     //
-    // Only now push these local variables on the stack, this is to keep the 
+    // Only now push these local variables on the stack, this is to keep the
     // stack from growing unnecessarily in the dynamic dispatch path above.
     //
     FxIoQueue*              queue;
@@ -283,14 +283,14 @@ Return Value:
             if (m_Filter) {
                 goto Forward;
             }
-        
+
             status = STATUS_INVALID_DEVICE_REQUEST;
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIO,
                 "No queue configured for WDFDEVICE 0x%p, failing IRP 0x%p,"
                 " %!STATUS!",
                 m_Device->GetHandle(), Irp, status);
-        
+
             goto CompleteIrp;
         }
     }
@@ -346,14 +346,14 @@ FxPkgIo::DispatchStep2(
     __in_opt FxIoInCallerContext* IoInCallerCtx,
     __in_opt FxIoQueue*  Queue
     )
-{       
+{
     NTSTATUS            status;
     FxRequest*          request;
     BOOLEAN             isForwardProgressQueue;
     BOOLEAN             inCriticalRegion;
     PWDF_OBJECT_ATTRIBUTES reqAttribs;
     FxIrp               fxIrp(Irp);
-    
+
     request = NULL;
     inCriticalRegion = FALSE;
     isForwardProgressQueue = Queue != NULL && Queue->IsForwardProgressQueue();
@@ -362,13 +362,13 @@ FxPkgIo::DispatchStep2(
     ASSERT((IoInCallerCtx != NULL && IoInCallerCtx->m_Method != NULL) ||
             Queue != NULL);
     //
-    // The request inserted into the queue can be retrieved and processed 
+    // The request inserted into the queue can be retrieved and processed
     // by an arbitrary thread. So we need to make sure that such a thread doesn't
-    // get suspended and deadlock the driver and potentially the system by 
-    // entering critical region.The KeEnterCriticalRegion temporarily disables 
-    // the delivery of normal kernel APCs used to suspend a thread. 
-    // Kernel APCs queued to this thread will get executed when we leave the 
-    // critical region. 
+    // get suspended and deadlock the driver and potentially the system by
+    // entering critical region.The KeEnterCriticalRegion temporarily disables
+    // the delivery of normal kernel APCs used to suspend a thread.
+    // Kernel APCs queued to this thread will get executed when we leave the
+    // critical region.
     //
     if (Mx::MxGetCurrentIrql() <= APC_LEVEL) {
         Mx::MxEnterCriticalRegion();
@@ -379,20 +379,20 @@ FxPkgIo::DispatchStep2(
         reqAttribs = &Queue->GetCxDeviceInfo()->RequestAttributes;
     }
     else {
-        reqAttribs = m_Device->GetRequestAttributes(); 
+        reqAttribs = m_Device->GetRequestAttributes();
     }
 
     status = FxRequest::_CreateForPackage(m_Device, reqAttribs, Irp, &request);
-    
+
     //
     // Check if it is forward progress queue and the EnhancedVerifierOption for
-    // testing forward progress are set. 
+    // testing forward progress are set.
     //
-    if (isForwardProgressQueue && 
+    if (isForwardProgressQueue &&
         NT_SUCCESS(status) &&
         IsFxVerifierTestForwardProgress(GetDriverGlobals())) {
         //
-        // This function returns STATUS_INSUFFICIENT_RESOURCES 
+        // This function returns STATUS_INSUFFICIENT_RESOURCES
         // if testing forward progress is enabled and free's the passed in request.
         //
         status = VerifierFreeRequestToTestForwardProgess(request);
@@ -425,23 +425,23 @@ FxPkgIo::DispatchStep2(
     }
     else {
         if (isForwardProgressQueue) {
-            status = Queue->InvokeAllocateResourcesCallback(request); 
+            status = Queue->InvokeAllocateResourcesCallback(request);
             if (!NT_SUCCESS(status)) {
                 //
-                // Failure of the callback means the driver wasn't able to 
-                // allocate resources for the request. In that case free the 
+                // Failure of the callback means the driver wasn't able to
+                // allocate resources for the request. In that case free the
                 // request allocated earlier and use the reserved one.
-                // 
+                //
                 request->FreeRequest();
                 request = NULL;
-                
+
                 status = Queue->GetReservedRequest(Irp, &request);
                 if (status == STATUS_PENDING) {
                     goto IrpIsGone;
                 }
                 else if (!NT_SUCCESS(status)) {
                     goto CompleteIrp;
-                }            
+                }
             }
         }
     }
@@ -449,17 +449,17 @@ FxPkgIo::DispatchStep2(
     //
     // Since we can't guarantee the callback to be called in the context of the
     // caller for reserved requests, we will skip calling InCallerContextCallback
-    // for reserverd request. 
+    // for reserverd request.
     //
     if (IoInCallerCtx != NULL &&
-        IoInCallerCtx->m_Method != NULL && 
+        IoInCallerCtx->m_Method != NULL &&
         request->IsReserved() == FALSE) {
-        
+
         request->SetInternalContext(Queue);
-        status = DispathToInCallerContextCallback(IoInCallerCtx, request, Irp);
+        status = DispatchToInCallerContextCallback(IoInCallerCtx, request, Irp);
 
         //
-        // The driver is responsible for calling WdfDeviceEnqueueRequest to 
+        // The driver is responsible for calling WdfDeviceEnqueueRequest to
         // insert it back into the I/O processing pipeline, or completing it.
         //
         goto IrpIsGone;
@@ -482,7 +482,7 @@ IrpIsGone:
     if (inCriticalRegion) {
         Mx::MxLeaveCriticalRegion();
     }
-    
+
     return status;
 }
 
@@ -544,7 +544,7 @@ __inline
 FxDriver*
 FxPkgIo::GetDriver(
     VOID
-    ) 
+    )
 {
     return m_Device->GetDriver();
 }
@@ -553,31 +553,31 @@ _Must_inspect_result_
 NTSTATUS
 FX_VF_METHOD(FxPkgIo, VerifyEnqueueRequestUpdateFlags) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
-    _In_ FxRequest* Request, 
+    _In_ FxRequest* Request,
     _Inout_ SHORT* OrigVerifierFlags
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
 
     PAGED_CODE_LOCKED();
-    
+
     KIRQL irql;
-    
+
     Request->Lock(&irql);
-    
+
     *OrigVerifierFlags = Request->GetVerifierFlagsLocked();
-    
+
     status = Request->VerifyRequestIsInCallerContext(FxDriverGlobals);
     if (NT_SUCCESS(status)) {
         status = Request->VerifyRequestIsDriverOwned(FxDriverGlobals);
     }
-    
+
     if (NT_SUCCESS(status)) {
         Request->ClearVerifierFlagsLocked(
-                FXREQUEST_FLAG_DRIVER_INPROCESS_CONTEXT | 
+                FXREQUEST_FLAG_DRIVER_INPROCESS_CONTEXT |
                 FXREQUEST_FLAG_DRIVER_OWNED);
     }
-    
+
     Request->Unlock(irql);
     return status;
 }
@@ -585,7 +585,7 @@ FX_VF_METHOD(FxPkgIo, VerifyEnqueueRequestUpdateFlags) (
 VOID
 FX_VF_METHOD(FxPkgIo, VerifyEnqueueRequestRestoreFlags) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
-    _In_ FxRequest* Request, 
+    _In_ FxRequest* Request,
     _In_ SHORT OrigVerifierFlags
     )
 {
@@ -593,14 +593,14 @@ FX_VF_METHOD(FxPkgIo, VerifyEnqueueRequestRestoreFlags) (
     KIRQL irql;
 
     PAGED_CODE_LOCKED();
-    
+
     Request->Lock(&irql);
     Request->ClearVerifierFlagsLocked(~OrigVerifierFlags);
     Request->SetVerifierFlagsLocked(OrigVerifierFlags);
     Request->Unlock(irql);
 }
 
-    
+
 //
 // This inserts a request into the I/O processing pipeline
 //
@@ -617,11 +617,11 @@ FxPkgIo::EnqueueRequest(
     FxRequestCompletionState oldState;
     PFX_DRIVER_GLOBALS FxDriverGlobals = GetDriverGlobals();
     SHORT origVerifierFlags = 0;
-        
+
     //
-    // Request is owned by the driver, and has a reference count of == 1 
+    // Request is owned by the driver, and has a reference count of == 1
     // (or > 1 if EvtIoInCallerContext callback took an additional reference),
-    // with a FxPkgIoInProcessRequestComplete callback registered.   
+    // with a FxPkgIoInProcessRequestComplete callback registered.
     //
     ASSERT(pRequest->GetRefCnt() >= 1);
 
@@ -630,15 +630,15 @@ FxPkgIo::EnqueueRequest(
     DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIO,
                         "WDFREQUEST 0x%p", pRequest->GetObjectHandle());
 
-    status = VerifyEnqueueRequestUpdateFlags(FxDriverGlobals, 
-                                             pRequest, 
+    status = VerifyEnqueueRequestUpdateFlags(FxDriverGlobals,
+                                             pRequest,
                                              &origVerifierFlags);
     if (!NT_SUCCESS(status)) {
         return status;
     }
-    
+
     //
-    // Get the associated queue 
+    // Get the associated queue
     //
     pQueue = (FxIoQueue*) pRequest->GetInternalContext();
     if (NULL == pQueue) {
@@ -668,7 +668,7 @@ FxPkgIo::EnqueueRequest(
             goto Error;
         }
     }
-    
+
     //
     // If the queue is a default-queue and driver is a filter then before
     // calling the queue we should make sure the queue can dispatch
@@ -738,15 +738,15 @@ Forward:
     //
     if (pRequest->HasContext()) {
         status = STATUS_INVALID_DEVICE_REQUEST;
-        
+
         DoTraceLevelMessage(
             FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
             "Cannot send-and-forget WDFREQUEST 0x%p with formatted IO"
-            " context for filter WDFDEVICE 0x%p, %!STATUS!",                
+            " context for filter WDFDEVICE 0x%p, %!STATUS!",
             pRequest->GetObjectHandle(),
             Device->GetHandle(),
             status );
-        
+
         FxVerifierDbgBreakPoint(FxDriverGlobals);
         goto Error;
     }
@@ -784,7 +784,7 @@ Error:
 }
 
 _Must_inspect_result_
-NTSTATUS 
+NTSTATUS
 FxPkgIo::ConfigureDynamicDispatching(
     __in UCHAR               MajorFunction,
     __in_opt FxCxDeviceInfo* CxDeviceInfo,
@@ -802,7 +802,7 @@ FxPkgIo::ConfigureDynamicDispatching(
 
     fxDriverGlobals = GetDriverGlobals();
     addNew = TRUE;
-    
+
     mjIndex = FxIrpDynamicDispatchInfo::Mj2Index(MajorFunction);
 
     //
@@ -815,14 +815,14 @@ FxPkgIo::ConfigureDynamicDispatching(
                             MajorFunction, status);
         goto Done;
     }
-    
+
     //
     // Get driver I/O device path index.
     //
     driverIndex = FxDevice::GetCxDriverIndex(CxDeviceInfo);
 
     //
-    // Insert new info into correct slot in the I/O path. 
+    // Insert new info into correct slot in the I/O path.
     // Index goes from higher to lower (..., 2, 1, 0) b/c cx's callback is called before
     // client's one.
     //
@@ -831,9 +831,9 @@ FxPkgIo::ConfigureDynamicDispatching(
          next = next->Flink) {
 
         CCHAR curIndex = 0;
-            
-        dispatchInfo = CONTAINING_RECORD(next, 
-                                         FxIrpDynamicDispatchInfo, 
+
+        dispatchInfo = CONTAINING_RECORD(next,
+                                         FxIrpDynamicDispatchInfo,
                                          ListEntry);
         //
         // Get current I/O device path index.
@@ -849,17 +849,17 @@ FxPkgIo::ConfigureDynamicDispatching(
                     fxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
                     "Driver %p has already set a dispatch callback for "
                     "%!IRPMJ!, %!STATUS!",
-                    CxDeviceInfo == NULL ? 
-                        GetDriver()->GetHandle() : 
+                    CxDeviceInfo == NULL ?
+                        GetDriver()->GetHandle() :
                         CxDeviceInfo->Driver->GetHandle(),
                     MajorFunction, status);
                 goto Done;
             }
-            
+
             dispatchInfo->Dispatch[mjIndex].DriverContext = DriverContext;
             dispatchInfo->Dispatch[mjIndex].EvtDeviceDynamicDispatch =
                 EvtDeviceWdmIrpDispatch;
-            
+
             ASSERT(dispatchInfo->CxDeviceInfo == CxDeviceInfo);
 
             addNew = FALSE;
@@ -889,7 +889,7 @@ FxPkgIo::ConfigureDynamicDispatching(
                     status);
             goto Done;
         }
-        
+
         dispatchInfo->CxDeviceInfo = CxDeviceInfo;
         dispatchInfo->Dispatch[mjIndex].DriverContext = DriverContext;
         dispatchInfo->Dispatch[mjIndex].EvtDeviceDynamicDispatch =
@@ -902,7 +902,7 @@ FxPkgIo::ConfigureDynamicDispatching(
     }
 
     status = STATUS_SUCCESS;
-    
+
 Done:
     return status;
 }
@@ -1042,11 +1042,11 @@ FxPkgIo::CreateQueue(
 
     //
     // v1.11 and up: get driver object if driver handle is specified.
-    // Client driver can also specify a driver handle, the end result in this case is 
-    // a PkgIoContext that is NULL (see below), i.e., the same as if driver handle 
+    // Client driver can also specify a driver handle, the end result in this case is
+    // a PkgIoContext that is NULL (see below), i.e., the same as if driver handle
     // was NULL.
     //
-    if (Config->Size > sizeof(WDF_IO_QUEUE_CONFIG_V1_9) && 
+    if (Config->Size > sizeof(WDF_IO_QUEUE_CONFIG_V1_9) &&
         Config->Driver != NULL) {
 
         FxObjectHandleGetPtr(GetDriverGlobals(),
@@ -1054,7 +1054,7 @@ FxPkgIo::CreateQueue(
                              FX_TYPE_DRIVER,
                              (PVOID*)&pDriver);
     }
-    
+
     status = FxIoQueue::_Create(pFxDriverGlobals,
                             QueueAttributes,
                             Config,
@@ -1075,7 +1075,7 @@ FxPkgIo::CreateQueue(
     if (pDriver != NULL) {
         pQueue->SetCxDeviceInfo(m_Device->GetCxDeviceInfo(pDriver));
     }
-   
+
     status = pQueue->Commit(QueueAttributes, NULL, pParent);
     if (!NT_SUCCESS(status)) {
        pQueue->DeleteFromFailedCreate();
@@ -1199,7 +1199,7 @@ Return Value:
     m_PowerStateOn = FALSE;
 
     //
-    // If queues are shutting down, any new queue created after 
+    // If queues are shutting down, any new queue created after
     // this point would not accept any requests.
     //
     switch(Action) {
@@ -1278,7 +1278,7 @@ Return Value:
     SINGLE_LIST_ENTRY queueList, *ple;
 
     DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGIO,
-                "Power resume all queues of WDFDEVICE 0x%p", 
+                "Power resume all queues of WDFDEVICE 0x%p",
                 m_Device->GetHandle());
 
     queueList.Next = NULL;
@@ -1291,7 +1291,7 @@ Return Value:
     // are resuming the existing queues can be in a powered-on state.
     //
     m_PowerStateOn = TRUE;
-    
+
     //
     // Change the accepting state so that new queues created while we
     // are resuming the existing queues can be accept request.
@@ -1381,7 +1381,7 @@ Return Value:
     Lock(&irql);
 
     m_PowerStateOn = TRUE;
-    
+
     m_QueuesAreShuttingDown = FALSE;
 
     Unlock(irql);
@@ -1416,7 +1416,7 @@ FxPkgIo::FlushAllQueuesByFileObject(
     PFX_DRIVER_GLOBALS pFxDriverGlobals = GetDriverGlobals();
     FxIoQueueNode flushBookmark(FxIoQueueNodeTypeBookmark);
     KIRQL irql;
-    
+
     if(Mx::MxGetCurrentIrql() != PASSIVE_LEVEL) {
 
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
@@ -1458,7 +1458,7 @@ GetIoQueueList_ProcessQueueListEntry(
 {
     FxIoQueueNode*      listNode;
     FxIoQueue*          queue;
-    
+
     //
     // Skip any nodes that are not queues. They can be bookmarks for
     // in-progress flush operations.
@@ -1470,7 +1470,7 @@ GetIoQueueList_ProcessQueueListEntry(
 
     queue = FxIoQueue::_FromIoPkgListEntry(QueueLE);
     PushEntryList(SListHead, &queue->m_PowerSListEntry);
-    
+
     //
     // Add a reference since the request will be touched outside of the
     // lock being held. We will use the enumerant value as the tag.
@@ -1493,7 +1493,7 @@ FxPkgIo::GetIoQueueListLocked(
 --*/
 {
     PLIST_ENTRY         listHead, le;
-    
+
     listHead = &m_IoQueueListHead;
 
     if (FxIoQueueIteratorListPowerOn == ListType ||
@@ -1507,8 +1507,8 @@ FxPkgIo::GetIoQueueListLocked(
         // the list backwards, we build the single list head in the order of m_IoQueueListHead.
         //
         for (le = listHead->Blink; le != listHead; le = le->Blink) {
-            GetIoQueueList_ProcessQueueListEntry(le, 
-                                                 SListHead, 
+            GetIoQueueList_ProcessQueueListEntry(le,
+                                                 SListHead,
                                                  IO_ITERATOR_POWER_TAG);
         }
     }
@@ -1518,11 +1518,11 @@ FxPkgIo::GetIoQueueListLocked(
         // List is already sorted with client driver's queue first.
         // Since we are inserting into the head of the single list head, if we walked
         // over the list from last to first, we would reverse the entries.  By walking
-        // the list forwards, we build the single list head in the desired order 
+        // the list forwards, we build the single list head in the desired order
         //
         for (le = listHead->Flink; le != listHead; le = le->Flink) {
-            GetIoQueueList_ProcessQueueListEntry(le, 
-                                                 SListHead, 
+            GetIoQueueList_ProcessQueueListEntry(le,
+                                                 SListHead,
                                                  IO_ITERATOR_POWER_TAG);
         }
     }
@@ -1541,7 +1541,7 @@ FxPkgIo::AddIoQueue(
     KIRQL               irql;
     FxIoQueueNode*      listNode;
     CCHAR               queueIndex, curIndex;
-    
+
     listHead = &m_IoQueueListHead;
     queueIndex = FxDevice::GetCxDriverIndex(IoQueue->GetCxDeviceInfo());
     Lock(&irql);
@@ -1566,16 +1566,16 @@ FxPkgIo::AddIoQueue(
         //
         queue = FxIoQueue::_FromIoPkgListEntry(le);
         curIndex = FxDevice::GetCxDriverIndex(queue->GetCxDeviceInfo());
-        // 
+        //
         // Queues are inserted in order at the end of its allowed range.
         //
         if (curIndex < queueIndex || curIndex == queueIndex) {
             break;
         }
     }
-        
+
     InsertHeadList(le, &IoQueue->m_IoPkgListNode.m_ListEntry);
-    
+
     if (m_PowerStateOn) {
         IoQueue->SetPowerState(FxIoQueuePowerOn);
     } else {
@@ -1617,24 +1617,24 @@ FxPkgIo::GetFirstIoQueueLocked(
 
     Routine Description:
 
-        Inserts the provided bookmark (FxIoQueueNode) at the beginning 
+        Inserts the provided bookmark (FxIoQueueNode) at the beginning
         of the IO Package's queue list, and calls GetNextIoQueueLocked
         to retrieve the first queue and to advance the bookmark.
 
         Function is called with the FxPkg lock held.
-        
+
     Return Value:
 
-        NULL            if there are no queues in list else 
+        NULL            if there are no queues in list else
         FxIoQueue*      reference to first queue in list.
 
 --*/
 {
     ASSERT(QueueBookmark->IsNodeType(FxIoQueueNodeTypeBookmark));
     ASSERT(IsListEmpty(&QueueBookmark->m_ListEntry));
-    
+
     InsertHeadList(&m_IoQueueListHead, &QueueBookmark->m_ListEntry);
-    
+
     return GetNextIoQueueLocked(QueueBookmark, Tag);
 }
 
@@ -1652,7 +1652,7 @@ FxPkgIo::GetNextIoQueueLocked(
 
     Return Value:
 
-        NULL            if there are no more queues in list else 
+        NULL            if there are no more queues in list else
         FxIoQueue*      reference to the next queue in list.
 
 --*/
@@ -1663,17 +1663,17 @@ FxPkgIo::GetNextIoQueueLocked(
 
     ASSERT(QueueBookmark->IsNodeType(FxIoQueueNodeTypeBookmark));
     ASSERT(IsListEmpty(&QueueBookmark->m_ListEntry) == FALSE);
-    
+
     //
     // Try to advance bookmark to next location.
-    //    
+    //
     ple = QueueBookmark->m_ListEntry.Flink;
     RemoveEntryList(&QueueBookmark->m_ListEntry);
     InitializeListHead(&QueueBookmark->m_ListEntry);
 
     for (; ple != &m_IoQueueListHead; ple = ple->Flink) {
         //
-        // Skip any nodes that are not queues. These nodes can be 
+        // Skip any nodes that are not queues. These nodes can be
         // bookmarks for in-progress flush operations.
         //
         listNode = FxIoQueueNode::_FromListEntry(ple);
@@ -1682,7 +1682,7 @@ FxPkgIo::GetNextIoQueueLocked(
             //
             // This entry is a real queue.
             //
-            queue = FxIoQueue::_FromIoPkgListEntry(ple);        
+            queue = FxIoQueue::_FromIoPkgListEntry(ple);
             queue->ADDREF(Tag);
 
             //
@@ -1698,7 +1698,7 @@ FxPkgIo::GetNextIoQueueLocked(
 }
 
 NTSTATUS
-FxPkgIo::DispathToInCallerContextCallback(
+FxPkgIo::DispatchToInCallerContextCallback(
     __in    FxIoInCallerContext *InCallerContextInfo,
     __in    FxRequest *Request,
     __inout MdIrp      Irp
@@ -1709,7 +1709,7 @@ FxPkgIo::DispathToInCallerContextCallback(
     FxIrp fxIrp(Irp);
 
     pFxDriverGlobals = GetDriverGlobals();
-            
+
     //
     // Mark the IRP pending since we are going
     // to return STATUS_PENDING regardless of whether
@@ -1731,7 +1731,7 @@ FxPkgIo::DispathToInCallerContextCallback(
 
     ASSERT(oldState == FxRequestCompletionStateNone);
     UNREFERENCED_PARAMETER(oldState);
-    
+
     //
     // Release the reference count on the request since
     // the callback will hold the only one that gets
@@ -1740,18 +1740,18 @@ FxPkgIo::DispathToInCallerContextCallback(
     Request->RELEASE(FXREQUEST_STATE_TAG);
 
     Request->SetPresented();
-    
+
     //
     // Drivers that use this API are responsible for handling
     // all locking, threading, and IRQL level issues...
     //
-    InCallerContextInfo->Invoke(m_Device->GetHandle(), 
+    InCallerContextInfo->Invoke(m_Device->GetHandle(),
                                 Request->GetHandle());
     //
     // The driver is responsible for calling WdfDeviceEnqueueRequest to insert
     // it back into the I/O processing pipeline, or completing it.
     //
-    
+
     return STATUS_PENDING;
 }
 
@@ -1764,31 +1764,31 @@ FxPkgIo::VerifierFreeRequestToTestForwardProgess(
     BOOLEAN failAllocation;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
-    pFxDriverGlobals = GetDriverGlobals();    
+    pFxDriverGlobals = GetDriverGlobals();
     failAllocation = FALSE;
     //
     // forwardProgressTestFailAll takes precedence over forwardProgressTestFailRandom
     //
-    if (IsFxVerifierTestForwardProgressFailAll(pFxDriverGlobals)) {       
+    if (IsFxVerifierTestForwardProgressFailAll(pFxDriverGlobals)) {
         failAllocation = TRUE;
-    } 
-    else if (IsFxVerifierTestForwardProgressFailRandom(pFxDriverGlobals)) {            
+    }
+    else if (IsFxVerifierTestForwardProgressFailRandom(pFxDriverGlobals)) {
         //
         // Modulo 17 makes the probability of failure ~6% just like verifier.exe
         //
         failAllocation = (FxRandom(&m_RandomSeed) % 17 == 0);
     }
-    
+
     if (failAllocation) {
         //
-        // Don't use DeleteObject() here as the Request wasn't presented to the 
-        // driver and the cleanup /dispose callback can be invoked unless 
+        // Don't use DeleteObject() here as the Request wasn't presented to the
+        // driver and the cleanup /dispose callback can be invoked unless
         // we use FreeRequest() which clears the cleanup /dispose callbacks
         //
         Request->FreeRequest();
-    
+
         return STATUS_INSUFFICIENT_RESOURCES;
-    } 
+    }
     else {
         return STATUS_SUCCESS;
     }

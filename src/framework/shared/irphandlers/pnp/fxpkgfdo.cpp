@@ -995,7 +995,7 @@ Return Value:
                 //
                 if (m_ResourcesRaw->Count() > 0) {
                     pContext->ResourcesRaw =
-                        m_ResourcesRaw->CreateWdmList(NonPagedPool);
+                        m_ResourcesRaw->CreateWdmList(POOL_FLAG_NON_PAGED);
 
                     if (pContext->ResourcesRaw == NULL) {
                         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1004,7 +1004,7 @@ Return Value:
 
                 if (NT_SUCCESS(status) && m_Resources->Count() > 0) {
                     pContext->ResourcesTranslated =
-                        m_Resources->CreateWdmList(NonPagedPool);
+                        m_Resources->CreateWdmList(POOL_FLAG_NON_PAGED);
 
                     if (pContext->ResourcesTranslated == NULL) {
                         status = STATUS_INSUFFICIENT_RESOURCES;

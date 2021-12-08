@@ -847,6 +847,20 @@ VFWDFEXPORT(WdfDeviceGetSystemPowerAction)(
     WDFDEVICE Device
     );
 
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+NTAPI
+VFWDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PWDF_POWER_FRAMEWORK_SETTINGS PowerFrameworkSettings
+    );
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
@@ -4373,6 +4387,7 @@ WDFVERSION VfWdfVersion = {
         VFWDFEXPORT(WdfCxDeviceInitGetTypedContextWorker),
         VFWDFEXPORT(WdfCxDeviceInitSetPowerPolicyEventCallbacks),
         VFWDFEXPORT(WdfDeviceSetDeviceInterfaceStateEx),
+        VFWDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings),
     }
 };
 

@@ -19,7 +19,7 @@ enum FxUsbPipeMaxTransferSize {
 
 struct FxUsbPipeTransferContext : public FxUsbRequestContext {
     FxUsbPipeTransferContext(
-        __in FX_URB_TYPE UrbType     
+        __in FX_URB_TYPE UrbType
         );
 
     ~FxUsbPipeTransferContext(
@@ -84,7 +84,7 @@ private:
 
 public:
     _URB_BULK_OR_INTERRUPT_TRANSFER m_UrbLegacy;
-    
+
     //
     // m_Urb will either point to m_UrbLegacy or one allocated by USBD_UrbAllocate
     //
@@ -284,8 +284,8 @@ protected:
             pContext->m_RequestMemory->Delete();
             //
             // NOTE: Don't NULL out the m_RequestMemory member as this will
-            // prevent Reuse from releasing a reference on the m_RequestMemory object 
-            // and hence these memory objects will not be freed. 
+            // prevent Reuse from releasing a reference on the m_RequestMemory object
+            // and hence these memory objects will not be freed.
             //
         }
     }
@@ -308,10 +308,10 @@ protected:
     static
     MX_WORKITEM_ROUTINE
     _ReadWorkItem;
-        
+
 
     static
-    EVT_WDF_REQUEST_COMPLETION_ROUTINE 
+    EVT_WDF_REQUEST_COMPLETION_ROUTINE
     _FxUsbPipeRequestComplete;
 
     static
@@ -365,17 +365,17 @@ public:
     PVOID m_WorkItemRerunContext;
 
     //
-    // This is a pointer to the work-item's thread object. This value is 
-    // used for not deadlocking when misbehaved drivers (< v1.9) call 
+    // This is a pointer to the work-item's thread object. This value is
+    // used for not deadlocking when misbehaved drivers (< v1.9) call
     // WdfIoTargetStop from EvtUsbTargetPipeReadersFailed callback.
     //
-    volatile POINTER_ALIGNMENT MxThread m_WorkItemThread;    
+    volatile POINTER_ALIGNMENT MxThread m_WorkItemThread;
 
     //
     // Work item flags (see FX_USB_WORKITEM_Xxx defines).
     //
     ULONG m_WorkItemFlags;
-    
+
     //
     // Number of readers who have failed due to internal allocation errors
     //
@@ -423,7 +423,7 @@ public:
         __in UCHAR InterfaceNumber,
         __in FxUsbInterface* UsbInterface
         );
-    
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
     VOID
     InitPipe(
@@ -434,7 +434,7 @@ public:
 #endif
 
     _Must_inspect_result_
-    virtual    
+    virtual
     NTSTATUS
     GotoStartState(
         __in PLIST_ENTRY    RequestListHead,
@@ -449,7 +449,7 @@ public:
         __out PBOOLEAN                      Wait,
         __in BOOLEAN                        LockSelf
         );
-    
+
     VOID
     GotoPurgeState(
         __in WDF_IO_TARGET_PURGE_IO_ACTION  Action,
@@ -458,7 +458,7 @@ public:
         __out PBOOLEAN                      Wait,
         __in BOOLEAN                        LockSelf
         );
-    
+
     virtual
     VOID
     GotoRemoveState(
@@ -492,13 +492,18 @@ public:
     BOOLEAN
     IsType(
         __in WDF_USB_PIPE_TYPE Type
-        );
-
+        )
+    {
+        return GetType() == Type;
+    }
 
     WDF_USB_PIPE_TYPE
     GetType(
         VOID
-        );
+        )
+    {
+        return _UsbdPipeTypeToWdf(m_PipeInformation.PipeType);
+    }
 
     WDFUSBPIPE
     GetHandle(
@@ -507,6 +512,17 @@ public:
     {
         return (WDFUSBPIPE) GetObjectHandle();
     }
+
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+    __inline
+    UCHAR
+    GetPipeId(
+        VOID
+        )
+    {
+        return m_PipeInformation.EndpointAddress;
+    }
+#endif
 
     __inline
     BOOLEAN
@@ -519,11 +535,7 @@ public:
         // return 0 or some non zero value.  Make sure the non zero value is
         // TRUE
         //
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
         return USB_ENDPOINT_DIRECTION_IN(m_PipeInformation.EndpointAddress) ? TRUE : FALSE;
-#elif (FX_CORE_MODE == FX_CORE_USER_MODE)
-        return USB_ENDPOINT_DIRECTION_IN(m_PipeInformationUm.PipeId) ? TRUE : FALSE;
-#endif
     }
 
     __inline
@@ -537,11 +549,7 @@ public:
         // return 0 or some non zero value.  Make sure the non zero value is
         // TRUE
         //
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
         return USB_ENDPOINT_DIRECTION_OUT(m_PipeInformation.EndpointAddress) ? TRUE : FALSE;
-#elif (FX_CORE_MODE == FX_CORE_USER_MODE)
-        return USB_ENDPOINT_DIRECTION_OUT(m_PipeInformationUm.PipeId) ? TRUE : FALSE;
-#endif
     }
 
     _Must_inspect_result_
@@ -557,9 +565,11 @@ public:
         )
     {
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-        return  m_PipeInformation.MaximumPacketSize;
+        return  FLAG_TO_BOOL(m_PipeInformation.PipeFlags, USBD_PF_SSP_HIGH_BANDWIDTH_ISOCH)
+                    ? m_PipeInformation.MaximumTransferSize
+                    : m_PipeInformation.MaximumPacketSize;
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
-        return  m_PipeInformationUm.MaximumPacketSize;
+        return  m_PipeInformation.MaximumPacketSize;
 #endif
     }
 
@@ -573,11 +583,7 @@ public:
         // Assumes this is not a control pipe
         //
         if (m_CheckPacketSize &&
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-            (Length % m_PipeInformation.MaximumPacketSize) != 0) {
-#elif (FX_CORE_MODE == FX_CORE_USER_MODE)
-            (Length % m_PipeInformationUm.MaximumPacketSize) != 0) {
-#endif
+            (Length % GetMaxPacketSize()) != 0) {
             return STATUS_INVALID_BUFFER_SIZE;
         }
         else {
@@ -658,7 +664,7 @@ public:
             return WdfUsbPipeTypeInvalid;
         }
     }
-    
+
     NTSTATUS
     Reset(
         VOID
@@ -694,15 +700,15 @@ protected:
     Dispose(
         VOID
         );
-    
+
     FxUsbDevice* m_UsbDevice;
 
     FxUsbInterface* m_UsbInterface;
 
     //
-    // If the pipe does not have a continuous reader, this field is NULL.  
+    // If the pipe does not have a continuous reader, this field is NULL.
     // It is also cleared within the pipe's Dispose function after deleting
-    // the continuous reader to prevent misbehaved drivers from 
+    // the continuous reader to prevent misbehaved drivers from
     // crashing the system when they call WdfIoTargetStop from their usb pipe's
     // destroy callback.
     //
@@ -711,14 +717,13 @@ protected:
     //
     // Information about this pipe
     //
+    // For UMDF, the following fields should not be used:
+    //
+    //   USBD_PIPE_HANDLE PipeHandle;   // KMDF: WdfUsbTargetPipeWdmGetPipeHandle
+    //   ULONG  MaximumTransferSize;    // KMDF: > 64KB size if high_bw_iso flag
+    //   ULONG  PipeFlags;              // KMDF: USBD_PF_SSP_HIGH_BANDWIDTH_ISOCH
+    //
     USBD_PIPE_INFORMATION  m_PipeInformation;
-
-#if (FX_CORE_MODE == FX_CORE_USER_MODE)
-
-
-
-    WINUSB_PIPE_INFORMATION m_PipeInformationUm;
-#endif
 
     //
     // Interface associated with this pipe
@@ -730,14 +735,14 @@ protected:
     // multiple of max packet size.
     //
     BOOLEAN m_CheckPacketSize;
-    
+
     //
     // The USBD_HANDLE exchanged by FxUsbDevice
     //
     USBD_HANDLE m_USBDHandle;
 
     //
-    // If the client driver submits an URB to do a USB transfer, this field indicates 
+    // If the client driver submits an URB to do a USB transfer, this field indicates
     // the type of that Urb
     //
     FX_URB_TYPE m_UrbType;

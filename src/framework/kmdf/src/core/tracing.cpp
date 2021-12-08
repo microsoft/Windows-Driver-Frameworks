@@ -60,7 +60,7 @@ Routine Description:
 Arguments:
 
     None
-    
+
 Returns:
 
     NTSTATUS code
@@ -113,7 +113,7 @@ FxWmiTraceMessage(
     va_list va;
 
     va_start(va, MessageNumber);
-    
+
     status = WmiTraceMessageVa(LoggerHandle,
                                MessageFlags,
                                MessageGuid,
@@ -150,8 +150,8 @@ Return Value:
 {
     FxAutoRegKey service, parameters;
     NTSTATUS status;
-    OBJECT_ATTRIBUTES oa;
     ULONG numPages;
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     //
     // This is the value used in case of any error while retrieving 'LogPages'
@@ -163,28 +163,15 @@ Return Value:
     // External representation of the IFR is the "LogPages", so use that term when
     // overriding the size via the registry.
     //
-    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Wdf");
     DECLARE_CONST_UNICODE_STRING(valueName, L"LogPages");
 
-    InitializeObjectAttributes(&oa,
-                               (PUNICODE_STRING)RegistryPath,
-                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    status = ZwOpenKey(&service.m_Key, KEY_READ, &oa);
+    status = OpenDriverParamsKeyForRead(FxDriverGlobals, &service.m_Key);
     if (!NT_SUCCESS(status)) {
         goto defaultValues;
     }
 
-    InitializeObjectAttributes(&oa,
-                               (PUNICODE_STRING)&parametersPath,
-                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                               service.m_Key,
-                               NULL);
-
-    status = ZwOpenKey(&parameters.m_Key, KEY_READ, &oa);
-
+    status = FxRegKey::_OpenKey(service.m_Key, &parametersPath, &parameters.m_Key, KEY_READ);
     if (!NT_SUCCESS(status)) {
         goto defaultValues;
     }
@@ -255,9 +242,9 @@ Routine Description:
 
     size = FxIFRGetSize(FxDriverGlobals, RegistryPath);
 
-    pHeader = (PWDF_IFR_HEADER) ExAllocatePoolWithTag(NonPagedPool,
-                                                      size,
-                                                      WDF_IFR_LOG_TAG );
+    pHeader = (PWDF_IFR_HEADER) ExAllocatePool2(POOL_FLAG_NON_PAGED,
+                                                size,
+                                                WDF_IFR_LOG_TAG );
     if (pHeader == NULL) {
         return;
     }
@@ -316,15 +303,15 @@ Routine Description:
         ASSERT(FxDriverGlobals->WdfLogHeader == NULL);
         return;
     }
-    
+
     if (FxDriverGlobals == NULL || FxDriverGlobals->WdfLogHeader == NULL) {
         return;
     }
 
     //
-    // Under normal operation the ref count should usually drop to zero when 
-    // FxIfrStop is called by FxLibraryCommonUnregisterClient, unless 
-    // FxIfrReplay is in the process of making a copy of the IFR buffer. 
+    // Under normal operation the ref count should usually drop to zero when
+    // FxIfrStop is called by FxLibraryCommonUnregisterClient, unless
+    // FxIfrReplay is in the process of making a copy of the IFR buffer.
     // In which case that thread will call FxIfrStop.
     //
     if (0 == InterlockedDecrement(&(FxDriverGlobals->WdfLogHeaderRefCount))) {
@@ -404,7 +391,7 @@ Returns:
         size_t    argLen;
 
         va_start(ap, MessageNumber);
-        
+
         while ((va_arg(ap, PVOID)) != NULL) {
 
             argLen = va_arg(ap, size_t);
@@ -445,35 +432,66 @@ Returns:
         header = (PWDF_IFR_HEADER) FxDriverGlobals->WdfLogHeader;
 
         FxVerifyLogHeader(FxDriverGlobals, header);
-        
+
+        //
+        // Allocate space for the log in our circular buffer in a lockless way.
+        // The idea is: read the current buffer position, try and reserve space
+        // for our log, and then try and write the new buffer position. If another
+        // thread has changed the buffer position in this time simply try again.
+        //
         offsetRet.u.AsLONG = header->Offset.u.AsLONG;
-        offsetNew.u.AsLONG = offsetRet.u.s.Current;
 
         do {
+            //
+            // See if we can reserve based on our expected buffer position, and
+            // verify with InterlockedCompareExchange that this is the actual
+            // position (that another thread hasn't already beaten us here).
+            //
             offsetCur.u.AsLONG = offsetRet.u.AsLONG;
 
+            //
+            // See if we need to wrap around or if we can fit in the forward iteration
+            //
             if (&header->Base[header->Size] < &header->Base[offsetCur.u.s.Current+size]) {
 
-                offsetNew.u.s.Current  = 0;
-                offsetNew.u.s.Previous = offsetRet.u.s.Previous;
+                //
+                // We need to wrap around to the start of the buffer
+                //
+                offsetNew.u.s.Current  = usSize;
+                offsetNew.u.s.Previous = 0;
 
-                offsetRet.u.AsLONG =
-                    InterlockedCompareExchange( &header->Offset.u.AsLONG,
-                                                offsetNew.u.AsLONG,
-                                                offsetCur.u.AsLONG );
-
-                if (offsetCur.u.AsLONG != offsetRet.u.AsLONG) {
-                    continue;
-                } else {
-                    offsetNew.u.s.Current  = offsetCur.u.s.Current + usSize;
-                    offsetNew.u.s.Previous = offsetRet.u.s.Current;
-                }
             } else {
 
+                //
+                // We didn't need to wrap around so try claiming room at the
+                // end of the buffer
+                //
                 offsetNew.u.s.Current  = offsetCur.u.s.Current + usSize;
                 offsetNew.u.s.Previous = offsetCur.u.s.Current;
             }
 
+            //
+            // Check if another thread has preempted us and moved the log global
+            // offset pointer. If it has not, then our expected offset matches
+            // the log global offset, and we move it ourselves and claim the
+            // memory for our thread's use.
+            //
+            //   Thread 1:                          |  Thread 2:
+            //                                      |
+            //   offsetCur = header->Offset;        |  offsetCur = header->Offset;
+            //                                      |
+            //   compare and exchange, i.e.         |
+            //   offsetRet = header->Offset;        |
+            //   if (offsetCur == header->Offset) { |
+            //       header->Offset = offsetNew;    |
+            //   }                                  |
+            //                                      |  offsetRet = header->Offset; // read changed header
+            //                                      |  if (offsetCur == header->Offset) { // false
+            //                                      |      // because of false, do not modify header
+            //                                      |  }
+            //                                      |
+            //   break loop as offsetCur==offsetRet |  loop again as offsetCur != offsetRet
+            //
             offsetRet.u.AsLONG =
                 InterlockedCompareExchange( &header->Offset.u.AsLONG,
                                             offsetNew.u.AsLONG,
@@ -481,7 +499,11 @@ Returns:
 
         } while (offsetCur.u.AsLONG != offsetRet.u.AsLONG);
 
-        record = (PWDF_IFR_RECORD) &header->Base[offsetRet.u.s.Current];
+        //
+        // We had a successful compare+exchange, meaning we successfully reserved
+        // space in the buffer for this log message.
+        //
+        record = (PWDF_IFR_RECORD) &header->Base[offsetNew.u.s.Previous];
 
         // RtlZeroMemory( record, sizeof(WDF_IFR_RECORD) );
 

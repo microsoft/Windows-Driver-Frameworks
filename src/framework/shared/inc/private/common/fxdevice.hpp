@@ -1619,7 +1619,9 @@ public:
         {
             FxCxCallbackSmIoInit,
             FxCxCallbackSmIoRestart,
+            FxCxCallbackSmIoRestartEx,
             FxCxCallbackSmIoSuspend,
+            FxCxCallbackSmIoSuspendEx,
             FxCxCallbackSmIoFlush,
             FxCxCallbackSmIoCleanup
         };

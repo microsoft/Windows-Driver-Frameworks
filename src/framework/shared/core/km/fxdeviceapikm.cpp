@@ -39,16 +39,16 @@ extern "C" {
 //
 // Do not specify argument names
 FX_DECLARE_VF_FUNCTION_P3(
-VOID, 
-VerifyWdfDeviceWdmDispatchIrp, 
+VOID,
+VerifyWdfDeviceWdmDispatchIrp,
     _In_ PWDF_DRIVER_GLOBALS,
-    _In_ FxDevice*, 
-    _In_ WDFCONTEXT 
+    _In_ FxDevice*,
+    _In_ WDFCONTEXT
     );
 
 // Do not specify argument names
 FX_DECLARE_VF_FUNCTION_P4(
-NTSTATUS, 
+NTSTATUS,
 VerifyWdfDeviceWdmDispatchIrpToIoQueue,
     _In_ FxDevice*,
     _In_ MdIrp,
@@ -161,12 +161,12 @@ Return Value:
     FxDevice *pDevice;
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
-    
 
 
 
 
-    
+
+
     pFxFO = NULL;
 
     //
@@ -225,18 +225,18 @@ WDFEXPORT(WdfDeviceWdmDispatchPreprocessedIrp)(
                                    &fxDriverGlobals);
 
     FxPointerNotNull(fxDriverGlobals, Irp);
-    
+
     //
-    // Verifier checks. 
-    // This API can only be called by the client driver, Cx must call 
+    // Verifier checks.
+    // This API can only be called by the client driver, Cx must call
     // WdfDeviceWdmDispatchIrp from its preprocess callback.
-    // Also, Cx must register for a Preprocessor routine using 
+    // Also, Cx must register for a Preprocessor routine using
     // WdfCxDeviceInitAssignWdmIrpPreprocessCallback.
     //
     if (fxDriverGlobals->IsVerificationEnabled(1, 11, OkForDownLevel)) {
         if (device->IsCxInIoPath()) {
             FxDriver* driver = GetFxDriverGlobals(DriverGlobals)->Driver;
-            
+
             if (IsListEmpty(&device->m_PreprocessInfoListHead) ||
                 device->IsCxDriverInIoPath(driver)) {
 
@@ -253,7 +253,7 @@ WDFEXPORT(WdfDeviceWdmDispatchPreprocessedIrp)(
     // OK, ready to dispatch IRP.
     //
     return device->DispatchPreprocessedIrp(
-                        Irp, 
+                        Irp,
                         device->m_PreprocessInfoListHead.Flink->Flink);
 }
 
@@ -261,10 +261,10 @@ VOID
 FX_VF_FUNCTION(VerifyWdfDeviceWdmDispatchIrp) (
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
     _In_ PWDF_DRIVER_GLOBALS DriverGlobals,
-    _In_ FxDevice* device, 
+    _In_ FxDevice* device,
     _In_ WDFCONTEXT  DispatchContext
     )
-{    
+{
     UNREFERENCED_PARAMETER(FxDriverGlobals);
     FxDriver*   driver;
     BOOLEAN     ctxValid;
@@ -275,7 +275,7 @@ FX_VF_FUNCTION(VerifyWdfDeviceWdmDispatchIrp) (
 
     status = STATUS_SUCCESS;
     driver = GetFxDriverGlobals(DriverGlobals)->Driver;
-    ctxValid = (PLIST_ENTRY)DispatchContext == 
+    ctxValid = (PLIST_ENTRY)DispatchContext ==
                 &device->m_PreprocessInfoListHead ? TRUE : FALSE;
     //
     // Driver should be a cx.
@@ -289,7 +289,7 @@ FX_VF_FUNCTION(VerifyWdfDeviceWdmDispatchIrp) (
                 status);
         FxVerifierDbgBreakPoint(device->GetDriverGlobals());
     }
-    
+
     //
     // Validate DispatchContext.
     //
@@ -326,15 +326,15 @@ WDFEXPORT(WdfDeviceWdmDispatchIrp)(
     __in
     WDFCONTEXT DispatchContext
     )
-    
+
 /*++
 
 Routine Description:
 
-    Client driver calls this API from its dispatch callback when it decides to hand the IRP 
+    Client driver calls this API from its dispatch callback when it decides to hand the IRP
     back to framework.
 
-    Cx calls this API from (a) its pre-process callback or (b) its dispatch callback when 
+    Cx calls this API from (a) its pre-process callback or (b) its dispatch callback when
     it decides to hand the IRP back to the framework.
 
 Arguments:
@@ -348,7 +348,7 @@ Returns:
     IRP's status.
 
 --*/
-    
+
 {
     FxDevice *device;
     NTSTATUS status;
@@ -365,7 +365,7 @@ Returns:
         //
         // Called from a dispach irp callback.
         //
-        DispatchContext = 
+        DispatchContext =
             (WDFCONTEXT)((ULONG_PTR)DispatchContext & ~FX_IN_DISPATCH_CALLBACK);
 
         //
@@ -377,18 +377,18 @@ Returns:
         //
         // Called from a pre-process irp callback.
         //
-        
+
         //
         // Verifier checks.
         //
-        VerifyWdfDeviceWdmDispatchIrp(device->GetDriverGlobals(), 
+        VerifyWdfDeviceWdmDispatchIrp(device->GetDriverGlobals(),
                                       DriverGlobals,
-                                      device, 
+                                      device,
                                       DispatchContext);
-        
+
         status = device->DispatchPreprocessedIrp(Irp, DispatchContext);
     }
-    
+
     return status;
 }
 
@@ -414,27 +414,27 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
     PIO_STACK_LOCATION  stack;
     NTSTATUS            status;
     FxIoInCallerContext* ioInCallerCtx;
-    
+
     queue = NULL;
     ioInCallerCtx = NULL;
-    
+
     FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
                          Device,
                          FX_TYPE_DEVICE,
                          (PVOID*) &device);
 
-    fxDriverGlobals = device->GetDriverGlobals();    
+    fxDriverGlobals = device->GetDriverGlobals();
     FX_TRACK_DRIVER(fxDriverGlobals);
-    
+
     FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
                          Queue,
                          FX_TYPE_QUEUE,
                          (PVOID*)&queue);
-    
+
     FxPointerNotNull(fxDriverGlobals, Irp);
 
     //
-    // If the caller is a preprocess routine, the contract for this DDI is just like IoCallDriver.  
+    // If the caller is a preprocess routine, the contract for this DDI is just like IoCallDriver.
     // The caller sets up their stack location and then the DDI advances to the next stack
     // location. This means that the caller either has to call IoSkipCurrentIrpStackLocation
     // or IoCopyCurrentIrpStackLocationToNext before calling this DDI.
@@ -446,10 +446,10 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
     //
     // Verifier checks.
     //
-    status = VerifyWdfDeviceWdmDispatchIrpToIoQueue(fxDriverGlobals, 
-                                                    device, 
-                                                    Irp, 
-                                                    queue, 
+    status = VerifyWdfDeviceWdmDispatchIrpToIoQueue(fxDriverGlobals,
+                                                    device,
+                                                    Irp,
+                                                    queue,
                                                     Flags);
     if(!NT_SUCCESS(status)) {
         Irp->IoStatus.Status = status;
@@ -458,19 +458,19 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
 
         return status;
     }
-    
+
     //
     // Adjust stack if IRP needs to be forwarded to parent device.
     //
     if (device->m_ParentDevice == queue->GetDevice()) {
-        IoCopyCurrentIrpStackLocationToNext(Irp);   
-        IoSetNextIrpStackLocation(Irp);    
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+        IoSetNextIrpStackLocation(Irp);
 
         //
-        // From now on use new device. 
+        // From now on use new device.
         //
         device = device->m_ParentDevice;
-        
+
         //
         // Save a pointer to the device object for this request so that it can
         // be used later in completion.
@@ -478,7 +478,7 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
         stack = IoGetCurrentIrpStackLocation(Irp);
         stack->DeviceObject = device->GetDeviceObject();
     }
-    
+
     //
     // Get in-context caller callback if required.
     //
@@ -486,12 +486,12 @@ WDFEXPORT(WdfDeviceWdmDispatchIrpToIoQueue)(
         ioInCallerCtx = device->m_PkgIo->GetIoInCallerContextCallback(
                                                 queue->GetCxDeviceInfo());
     }
-    
+
     //
-    // DispatchStep2 will convert the IRP into a WDFREQUEST, queue it and if 
+    // DispatchStep2 will convert the IRP into a WDFREQUEST, queue it and if
     // possible dispatch the request to the driver.
     //
-    return device->m_PkgIo->DispatchStep2(Irp, ioInCallerCtx, queue);    
+    return device->m_PkgIo->DispatchStep2(Irp, ioInCallerCtx, queue);
 }
 
 _Must_inspect_result_
@@ -854,122 +854,6 @@ Return Value:
 }
 
 _Must_inspect_result_
-__drv_maxIRQL(PASSIVE_LEVEL)
-NTSTATUS
-WDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings)(
-    __in
-    PWDF_DRIVER_GLOBALS DriverGlobals,
-    __in
-    WDFDEVICE Device,
-    __in
-    PWDF_POWER_FRAMEWORK_SETTINGS PowerFrameworkSettings
-    )
-/*++
-
-Routine Description:
-    The DDI is invoked by KMDF client drivers for single-component devices to 
-    specify their power framework settings to KMDF. KMDF uses these settings on 
-    Win8+ when registering with the power framework. 
-    
-    On Win7 and older operating systems the power framework is not available, so
-    KMDF does nothing.
-
-Arguments:
-
-    Device - Handle to the framework device object for which power framework 
-      settings are being specified.
-
-    PowerFrameworkSettings - Pointer to a WDF_POWER_FRAMEWORK_SETTINGS structure
-      that contains the client driver's power framework settings.             
-
-Return Value:
-    An NTSTATUS value that denotes success or failure of the DDI
-
---*/
-{
-    NTSTATUS status;
-    PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    FxDevice *pDevice;
-
-    //
-    // Validate the Device object handle and get its FxDevice. Also get the 
-    // driver globals pointer.
-    //
-    FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
-                                   Device,
-                                   FX_TYPE_DEVICE,
-                                   (PVOID *) &pDevice,
-                                   &pFxDriverGlobals);
-                         
-    FxPointerNotNull(pFxDriverGlobals, PowerFrameworkSettings);
-
-    //
-    // Only power policy owners should call this DDI
-    //
-    if (pDevice->m_PkgPnp->IsPowerPolicyOwner() == FALSE) {
-        status = STATUS_INVALID_DEVICE_REQUEST;
-        DoTraceLevelMessage(
-            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-            "WDFDEVICE 0x%p is not the power policy owner, so the caller cannot"
-            " assign power framework settings %!STATUS!", Device, status);
-        FxVerifierDbgBreakPoint(pFxDriverGlobals);
-        return status;
-    }
-
-    //
-    // Validate the Settings parameter
-    //
-    if (PowerFrameworkSettings->Size != sizeof(WDF_POWER_FRAMEWORK_SETTINGS)) {
-        status = STATUS_INFO_LENGTH_MISMATCH;
-        DoTraceLevelMessage(
-            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-            "WDFDEVICE 0x%p Expected PowerFrameworkSettings size %d, actual %d,"
-            " %!STATUS!",
-            Device,
-            sizeof(WDF_POWER_FRAMEWORK_SETTINGS), 
-            PowerFrameworkSettings->Size,
-            status);
-        FxVerifierDbgBreakPoint(pFxDriverGlobals);
-        return status;
-    }
-
-    //
-    // If settings for component 0 are specified, make sure it contains at least
-    // one F-state.
-    //
-    if (NULL != PowerFrameworkSettings->Component) {
-
-        if (0 == PowerFrameworkSettings->Component->IdleStateCount) {
-            status = STATUS_INVALID_PARAMETER;
-            DoTraceLevelMessage(
-                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-                "WDFDEVICE 0x%p Component settings are specified but "
-                "IdleStateCount is 0. %!STATUS!", Device, status);
-            FxVerifierDbgBreakPoint(pFxDriverGlobals);
-            return status;
-        }
-
-        if (NULL == PowerFrameworkSettings->Component->IdleStates) {
-            status = STATUS_INVALID_PARAMETER;
-            DoTraceLevelMessage(
-                pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
-                "WDFDEVICE 0x%p Component settings are specified but IdleStates"
-                " is NULL. %!STATUS!", Device, status);
-            FxVerifierDbgBreakPoint(pFxDriverGlobals);
-            return status;
-        }
-    }
-
-    //
-    // Assign the driver's settings
-    //
-    status = pDevice->m_PkgPnp->AssignPowerFrameworkSettings(
-                                            PowerFrameworkSettings);
-    
-    return status;
-}
-
-_Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
@@ -1014,7 +898,7 @@ Return Value:
 
     pkgPnP = pDevice->m_PkgPnp;
     if (NT_SUCCESS(pkgPnP->m_CompanionTargetStatus)) {
-        *CompanionTarget = (WDFCOMPANIONTARGET) 
+        *CompanionTarget = (WDFCOMPANIONTARGET)
                                 pkgPnP->m_CompanionTarget->GetObjectHandle();
     }
 

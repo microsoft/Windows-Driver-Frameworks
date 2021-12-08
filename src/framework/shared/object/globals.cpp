@@ -219,7 +219,7 @@ Return Value:
         // Freed with ExFreePool in FxFreeDriverGlobals.  Must be non paged because
         // objects can be allocated at IRQL > PASSIVE_LEVEL.
         //
-        pInfo = (FxObjectDebugInfo*) MxMemory::MxAllocatePoolWithTag(NonPagedPool,
+        pInfo = (FxObjectDebugInfo*) MxMemory::MxAllocatePool2(POOL_FLAG_NON_PAGED,
                                                            length,
                                                            FxDriverGlobals->Tag);
         if (pInfo == NULL) {
@@ -327,8 +327,8 @@ FxDriverGlobalsInitializeDebugExtension(
     // info and it won't be available if registry info is not present.
     //
 
-    pExtension = (FxDriverGlobalsDebugExtension*) MxMemory::MxAllocatePoolWithTag(
-        NonPagedPool, sizeof(FxDriverGlobalsDebugExtension), FxDriverGlobals->Tag);
+    pExtension = (FxDriverGlobalsDebugExtension*) MxMemory::MxAllocatePool2(
+        POOL_FLAG_NON_PAGED, sizeof(FxDriverGlobalsDebugExtension), FxDriverGlobals->Tag);
 
     if (pExtension == NULL) {
         return;
@@ -550,6 +550,8 @@ FxLibraryGlobalsQueryRegistrySettings(
 
 
 
+
+
 exit:
     return;
 }
@@ -597,6 +599,18 @@ FxLibraryGlobalsCommission(
     // Logging Sleep Study Blockers is enabled by default
     //
     FxLibraryGlobals.SleepStudyDisabled = FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1201,7 +1215,7 @@ FxAllocateDriverGlobals(
     NTSTATUS            status;
 
     pFxDriverGlobals = (PFX_DRIVER_GLOBALS)
-        MxMemory::MxAllocatePoolWithTag(NonPagedPool, sizeof(FX_DRIVER_GLOBALS), FX_TAG);
+        MxMemory::MxAllocatePool2(POOL_FLAG_NON_PAGED, sizeof(FX_DRIVER_GLOBALS), FX_TAG);
 
     if (pFxDriverGlobals == NULL) {
         return NULL;
@@ -1416,7 +1430,7 @@ Return Value:
 
     if (Limit != FX_OBJECT_LEAK_DETECTION_DISABLED) {
         FxDriverGlobals->FxVerifyLeakDetection = (FxObjectDebugLeakDetection*)
-                            MxMemory::MxAllocatePoolWithTag(NonPagedPool,
+                            MxMemory::MxAllocatePool2(POOL_FLAG_NON_PAGED,
                                 sizeof(FxObjectDebugLeakDetection),
                                 FxDriverGlobals->Tag);
     }
@@ -1519,7 +1533,7 @@ Return Value:
     // Pool can be paged b/c we are running at PASSIVE_LEVEL and we are going
     // to free it at the end of this function.
     //
-    dataBuffer = MxMemory::MxAllocatePoolWithTag(PagedPool, length, FxDriverGlobals->Tag);
+    dataBuffer = MxMemory::MxAllocatePool2(POOL_FLAG_PAGED, length, FxDriverGlobals->Tag);
     if (dataBuffer == NULL) {
         status = STATUS_MEMORY_NOT_ALLOCATED;
         goto exit;
@@ -1583,6 +1597,8 @@ FxVerifierQueryTrackPower(
         *TrackPower = FxTrackPowerNone;
     }
 }
+
+
 
 
 
@@ -1672,7 +1688,6 @@ Arguments:
     ULONG i;
     ULONG timeoutValue = 0;
     FxAutoRegKey hDriver, hWdf;
-    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
 
     typedef NTSTATUS NTAPI QUERYFN(
         ULONG, PCWSTR, PRTL_QUERY_REGISTRY_TABLE, PVOID, PVOID);
@@ -1681,7 +1696,13 @@ Arguments:
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
     UNICODE_STRING FunctionName;
-#endif
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Wdf");
+    UNREFERENCED_PARAMETER(RegistryPath);
+
+    status = OpenDriverParamsKeyForRead(FxDriverGlobals, &hDriver.m_Key);
+
+#else
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
 
     //
     // UMDF may not provide this registry path
@@ -1691,6 +1712,8 @@ Arguments:
     }
 
     status = FxRegKey::_OpenKey(NULL, RegistryPath, &hDriver.m_Key, KEY_READ);
+#endif
+
     if (!NT_SUCCESS(status)) {
         return;
     }
@@ -1970,6 +1993,48 @@ FX_DRIVER_GLOBALS::WaitForSignal(
             break;
         }
     } WHILE(TRUE);
+}
+
+_Must_inspect_result_
+BOOLEAN
+FX_DRIVER_GLOBALS::IsVersionGreaterThanOrEqualTo(
+    _In_ ULONG Major,
+    _In_ ULONG Minor
+    )
+{
+    if ((WdfBindInfo->Version.Major > Major) ||
+                (WdfBindInfo->Version.Major == Major &&
+                  WdfBindInfo->Version.Minor >= Minor)) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
+
+_Must_inspect_result_
+BOOLEAN
+FX_DRIVER_GLOBALS::IsMinorVersionGreaterThanOrEqualTo(
+    _In_ ULONG Minor
+    )
+{
+#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
+    ASSERT(WdfBindInfo->Version.Major == 1);
+#else
+    ASSERT(WdfBindInfo->Version.Major == 2);
+
+    //
+    // This is needed for e.g. KMDF checking version >= 1.11
+    //
+    // UMDF 2.0 = KMDF 1.13. Thus any check below 13 is always satisfied.
+    // Starting with minor version = 15, KMDF and UMDF are updated together.
+    //
+    if (Minor <= 13) {
+        return TRUE;
+    }
+#endif
+
+    return (WdfBindInfo->Version.Minor >= Minor);
 }
 
 } // extern "C"

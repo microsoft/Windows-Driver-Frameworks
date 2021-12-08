@@ -26,7 +26,7 @@ Revision History:
 
         New failure paths:
             Initialization failures of paged/non-paged lock -
-            
+
             Upon failure we disable pool tracking, rest of the behavior
             remains unchanged, and FxPoolInitialize not being bubbled up
             doesn't become an issue.
@@ -166,6 +166,22 @@ FxIsPagedPoolType(
     __in POOL_TYPE Type
     );
 
+
+//
+// An union to pass to FxPoolAllocator so that it knows which one to to call:
+//  - ExValidatePoolFlags, which expects a POOL_TYPE
+//  - ExValidatePool2, which expects a POOL_FLAGS
+//
+struct FxPoolTypeOrPoolFlags {
+
+    BOOLEAN         UsePoolType;
+
+    union {
+        POOL_TYPE   PoolType;
+        POOL_FLAGS  PoolFlags;
+    } u;
+};
+
 /*++
 
 Routine Description:
@@ -176,7 +192,7 @@ Arguments:
 
     Pool    - FX_POOL object for tracking allocations
 
-    Type    - POOL_TYPE from ntddk.h
+    TypeOrFlags - FxPoolTypeOrPoolFlags
 
     Size    - Size in bytes of the allocation
 
@@ -194,7 +210,7 @@ PVOID
 FxPoolAllocator(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PFX_POOL  Pool,
-    __in POOL_TYPE Type,
+    __in FxPoolTypeOrPoolFlags TypeOrFlags,
     __in SIZE_T    Size,
     __in ULONG     Tag,
     __in PVOID     CallersAddress

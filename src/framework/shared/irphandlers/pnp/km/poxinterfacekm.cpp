@@ -281,7 +281,6 @@ FxPoxInterface::PoxRegisterDevice(
     PO_FX_COMPONENT_IDLE_STATE idleState;
     PPOX_SETTINGS poxSettings = NULL;
     BOOLEAN directedTransitions;
-    BOOLEAN dfxChildrenOptional;
 
     RtlZeroMemory(&poxDevice, sizeof(poxDevice));
     RtlZeroMemory(&idleState, sizeof(idleState));
@@ -316,14 +315,10 @@ FxPoxInterface::PoxRegisterDevice(
 
         poxDevice.DirectedPowerDownCallback =
             FxPoxInterface::DirectedPowerDownCallback;
-
-        dfxChildrenOptional = m_PkgPnp->m_PowerPolicyMachine.m_Owner->
-            m_IdleSettings.m_TimeoutMgmt.GetDirectedPowerTransitionChildrenOptional();
-
-        if (dfxChildrenOptional) {
-            poxDevice.Flags = PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL;
-        }
     }
+
+    poxDevice.Flags = m_PkgPnp->m_PowerPolicyMachine.m_Owner->
+        m_IdleSettings.m_TimeoutMgmt.GetPoFxDeviceFlags();
 
     //
     // We register as a single component device

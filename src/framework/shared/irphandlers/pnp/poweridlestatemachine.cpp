@@ -45,6 +45,11 @@ const FxPowerIdleTargetState FxPowerIdleMachine::m_StartedStates[] =
     { PowerIdleEventStop, FxIdleStopped DEBUGGED_EVENT },
 };
 
+const FxPowerIdleTargetState FxPowerIdleMachine::m_StartedPowerFailedStates[] =
+{
+    { PowerIdleEventStop, FxIdleStopped DEBUGGED_EVENT },
+};
+
 const FxPowerIdleTargetState FxPowerIdleMachine::m_DisabledStates[] =
 {
     { PowerIdleEventEnabled, FxIdleCheckIoCount DEBUGGED_EVENT },
@@ -132,8 +137,8 @@ const FxIdleStateTable FxPowerIdleMachine::m_StateTable[] =
 
     // FxIdleStartedPowerFailed
     {   FxPowerIdleMachine::StartedPowerFailed,
-        NULL,
-        0,
+        FxPowerIdleMachine::m_StartedPowerFailedStates,
+        ARRAY_SIZE(FxPowerIdleMachine::m_StartedPowerFailedStates),
     },
 
     // FxIdleDisabled
@@ -346,13 +351,13 @@ Return Value:
   --*/
 {
     //
-    // m_Lock and m_PowerTimeoutTimer are now being initialized in Init method 
+    // m_Lock and m_PowerTimeoutTimer are now being initialized in Init method
     // since they may fail for UM.
     //
 
     m_PowerTimeout.QuadPart = 0;
     m_CurrentIdleState = FxIdleStopped;
-    
+
     m_EventHistoryIndex = 0;
     m_StateHistoryIndex = 0;
 
@@ -387,7 +392,7 @@ FxPowerIdleMachine::Init(
     if (!NT_SUCCESS(status)) {
         return status;
     }
-    
+
     //
     // For KM, timer initialize always succeeds. For UM, it might fail.
     //
@@ -516,7 +521,7 @@ Arguments:
     This - instance of the state machine
 
 Return Value:
-    FxIdleStarted
+    FxIdleMax
 
   --*/
 {
@@ -526,11 +531,11 @@ Return Value:
     This->m_Flags |= FxPowerIdlePowerFailed;
 
     //
-    // We assume in the started state that the event is set
+    // Wake up any waiters and indicate failure to them.
     //
-    ASSERT(This->m_D0NotificationEvent.ReadState() == 0);
+    This->SendD0Notification();
 
-    return FxIdleStarted;
+    return FxIdleMax;
 }
 
 FxPowerIdleStates
@@ -631,7 +636,7 @@ Return Value:
     ASSERT((This->m_Flags & FxPowerIdleTimerEnabled) && This->m_IoCount == 0);
 
     This->m_Flags |= FxPowerIdleTimerStarted;
-    This->m_PowerTimeoutTimer.Start(This->m_PowerTimeout, 
+    This->m_PowerTimeoutTimer.Start(This->m_PowerTimeout,
                                     m_IdleTimerTolerableDelayMS);
 
     return FxIdleTimerRunning;
@@ -1289,11 +1294,11 @@ Return Value:
 
     pThis->m_Lock.AcquireAtDpcLevel();
     pThis->ProcessEventLocked(PowerIdleEventTimerExpired);
-    
+
 #if FX_IS_KERNEL_MODE
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     PFN_WDF_DRIVER_DEVICE_ADD pDriverDeviceAdd;
-    
+
     pFxDriverGlobals = GetPnpPkg(pThis)->GetDriverGlobals();
 
     //
@@ -1328,7 +1333,7 @@ Return Value:
 {
     FxPkgPnp* pPkgPnp;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    
+
     ASSERT(m_CurrentIdleState == FxIdleStopped);
 
     m_IoCount = 0;
@@ -1498,9 +1503,9 @@ Arguments:
     WaitForD0 - TRUE if the caller wants to synchronously wait for the Dx to D0
                 transition
 
-    QueryPnpPending - TRUE if we are being called to bring the device back to 
-                working state when a QueryRemove or a QueryStop 
-                
+    QueryPnpPending - TRUE if we are being called to bring the device back to
+                working state when a QueryRemove or a QueryStop
+
 Return Value:
     NTSTATUS
 
@@ -1531,7 +1536,7 @@ Return Value:
 
 
 
-    
+
     //
     // Poke the state machine
     //
@@ -1547,8 +1552,8 @@ Return Value:
             ASSERT(Mx::MxGetCurrentIrql() <= APC_LEVEL);
 
             //
-            // With the current usage, if WaitForD0 is TRUE, then the only 
-            // acceptable flag is FxPowerReferenceDefault. 
+            // With the current usage, if WaitForD0 is TRUE, then the only
+            // acceptable flag is FxPowerReferenceDefault.
             //
             // If the usage changes in the future such that it is acceptable to
             // have WaitForD0 set to TRUE and some flag(s) set, then the ASSERT
@@ -1573,8 +1578,8 @@ Return Value:
             m_Lock.Acquire(&irql);
 
             //
-            // If WaitForD0 is TRUE, then the FxPowerIdleSendPnpPowerUpEvent 
-            // flag can't be set. That flag is only used when the PnP state 
+            // If WaitForD0 is TRUE, then the FxPowerIdleSendPnpPowerUpEvent
+            // flag can't be set. That flag is only used when the PnP state
             // machine waits asynchronously for the device to power up during
             // query-remove.
             //
@@ -1671,17 +1676,17 @@ FxPowerIdleMachine::IoIncrementWithFlags(
 /*++
 
 Routine Description:
-    An enchanced version of FxPowerIdleMachine::IoIncrement that has special 
+    An enchanced version of FxPowerIdleMachine::IoIncrement that has special
     behavior based on flags passed in by the caller. Please read the routine
     description of FxPowerIdleMachine::IoIncrement as well.
 
 Arguments:
     Flags - The following flags are defined -
          FxPowerReferenceDefault - No special behavior
-         FxPowerReferenceSendPnpPowerUpEvent - Set the 
+         FxPowerReferenceSendPnpPowerUpEvent - Set the
            FxPowerIdleSendPnpPowerUpEvent flag in the idle state machine flags.
-           This will indicate to the idle state machine that when the device 
-           powers up, it needs to send the PnpEventDeviceInD0 event to the PnP 
+           This will indicate to the idle state machine that when the device
+           powers up, it needs to send the PnpEventDeviceInD0 event to the PnP
            state machine.
 
 Return Value:
@@ -1715,7 +1720,7 @@ Return Value:
         if (Count != NULL) {
             *Count = m_IoCount;
         }
-        
+
         ProcessEventLocked(PowerIdleEventIoIncrement);
 
         if (InD0Locked()) {
@@ -1771,15 +1776,15 @@ Return Value:
         // 1. Driver called WdfDevicveStopIdle/WdfDeviceResumeIdle in a mismatched
         //    manner. This is a driver bug.
         // 2. Framework did power deref without a corresponding power ref.
-        //    This would be a framework bug. 
+        //    This would be a framework bug.
         //
         // We will break into debugger if verifier is turned on. This will allow
         // developers to catch this problem during develeopment.
-        // We limit this break to version 1.11+ because otherwise older drivers 
-        // may hit this, and if they cannot be fixed for some reason, then 
-        // verifier would need to be turned off to avoid the break which is not 
-        // desirable. 
-        // 
+        // We limit this break to version 1.11+ because otherwise older drivers
+        // may hit this, and if they cannot be fixed for some reason, then
+        // verifier would need to be turned off to avoid the break which is not
+        // desirable.
+        //
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
             "WDFDEVICE 0x%p !devobj 0x%p The device is being power-dereferenced"
@@ -1788,7 +1793,7 @@ Return Value:
             " WdfDeviceStopIdle.",
             pPkgPnp->GetDevice()->GetHandle(),
             pPkgPnp->GetDevice()->GetDeviceObject());
-        
+
         if (pFxDriverGlobals->IsVerificationEnabled(1, 11, OkForDownLevel)) {
            FxVerifierDbgBreakPoint(pFxDriverGlobals);
         }
@@ -1881,7 +1886,7 @@ FxPowerIdleMachine::SendD0Notification(
         GetPnpPkg(this)->PnpProcessEvent(PnpEventDeviceInD0);
 #else
         GetPnpPkg(this)->PnpProcessEvent(
-            PnpEventDeviceInD0, 
+            PnpEventDeviceInD0,
             TRUE // ProcessEventOnDifferentThread
             );
 #endif

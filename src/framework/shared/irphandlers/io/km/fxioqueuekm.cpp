@@ -16,10 +16,10 @@ FxIoQueue::QueueForwardProgressIrpLocked(
     __in PIRP Irp
     )
 {
-    InsertTailList(&m_FwdProgContext->m_PendedIrpList, 
-                   &Irp->Tail.Overlay.ListEntry);      
+    InsertTailList(&m_FwdProgContext->m_PendedIrpList,
+                   &Irp->Tail.Overlay.ListEntry);
 
-    Irp->Tail.Overlay.DriverContext[FX_IRP_QUEUE_CSQ_CONTEXT_ENTRY] = 
+    Irp->Tail.Overlay.DriverContext[FX_IRP_QUEUE_CSQ_CONTEXT_ENTRY] =
             m_FwdProgContext;
 
     IoSetCancelRoutine(Irp, _WdmCancelRoutineForReservedIrp);
@@ -31,9 +31,9 @@ FxIoQueue::QueueForwardProgressIrpLocked(
 
             RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
             InitializeListHead(&Irp->Tail.Overlay.ListEntry);
-            
-            return STATUS_CANCELLED;                
-        } 
+
+            return STATUS_CANCELLED;
+        }
         else {
             //
             // CancelRoutine will complete the IRP
@@ -59,7 +59,7 @@ FxIoQueue::GetForwardProgressIrpLocked(
         Remove an IRP from the pending irp list if it matches with the input
         fileobject. If the fileobject value is NULL, return the first one from
         the pending list.
-        
+
 --*/
 {
     PIRP pIrp;
@@ -68,12 +68,12 @@ FxIoQueue::GetForwardProgressIrpLocked(
 
     pIrp = NULL;
     listHead = &m_FwdProgContext->m_PendedIrpList;
-    
+
     for(thisEntry = listHead->Flink;
         thisEntry != listHead;
         thisEntry = nextEntry) {
         nextEntry = thisEntry->Flink;
-        
+
         pIrp = CONTAINING_RECORD(thisEntry, IRP, Tail.Overlay.ListEntry);
         pIrpStack = IoGetCurrentIrpStackLocation(pIrp);
 
@@ -81,11 +81,11 @@ FxIoQueue::GetForwardProgressIrpLocked(
 
             RemoveEntryList(thisEntry);
             InitializeListHead(thisEntry);
-            
+
             if (NULL != IoSetCancelRoutine (pIrp, NULL)) {
                 pIrp->Tail.Overlay.DriverContext[FX_IRP_QUEUE_CSQ_CONTEXT_ENTRY] = NULL;
                 break;
-            } 
+            }
             else {
                 //
                 // Irp is canceled and the cancel routines is waiting to run.
@@ -97,7 +97,7 @@ FxIoQueue::GetForwardProgressIrpLocked(
 
         pIrp = NULL;
     }
-    
+
     return pIrp;
 }
 
@@ -112,35 +112,35 @@ Routine Description:
 
     Verify -
         TRUE - Make sure the number of request freed matches with the count of
-               request created. 
-        FALSE - Called when we fail to allocate all the reserved requests 
-                during config at init time. So we don't verify because the 
+               request created.
+        FALSE - Called when we fail to allocate all the reserved requests
+                during config at init time. So we don't verify because the
                 count of request freed wouldn't match with the configured value.
 --*/
-{   
+{
     ULONG count;
     KIRQL oldIrql;
-    
+
     count = 0;
 
     //
     // Since forward progress request are allocated only for top level
-    // queues which cant be deleted so we dont need to add a reference on the 
-    // queue for each reserved request since the Queue is guaranteed to be 
+    // queues which cant be deleted so we dont need to add a reference on the
+    // queue for each reserved request since the Queue is guaranteed to be
     // around when the request is being freed even if the Request was forwarded
     // to another Queue.
-    // 
+    //
     m_FwdProgContext->m_PendedReserveLock.Acquire(&oldIrql);
 
     while (!IsListEmpty(&m_FwdProgContext->m_ReservedRequestList)) {
         PLIST_ENTRY pEntry;
-        FxRequest * pRequest;        
+        FxRequest * pRequest;
 
         pEntry = RemoveHeadList(&m_FwdProgContext->m_ReservedRequestList);
-        pRequest = FxRequest::_FromOwnerListEntry(FxListEntryForwardProgress, 
-                                                  pEntry);   
-        pRequest->FreeRequest();  
-        
+        pRequest = FxRequest::_FromOwnerListEntry(FxListEntryForwardProgress,
+                                                  pEntry);
+        pRequest->FreeRequest();
+
         count++;
     }
 
@@ -163,11 +163,11 @@ FxIoQueue::ReturnReservedRequest(
 /*++
 
 Routine Description:
-    Reuse the ReservedRequest if there are pended IRPs otherwise 
-    add it back to the reserve list.     
+    Reuse the ReservedRequest if there are pended IRPs otherwise
+    add it back to the reserve list.
 
 --*/
-{   
+{
     KIRQL   oldIrql;
     PIRP    pIrp;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
@@ -179,7 +179,7 @@ Routine Description:
 
     if (pFxDriverGlobals->FxVerifierOn) {
         ReservedRequest->ClearVerifierFlags(
-            FXREQUEST_FLAG_RESERVED_REQUEST_ASSOCIATED_WITH_IRP); 
+            FXREQUEST_FLAG_RESERVED_REQUEST_ASSOCIATED_WITH_IRP);
     }
 
     //
@@ -195,14 +195,14 @@ Routine Description:
 
     if (pIrp != NULL) {
         //
-        // Associate the reserved request with the Pended IRP 
+        // Associate the reserved request with the Pended IRP
         //
         ReservedRequest->m_Irp.SetIrp(pIrp);
         ReservedRequest->AssignMemoryBuffers(m_Device->GetIoType());
-        
+
         if (pFxDriverGlobals->FxVerifierOn) {
             ReservedRequest->SetVerifierFlags(
-                FXREQUEST_FLAG_RESERVED_REQUEST_ASSOCIATED_WITH_IRP); 
+                FXREQUEST_FLAG_RESERVED_REQUEST_ASSOCIATED_WITH_IRP);
         }
 
         //
@@ -213,10 +213,10 @@ Routine Description:
     }
     else {
         PutBackReservedRequest(ReservedRequest);
-    }    
+    }
 }
 
-VOID 
+VOID
 FxIoQueue::GetForwardProgressIrps(
     __in     PLIST_ENTRY    IrpListHead,
     __in_opt MdFileObject   FileObject
@@ -227,23 +227,23 @@ Routine Description:
 
     This function is called to retrieve the list of reserved queued IRPs.
     The IRP's Tail.Overlay.ListEntry field is used to link these structs together.
-    
+
 --*/
 {
     PIRP    irp;
     KIRQL   irql;
-    
+
     m_FwdProgContext->m_PendedReserveLock.Acquire(&irql);
-    
-    do {        
+
+    do {
         irp = GetForwardProgressIrpLocked(FileObject);
-        if (irp != NULL) {   
+        if (irp != NULL) {
             //
             // Add it to the cleanupList. We will complete the IRP after
             // releasing the lock.
             //
             InsertTailList(IrpListHead, &irp->Tail.Overlay.ListEntry);
-        } 
+        }
     } while (irp != NULL);
 
     m_FwdProgContext->m_PendedReserveLock.Release(irql);
@@ -264,24 +264,24 @@ Routine Description:
 {
     KIRQL irql;
     PFXIO_FORWARD_PROGRESS_CONTEXT m_FwdPrgContext;
-    
+
     UNREFERENCED_PARAMETER (DeviceObject);
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     m_FwdPrgContext = (PFXIO_FORWARD_PROGRESS_CONTEXT)
         Irp->Tail.Overlay.DriverContext[FX_IRP_QUEUE_CSQ_CONTEXT_ENTRY];
-    
+
     Irp->Tail.Overlay.DriverContext[FX_IRP_QUEUE_CSQ_CONTEXT_ENTRY] = NULL;
 
     m_FwdPrgContext->m_PendedReserveLock.Acquire(&irql);
 
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
     InitializeListHead(&Irp->Tail.Overlay.ListEntry);
-    
+
     m_FwdPrgContext->m_PendedReserveLock.Release(irql);
 
-    Irp->IoStatus.Status = STATUS_CANCELLED; 
+    Irp->IoStatus.Status = STATUS_CANCELLED;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -324,19 +324,19 @@ Return Value:
 
 --*/
 {
-    KeInsertQueueDpc(&m_Dpc, NULL, NULL);            
+    KeInsertQueueDpc(&m_Dpc, NULL, NULL);
 }
 
 _Must_inspect_result_
 NTSTATUS
 FxIoQueue::GetReservedRequest(
     __in MdIrp Irp,
-    __deref_out_opt FxRequest **ReservedRequest       
+    __deref_out_opt FxRequest **ReservedRequest
     )
 /*++
 
 Routine Description:
-    Use the policy configured on the queue to decide whether to allocate a 
+    Use the policy configured on the queue to decide whether to allocate a
     reserved request.
 
 --*/
@@ -348,12 +348,12 @@ Routine Description:
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     pFxDriverGlobals = GetDriverGlobals();
-    
+
     *ReservedRequest = NULL;
     action = WdfIoForwardProgressActionInvalid;
-   
+
     switch (m_FwdProgContext->m_Policy) {
-        
+
     case WdfIoForwardProgressReservedPolicyPagingIO:
         if (IsPagingIo(Irp)) {
             action = WdfIoForwardProgressActionUseReservedRequest;
@@ -361,26 +361,26 @@ Routine Description:
         else {
             action =  WdfIoForwardProgressActionFailRequest;
         }
-        
+
         break;
     case WdfIoForwardProgressReservedPolicyAlwaysUseReservedRequest:
 
-        action = WdfIoForwardProgressActionUseReservedRequest;        
+        action = WdfIoForwardProgressActionUseReservedRequest;
         break;
-        
+
     case WdfIoForwardProgressReservedPolicyUseExamine:
-        
+
         //
         // Call the driver to figure out what action to take.
         //
         if (m_FwdProgContext->m_IoExamineIrp.Method != NULL) {
-            
+
             action = m_FwdProgContext->m_IoExamineIrp.Invoke(GetHandle(), Irp);
 
             //
             // Make sure the use has returned a valid action
             //
-            if((action < WdfIoForwardProgressActionFailRequest || 
+            if((action < WdfIoForwardProgressActionFailRequest ||
                 action > WdfIoForwardProgressActionUseReservedRequest)) {
 
                 status = STATUS_UNSUCCESSFUL;
@@ -389,18 +389,18 @@ Routine Description:
                     "EvtIoExamineIrp callback on WDFQUEUE %p returned an "
                     "invalid action %d, %!STATUS!",
                     GetHandle(), action, status);
-                
+
                 FxVerifierDbgBreakPoint(pFxDriverGlobals);
-                    
+
                 return status;
              }
 
-        }            
+        }
         break;
 
     default:
             ASSERTMSG("Invalid forward progress setting ", FALSE);
-            break;           
+            break;
     }
 
     if (action == WdfIoForwardProgressActionFailRequest) {
@@ -408,9 +408,9 @@ Routine Description:
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
             "Forward action on WDFQUEUE %p says that framework should fail "
-            "the Irp %p, %!STATUS!", 
+            "the Irp %p, %!STATUS!",
             GetHandle(), Irp, status);
-        
+
         return status;
     }
 
@@ -423,23 +423,23 @@ Routine Description:
 
         pEntry = RemoveHeadList(&m_FwdProgContext->m_ReservedRequestList);
 
-        pRequest = FxRequest::_FromOwnerListEntry(FxListEntryForwardProgress, 
-                                                  pEntry); 
+        pRequest = FxRequest::_FromOwnerListEntry(FxListEntryForwardProgress,
+                                                  pEntry);
         ASSERT(pRequest != NULL);
         ASSERT(pRequest->GetRefCnt() == 1);
 
-        InsertTailList(&m_FwdProgContext->m_ReservedRequestInUseList, 
-                    pRequest->GetListEntry(FxListEntryForwardProgress));      
+        InsertTailList(&m_FwdProgContext->m_ReservedRequestInUseList,
+                    pRequest->GetListEntry(FxListEntryForwardProgress));
 
         pRequest->m_Irp.SetIrp(Irp);
         pRequest->AssignMemoryBuffers(m_Device->GetIoType());
 
         if (pFxDriverGlobals->FxVerifierOn) {
-            pRequest->SetVerifierFlags(FXREQUEST_FLAG_RESERVED_REQUEST_ASSOCIATED_WITH_IRP);                             
+            pRequest->SetVerifierFlags(FXREQUEST_FLAG_RESERVED_REQUEST_ASSOCIATED_WITH_IRP);
         }
 
         //
-        // if *ReservedRequest is non-null the caller needs to free the 
+        // if *ReservedRequest is non-null the caller needs to free the
         // previous request it allocated.
         //
         *ReservedRequest = pRequest;
@@ -447,12 +447,12 @@ Routine Description:
         status = STATUS_SUCCESS;
     }
     else {
-        
-        status = QueueForwardProgressIrpLocked(Irp);        
+
+        status = QueueForwardProgressIrpLocked(Irp);
         ASSERT(*ReservedRequest == NULL);
     }
-    
-    m_FwdProgContext->m_PendedReserveLock.Release(oldIrql);      
+
+    m_FwdProgContext->m_PendedReserveLock.Release(oldIrql);
 
     return status;
 }
@@ -468,14 +468,14 @@ Routine Description:
     Configure the queue for forward Progress.
 
 --*/
-{     
+{
     NTSTATUS status;
     FxRequest *pRequest;
     ULONG index;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     pFxDriverGlobals = GetDriverGlobals();
-    
+
     //
     // If the queue is not a top level queue then return an error
     //
@@ -489,16 +489,16 @@ Routine Description:
             status = STATUS_INVALID_PARAMETER;
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGIO,
-                "Setting Forward progress policy on non-top level queue %!STATUS!", 
+                "Setting Forward progress policy on non-top level queue %!STATUS!",
                 status);
 
             return status;
         }
     }
 
-    m_FwdProgContext = (PFXIO_FORWARD_PROGRESS_CONTEXT) 
-                                FxPoolAllocate(GetDriverGlobals(), 
-                                    NonPagedPool, 
+    m_FwdProgContext = (PFXIO_FORWARD_PROGRESS_CONTEXT)
+                                FxPoolAllocate2(GetDriverGlobals(),
+                                    POOL_FLAG_NON_PAGED,
                                     sizeof(FXIO_FORWARD_PROGRESS_CONTEXT)
                                     );
     if (m_FwdProgContext == NULL) {
@@ -518,41 +518,41 @@ Routine Description:
     //
     m_FwdProgContext->m_Policy = Policy->ForwardProgressReservedPolicy;
 
-    m_FwdProgContext->m_NumberOfReservedRequests = 
+    m_FwdProgContext->m_NumberOfReservedRequests =
             Policy->TotalForwardProgressRequests;
-    
-    m_FwdProgContext->m_IoReservedResourcesAllocate.Method  = 
+
+    m_FwdProgContext->m_IoReservedResourcesAllocate.Method  =
             Policy->EvtIoAllocateResourcesForReservedRequest;
-    
-    m_FwdProgContext->m_IoResourcesAllocate.Method  = 
+
+    m_FwdProgContext->m_IoResourcesAllocate.Method  =
             Policy->EvtIoAllocateRequestResources;
-    
-    m_FwdProgContext->m_IoExamineIrp.Method  = 
+
+    m_FwdProgContext->m_IoExamineIrp.Method  =
             Policy->ForwardProgressReservePolicySettings.Policy.\
-                ExaminePolicy.EvtIoWdmIrpForForwardProgress;     
-        
+                ExaminePolicy.EvtIoWdmIrpForForwardProgress;
+
     InitializeListHead(&m_FwdProgContext->m_ReservedRequestList);
-    InitializeListHead(&m_FwdProgContext->m_ReservedRequestInUseList);    
+    InitializeListHead(&m_FwdProgContext->m_ReservedRequestInUseList);
     InitializeListHead(&m_FwdProgContext->m_PendedIrpList);
 
     m_FwdProgContext->m_PendedReserveLock.Initialize();
 
-    for (index = 0; 
-         index < m_FwdProgContext->m_NumberOfReservedRequests; 
-         index++) 
+    for (index = 0;
+         index < m_FwdProgContext->m_NumberOfReservedRequests;
+         index++)
     {
         status = AllocateReservedRequest(&pRequest);
-        if (!NT_SUCCESS(status)) {          
+        if (!NT_SUCCESS(status)) {
             break;
-        }                 
+        }
 
-        InsertTailList(&m_FwdProgContext->m_ReservedRequestList, 
+        InsertTailList(&m_FwdProgContext->m_ReservedRequestList,
                        pRequest->GetListEntry(FxListEntryForwardProgress));
-    }    
-    
+    }
+
     //
-    // Since we allow forward progress policy to be set even after AddDevice 
-    // when the queue has already started dispatching, we need to make 
+    // Since we allow forward progress policy to be set even after AddDevice
+    // when the queue has already started dispatching, we need to make
     // sure all checks which determine whether the queue is configured for
     // forward progress succeed. Setting Forward progress on the queue as the
     // last operation helps with that.
@@ -568,6 +568,6 @@ Routine Description:
         FxPoolFree(m_FwdProgContext);
         m_FwdProgContext = NULL;
     }
-    
+
     return status;
 }

@@ -2562,6 +2562,18 @@ protected:
 
     static
     WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDeviceD0PowerRequestFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
+    PowerPolSystemWakeDevicePowerRequestFailed(
+        __inout FxPkgPnp* This
+        );
+
+    static
+    WDF_DEVICE_POWER_POLICY_STATE
     PowerPolSleepingPowerDownNotProcessed(
         __inout FxPkgPnp* This
         );
@@ -3702,7 +3714,7 @@ private:
         );
 
     VOID
-    ReadRegistryPofxDirectredTransition(
+    ReadRegistryWdfSetting(
         _In_    PCUNICODE_STRING ValueName,
         _Inout_ BOOLEAN *Enabled
         );
@@ -4465,6 +4477,16 @@ public:
         ASSERT(IsPowerPolicyOwner() != FALSE);
 
         ++m_WakeInterruptCount;
+    }
+
+    VOID
+    WakeInterruptDestroyed(
+        VOID
+        )
+    {
+        ASSERT(IsPowerPolicyOwner() != FALSE);
+
+        --m_WakeInterruptCount;
     }
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)

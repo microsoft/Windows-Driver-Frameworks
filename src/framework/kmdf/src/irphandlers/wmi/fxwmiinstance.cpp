@@ -81,7 +81,7 @@ FxWmiInstance::FireEvent(
     // we cannot use a framework allocate function.
     //
     pNode = (PWNODE_SINGLE_INSTANCE)
-        ExAllocatePoolWithTag(NonPagedPool, sizeNeeded, GetDriverGlobals()->Tag);
+        ExAllocatePool2(POOL_FLAG_NON_PAGED, sizeNeeded, GetDriverGlobals()->Tag);
 
     if (pNode != NULL) {
         RtlCopyMemory(&pNode->WnodeHeader.Guid,

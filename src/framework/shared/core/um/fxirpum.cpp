@@ -1694,19 +1694,19 @@ FxIrp::CopyParameters(
     _Out_ PWDF_REQUEST_PARAMETERS Parameters
     )
 {
-    IWudfIoIrp* ioIrp;
+    IWudfIoIrp2* ioIrp;
     UCHAR majorFunction;
 
-    ioIrp = GetIoIrp();
+    ioIrp = GetIoIrp2();
     majorFunction = GetMajorFunction();
 
     switch (majorFunction) {
     case IRP_MJ_CREATE:
-        ioIrp->GetCreateParameters(
+        ioIrp->GetCreateParameters2(
                                    &Parameters->Parameters.Create.Options,
                                    &Parameters->Parameters.Create.FileAttributes,
                                    &Parameters->Parameters.Create.ShareAccess,
-                                   NULL // ACCESS_MASK*
+                                   &Parameters->Parameters.Create.SecurityContext
                                    );
         break;
     case IRP_MJ_READ:
@@ -1794,6 +1794,24 @@ FxIrp::GetIoIrp(
     return static_cast<IWudfIoIrp*>(m_Irp);
 }
 
+IWudfIoIrp2*
+FxIrp::GetIoIrp2(
+    VOID
+    )
+{
+    IWudfIoIrp2* pIoIrp;
+    HRESULT hrQI;
+
+    hrQI = m_Irp->QueryInterface(IID_IWudfIoIrp2, (PVOID*)&pIoIrp);
+    FX_VERIFY(INTERNAL, CHECK_QI(hrQI, pIoIrp));
+    pIoIrp->Release();
+
+    //
+    // Now that we confirmed the irp is an io irp, just return the underlying
+    // irp.
+    //
+    return static_cast<IWudfIoIrp2*>(m_Irp);
+}
 
 IWudfPnpIrp*
 FxIrp::GetPnpIrp(
@@ -1813,4 +1831,3 @@ FxIrp::GetPnpIrp(
     //
     return static_cast<IWudfPnpIrp*>(m_Irp);
 }
-

@@ -79,7 +79,7 @@ private:
 public:
 
     _URB_CONTROL_TRANSFER m_UrbLegacy;
-    
+
     //
     // m_Urb will either point to m_UrbLegacy or one allocated by USBD_UrbAllocate
     //
@@ -104,7 +104,7 @@ struct FxUsbDeviceStringContext : public FxUsbRequestContext {
     AllocateUrb(
         __in USBD_HANDLE USBDHandle
         );
-    
+
     virtual
     VOID
     Dispose(
@@ -433,9 +433,9 @@ public:
         __drv_when(CapabilityBufferLength != 0 && ResultLength == NULL, __out_bcount(CapabilityBufferLength))
         __drv_when(CapabilityBufferLength != 0 && ResultLength != NULL, __out_bcount_part_opt(CapabilityBufferLength, *ResultLength))
         PVOID CapabilityBuffer,
-        __out_opt 
+        __out_opt
         __drv_when(ResultLength != NULL,__deref_out_range(<=,CapabilityBufferLength))
-        PULONG ResultLength    
+        PULONG ResultLength
         );
 
     __checkReturn
@@ -462,7 +462,7 @@ public:
         __deref_opt_out_bcount(GET_ISOCH_URB_SIZE(NumberOfIsochPackets))
         PURB* Urb
         );
-    
+
     USBD_HANDLE
     GetUSBDHandle(
         VOID
@@ -498,7 +498,7 @@ protected:
     RemoveDeletedInterface(
         __in FxUsbInterface* Interface
         );
-    
+
     //
     // FxIoTarget overrides
     //
@@ -514,7 +514,7 @@ protected:
     Stop(
         __in WDF_IO_TARGET_SENT_IO_ACTION Action
         );
-    
+
     virtual
     VOID
     Purge(
@@ -587,11 +587,17 @@ protected:
     Dispose(
         VOID
         );
-    
+
     _Must_inspect_result_
     NTSTATUS
     GetPortStatus(
         __out PULONG PortStatus
+        );
+
+    PURB
+    CreateConfigRequest(
+        _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
+        _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList
         );
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
@@ -630,7 +636,7 @@ protected:
     PUSB_BUSIFFN_QUERY_BUS_TIME m_QueryBusTime;
 
     PVOID m_BusInterfaceContext;
-    
+
     PINTERFACE_DEREFERENCE m_BusInterfaceDereference;
 
     FxWaitLockInternal m_InterfaceIterationLock;
@@ -646,6 +652,8 @@ protected:
     BOOLEAN m_MismatchedInterfacesInConfigDescriptor;
 
     FX_URB_TYPE m_UrbType;
+
+    BOOLEAN m_SspIsochPipeFlags; // Support USBD_PF_HANDLES_SSP_HIGH_BANDWIDTH_ISOCH
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 private:

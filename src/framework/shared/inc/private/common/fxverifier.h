@@ -65,10 +65,6 @@ enum FxEnhancedVerifierBitFlags {
         FxVerifierBugCheckWorker(FxDriverGlobals, __VA_ARGS__);
 #endif
 
-//
-// FxVerifierDbgBreakPoint and FxVerifierBreakOnDeviceStateError are mapped
-// to FX_VERIFY in UMDF and break regardless of any flags
-//
 __inline
 VOID
 FxVerifierDbgBreakPoint(

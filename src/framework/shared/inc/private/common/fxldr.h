@@ -30,6 +30,14 @@ extern "C" {
 
 #endif // __FXLDRUM_H__
 
+//
+// Cherry-pick MAX_SERVICE_NAME_LENGTH from winsvcp.h
+// This does not include the trailing NULL.
+//
+#ifndef MAX_SERVICE_NAME_LENGTH
+#define MAX_SERVICE_NAME_LENGTH 256
+#endif
+
 #define WDF_COMPONENT_NAME(a) L#a
 
 //
@@ -173,6 +181,90 @@ WdfBindClientHelper(
     _In_ WDF_MINOR_VERSION       FxMinorVersion
     );
 
+#ifdef WDF_STUB_VERSION
+
+PWDF_CLASS_BIND_INFO
+__inline
+FxGetNextClassBindInfo(
+    _In_reads_bytes_((BYTE*)pEnd - pCur) const BYTE* pCur,
+    _In_reads_bytes_(0) const PWDF_CLASS_BIND_INFO   pEnd
+    )
+/*++
+
+Routine Description:
+
+    Search the next class bind info, starting from the given address
+
+Arguments:
+
+    pCur - The address to start searching the bind info
+
+    pEnd - The end of all bind info, normally address of __KMDF_CLASS_BIND_END
+
+Return Value:
+
+    NULL - Stop. Failure happens
+    pEnd - Stop. No more bind info
+    Others - Continue. Find a valid bind info
+
+--*/
+{
+    //
+    // Skip padding buffer (arbitrary length of zeros, added by the compiler)
+    // between data structures.
+    //
+    // Structures (including WDF_CLASS_BIND_INFO) are generally aligned on the
+    // natural boundaries of the target processor, i.e. sizoef(PVOID).
+    // We also C_ASSERT that this struct ends on natural boundaries too. Thus
+    // any padding between them must be one or more NULL pointers.
+    //
+    // We know the first field of the structure, "Size", is never zero. Thus
+    // if the location contains zero, it must be a padding.
+    //
+    C_ASSERT(alignof(WDF_CLASS_BIND_INFO) % sizeof(PVOID) == 0);
+    C_ASSERT(sizeof (WDF_CLASS_BIND_INFO) % sizeof(PVOID) == 0);
+    C_ASSERT(FIELD_OFFSET(_WDF_CLASS_BIND_INFO, Size) == 0);
+
+    //
+    // Skip any leading padding buffers
+    //
+    while ((pCur + sizeof(PVOID) <= (PBYTE)pEnd) && (*(PVOID*)pCur == NULL)) {
+        pCur += sizeof(PVOID);
+    }
+
+    //
+    // Verify whether we reached the end of all bind info
+    //
+    if (pCur >= (PBYTE)pEnd) {
+        return pEnd;
+    }
+
+    //
+    // Verify the Size field is correct, and the whole strucure is within pEnd
+    //
+    if ((pCur + sizeof(WDF_CLASS_BIND_INFO) <= (PBYTE)pEnd) &&
+        (sizeof(WDF_CLASS_BIND_INFO) == ((PWDF_CLASS_BIND_INFO)pCur)->Size)) {
+        return (PWDF_CLASS_BIND_INFO)pCur;
+    }
+
+#if WDF_STUB_VERSION >= 25
+    //
+    // Verify the structure starts and ends on natural boundaries
+    //
+    C_ASSERT(alignof(WDF_CLASS_BIND_INFO2) % sizeof(PVOID) == 0);
+    C_ASSERT(sizeof (WDF_CLASS_BIND_INFO2) % sizeof(PVOID) == 0);
+
+    if ((pCur + sizeof(WDF_CLASS_BIND_INFO2) <= (PBYTE)pEnd) &&
+        (sizeof(WDF_CLASS_BIND_INFO2) == ((PWDF_CLASS_BIND_INFO)pCur)->Size)) {
+        return (PWDF_CLASS_BIND_INFO)pCur;
+    }
+#endif
+
+    return NULL;
+}
+
+#endif // WDF_STUB_VERSION
+
 typedef
 _Must_inspect_result_
 NTSTATUS
@@ -231,6 +323,13 @@ typedef struct _CLIENT_INFO {
     // registry service path of client driver
     //
     PUNICODE_STRING    RegistryPath;
+
+#ifndef __FXLDRUM_H__
+    //
+    // driver object
+    //
+    PDRIVER_OBJECT     DriverObject;
+#endif
 
 } CLIENT_INFO, *PCLIENT_INFO;
 

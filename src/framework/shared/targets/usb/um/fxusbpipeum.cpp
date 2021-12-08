@@ -66,7 +66,7 @@ FxUsbPipeContinuousReader::_ReadWorkItem(
 {
     FxUsbPipeRepeatReader * pRepeater;
     pRepeater = (FxUsbPipeRepeatReader *)Context;
-    
+
     pRepeater->RequestIrp->Forward();
 }
 
@@ -172,7 +172,7 @@ FxUsbPipeContinuousReader::Config(
         // Initialize the event before FormatRepeater clears it
         //
         status = pRepeater->ReadCompletedEvent.Initialize(NotificationEvent, TRUE);
-      
+
         if (!NT_SUCCESS(status)) {
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGIOTARGET,
@@ -202,7 +202,11 @@ FxUsbPipe::InitPipe(
     __in FxUsbInterface* UsbInterface
     )
 {
-    RtlCopyMemory(&m_PipeInformationUm, PipeInfo, sizeof(m_PipeInformationUm));
+    m_PipeInformation.PipeType          = PipeInfo->PipeType;
+    m_PipeInformation.EndpointAddress   = PipeInfo->PipeId;
+    m_PipeInformation.MaximumPacketSize = PipeInfo->MaximumPacketSize;
+    m_PipeInformation.Interval          = PipeInfo->Interval;
+
     m_InterfaceNumber = InterfaceNumber;
 
     if (m_UsbInterface != NULL) {
@@ -239,7 +243,7 @@ FxUsbPipe::FormatTransferRequest(
 
         return status;
     }
-    
+
     bufferSize = Buffer->GetBufferLength();
 
     status = RtlSizeTToULong(bufferSize, &dummyLength);
@@ -264,7 +268,7 @@ FxUsbPipe::FormatTransferRequest(
         }
 
         if (m_CheckPacketSize &&
-            (bufferSize % m_PipeInformationUm.MaximumPacketSize) != 0) {
+            (bufferSize % GetMaxPacketSize()) != 0) {
             return STATUS_INVALID_BUFFER_SIZE;
         }
     }
@@ -302,44 +306,11 @@ FxUsbPipe::FormatTransferRequest(
     pContext->StoreAndReferenceMemory(Buffer);
 
     pContext->m_UmUrb.UmUrbHeader.InterfaceHandle = m_UsbInterface->m_WinUsbHandle;
-    
-    pContext->m_UmUrb.UmUrbBulkOrInterruptTransfer.PipeID = m_PipeInformationUm.PipeId;
+
+    pContext->m_UmUrb.UmUrbBulkOrInterruptTransfer.PipeID = GetPipeId();
     pContext->m_UmUrb.UmUrbBulkOrInterruptTransfer.InPipe = IsInEndpoint();
 
     FxUsbUmFormatRequest(Request, &pContext->m_UmUrb.UmUrbHeader, m_UsbDevice->m_pHostTargetFile);
 
     return STATUS_SUCCESS;
 }
-
-VOID
-FxUsbPipe::GetInformation(
-    __out PWDF_USB_PIPE_INFORMATION PipeInformation
-    )
-{
-
-
-
-
-    PipeInformation->MaximumPacketSize = m_PipeInformationUm.MaximumPacketSize;
-    PipeInformation->EndpointAddress = m_PipeInformationUm.PipeId;
-    PipeInformation->Interval = m_PipeInformationUm.Interval;
-    PipeInformation->PipeType = _UsbdPipeTypeToWdf(m_PipeInformationUm.PipeType);    
-    PipeInformation->SettingIndex = m_UsbInterface->GetConfiguredSettingIndex();
-}
-
-WDF_USB_PIPE_TYPE
-FxUsbPipe::GetType(
-    VOID
-    )
-{
-    return _UsbdPipeTypeToWdf(m_PipeInformationUm.PipeType);
-}
-
-BOOLEAN
-FxUsbPipe::IsType(
-    __in WDF_USB_PIPE_TYPE Type
-    )
-{
-    return _UsbdPipeTypeToWdf(m_PipeInformationUm.PipeType) == Type ? TRUE : FALSE;
-}
-

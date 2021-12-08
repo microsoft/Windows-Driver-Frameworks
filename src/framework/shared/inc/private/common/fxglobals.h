@@ -100,6 +100,8 @@ typedef enum WaitSignalFlags {
 
 
 
+
+
 struct FxObjectDebugInfo {
     //
     // FX_OBJECT_TYPES enum value
@@ -187,6 +189,8 @@ struct FxDriverGlobalsDebugExtension {
     // and optionally capture stack frames.
     //
     FxTrackPowerOption TrackPower;
+
+
 
 
 
@@ -321,6 +325,12 @@ public:
 
     _Must_inspect_result_
     BOOLEAN
+    IsMinorVersionGreaterThanOrEqualTo(
+        _In_ ULONG  Minor
+        );
+
+    _Must_inspect_result_
+    BOOLEAN
     IsCorrectVersionRegistered(
         _In_ PCUNICODE_STRING ServiceKeyName
         );
@@ -425,6 +435,11 @@ public:
     // name).
     //
     ULONG Tag;
+
+    //
+    // Driver Object. Useful before FxDriver::m_DriverObject is initialized.
+    //
+    MxDriverObject DriverObject;
 
     //
     // Backpointer to Fx driver object
@@ -633,6 +648,11 @@ FxPoolAllocate(
     __in size_t Size
     )
 {
+    FxPoolTypeOrPoolFlags typeOrFlags;
+
+    typeOrFlags.UsePoolType = TRUE;
+    typeOrFlags.u.PoolType = Type;
+
     //
     // Always pass in the return address, regardless of the value of
     // Globals->WdfPoolTrackingOn.
@@ -640,7 +660,7 @@ FxPoolAllocate(
     return FxPoolAllocator(
         Globals,
         &Globals->FxPoolFrameworks,
-        Type,
+        typeOrFlags,
         Size,
         Globals->Tag,
         _ReturnAddress()
@@ -657,14 +677,56 @@ FxPoolAllocateWithTag(
     __in ULONG Tag
     )
 {
+    FxPoolTypeOrPoolFlags typeOrFlags;
+
+    typeOrFlags.UsePoolType = TRUE;
+    typeOrFlags.u.PoolType = Type;
+
     return FxPoolAllocator(
         Globals,
         &Globals->FxPoolFrameworks,
-        Type,
+        typeOrFlags,
         Size,
         Tag,
         Globals->FxPoolTrackingOn ? _ReturnAddress() : NULL
         );
+}
+
+__bcount(Size)
+PVOID
+FORCEINLINE
+FxPoolAllocateWithTag2(
+    _In_ PFX_DRIVER_GLOBALS Globals,
+    _In_ POOL_FLAGS Flags,
+    _In_ size_t Size,
+    _In_ ULONG Tag
+    )
+{
+    FxPoolTypeOrPoolFlags typeOrFlags;
+
+    typeOrFlags.UsePoolType = FALSE;
+    typeOrFlags.u.PoolFlags = Flags;
+
+    return FxPoolAllocator(
+        Globals,
+        &Globals->FxPoolFrameworks,
+        typeOrFlags,
+        Size,
+        Tag,
+        Globals->FxPoolTrackingOn ? _ReturnAddress() : NULL
+        );
+}
+
+__bcount(Size)
+PVOID
+FORCEINLINE
+FxPoolAllocate2(
+    _In_ PFX_DRIVER_GLOBALS Globals,
+    _In_ POOL_FLAGS Flags,
+    _In_ size_t Size
+    )
+{
+    return FxPoolAllocateWithTag2(Globals, Flags, Size, Globals->Tag);
 }
 
 //
@@ -692,6 +754,21 @@ VOID
 UnlockVerifierSection(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals
     );
+
+__inline
+NTSTATUS
+OpenDriverParamsKeyForRead(
+    _In_  PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _Out_ HANDLE            *Key
+    )
+{
+    return IoOpenDriverRegistryKey(FxDriverGlobals->DriverObject.GetObject(),
+                                   DriverRegKeyParameters,
+                                   KEY_READ,
+                                   0, // Flags - Must be 0
+                                   Key);
+}
+
 #endif
 
 BOOLEAN
@@ -994,6 +1071,12 @@ struct FxLibraryGlobalsType {
 
 
 
+
+    //
+    // If enabled, for device using SystemManagedIdleTimeout, WDF uses its
+    // internal idle timer instead of letting PoFx to manage the idle timeout.
+    //
+    BOOLEAN UseWdfTimerForPofx;
 };
 
 extern FxLibraryGlobalsType FxLibraryGlobals;

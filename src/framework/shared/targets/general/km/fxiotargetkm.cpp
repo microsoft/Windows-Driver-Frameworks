@@ -48,7 +48,7 @@ FxIoTarget::FormatIoRequest(
     FxIrp* irp;
 
     UNREFERENCED_PARAMETER(FileObject);
-    
+
     ASSERT(MajorCode == IRP_MJ_WRITE || MajorCode == IRP_MJ_READ);
 
     freeSysBuf = FALSE;
@@ -89,7 +89,7 @@ FxIoTarget::FormatIoRequest(
     CopyFileObjectAndFlags(Request);
 
     //
-    // Note that by convention "Set" methods of FxIrp apply to next stack 
+    // Note that by convention "Set" methods of FxIrp apply to next stack
     // location unless specified otherwise in the name.
     //
     irp->SetMajorFunction(MajorCode);
@@ -117,8 +117,8 @@ FxIoTarget::FormatIoRequest(
                     setBufferAndLength = FALSE;
             }
             else {
-                irp->SetSystemBuffer(FxPoolAllocate(GetDriverGlobals(),
-                                   NonPagedPool,
+                irp->SetSystemBuffer(FxPoolAllocate2(GetDriverGlobals(),
+                                   POOL_FLAG_NON_PAGED,
                                    ioLength));
                 if (irp->GetSystemBuffer() == NULL) {
                     DoTraceLevelMessage(
@@ -161,7 +161,7 @@ FxIoTarget::FormatIoRequest(
             // On reads, copy back to the double buffer after the read has
             // completed.
             //
-            if (setBufferAndLength) {                
+            if (setBufferAndLength) {
                 pContext->SetBufferAndLength(irp->GetSystemBuffer(),
                                     ioLength,
                                     (MajorCode == IRP_MJ_READ) ? TRUE : FALSE);
@@ -169,8 +169,8 @@ FxIoTarget::FormatIoRequest(
                 freeSysBuf = FALSE; // FxIoContext will free the buffer.
             }
             else {
-                pContext->m_CopyBackToBuffer = MajorCode == IRP_MJ_READ  ? 
-                                                                TRUE : FALSE;                
+                pContext->m_CopyBackToBuffer = MajorCode == IRP_MJ_READ  ?
+                                                                TRUE : FALSE;
             }
         }
         else {
@@ -186,7 +186,7 @@ FxIoTarget::FormatIoRequest(
         BOOLEAN reuseMdl;
 
         reuseMdl = FALSE;
-        
+
         if (pContext->m_MdlToFree != NULL) {
             reuseMdl = TRUE;
         }
@@ -337,7 +337,7 @@ FxIoTarget::FormatIoctlRequest(
     else {
         majorFunction = IRP_MJ_DEVICE_CONTROL;
     }
-    
+
     irp->SetMajorFunction(majorFunction);
 
     pContext->m_MajorFunction = majorFunction;
@@ -370,8 +370,8 @@ FxIoTarget::FormatIoctlRequest(
                     setBufferAndLength = FALSE;
             }
             else {
-                irp->SetSystemBuffer(FxPoolAllocate(GetDriverGlobals(),
-                                   NonPagedPool,
+                irp->SetSystemBuffer(FxPoolAllocate2(GetDriverGlobals(),
+                                   POOL_FLAG_NON_PAGED,
                                    allocationLength));
                 if (irp->GetSystemBuffer() == NULL) {
                     DoTraceLevelMessage(

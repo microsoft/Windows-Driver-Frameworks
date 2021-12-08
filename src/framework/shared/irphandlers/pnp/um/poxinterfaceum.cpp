@@ -27,11 +27,15 @@ FxPoxInterface::PoxRegisterDevice(
 {
     HRESULT hr;
     BOOLEAN directedTransitionsEnabled;
+    ULONGLONG deviceFlags;
+
+    deviceFlags = m_PkgPnp->m_PowerPolicyMachine.m_Owner->
+        m_IdleSettings.m_TimeoutMgmt.GetPoFxDeviceFlags();
 
     directedTransitionsEnabled = m_PkgPnp->m_PowerPolicyMachine.m_Owner->
         m_IdleSettings.m_TimeoutMgmt.GetDirectedPowerTransitionSupport();
 
-    hr = m_PkgPnp->GetDevice()->GetDeviceStack2()->PoFxRegisterDevice(directedTransitionsEnabled);
+    hr = m_PkgPnp->GetDevice()->GetDeviceStack2()->PoFxRegisterDevice(deviceFlags, directedTransitionsEnabled);
 
     if (S_OK == hr)
     {

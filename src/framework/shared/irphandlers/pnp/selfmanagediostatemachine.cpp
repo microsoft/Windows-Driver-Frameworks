@@ -69,7 +69,7 @@ const FxSelfManagedIoTargetState FxSelfManagedIoMachine::m_FlushedStates[] =
 {
     { SelfManagedIoEventStart, FxSelfManagedIoRestarting DEBUGGED_EVENT },
     { SelfManagedIoEventCleanup, FxSelfManagedIoCleanup DEBUGGED_EVENT },
-    { SelfManagedIoEventFlush, FxSelfManagedIoFlushed TRAP_ON_EVENT },
+    { SelfManagedIoEventFlush, FxSelfManagedIoFlushed DEBUGGED_EVENT },
 };
 
 const FxSelfManagedIoStateTable FxSelfManagedIoMachine::m_StateTable[] =

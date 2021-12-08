@@ -594,9 +594,9 @@ FxDmaEnabler::ConfigureSystemAdapter(
         // Allocate the SG list.
         //
         m_SGList.SystemProfile.List =
-            (PSCATTER_GATHER_LIST) ExAllocatePoolWithTag(NonPagedPool,
-                                                         systemSGListSize,
-                                                         GetDriverGlobals()->Tag);
+            (PSCATTER_GATHER_LIST) ExAllocatePool2(POOL_FLAG_NON_PAGED,
+                                                   systemSGListSize,
+                                                   GetDriverGlobals()->Tag);
 
         if (m_SGList.SystemProfile.List == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;

@@ -23,6 +23,7 @@ typedef enum _WDFFUNCENUM_NUMENTRIES {
     WdfFunctionTableNumEntries_V1_25 = 453,
     WdfFunctionTableNumEntries_V1_27 = 453,
     WdfFunctionTableNumEntries_V1_29 = 454,
+    WdfFunctionTableNumEntries_V1_31 = 458,
 
 
 
@@ -172,6 +173,7 @@ IsClientInfoValid(
 {
     if (ClientInfo == NULL ||
         ClientInfo->Size != sizeof(CLIENT_INFO) ||
+        ClientInfo->DriverObject == NULL ||
         ClientInfo->RegistryPath == NULL ||
         ClientInfo->RegistryPath->Length == 0 ||
         ClientInfo->RegistryPath->Buffer == NULL) {
@@ -401,7 +403,7 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_29) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V1_31) {
         //
         // Make sure table count matches exactly with previously
         // released framework version table sizes.
@@ -412,6 +414,7 @@ FxLibraryCommonRegisterClient(
 
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V1_31: // 458 - win10 2004 Vibranium
         case WdfFunctionTableNumEntries_V1_29: // 454 - win10 1903 19H1
      // case WdfFunctionTableNumEntries_V1_27: // 453 - win10 1809 RS5
         case WdfFunctionTableNumEntries_V1_25: // 453 - win10 1803 RS4
@@ -499,7 +502,9 @@ FxLibraryCommonRegisterClient(
         // store enhanced verifier options in driver globals
         //
         fxDriverGlobals = GetFxDriverGlobals(*WdfDriverGlobals);
-        GetEnhancedVerifierOptions(ClientInfo, &fxDriverGlobals->FxEnhancedVerifierOptions);
+        fxDriverGlobals->DriverObject = ClientInfo->DriverObject;
+
+        GetEnhancedVerifierOptions(fxDriverGlobals);
         isFunctinTableHookingOn = IsFxVerifierFunctionTableHooking(fxDriverGlobals);
         isPerformanceAnalysisOn = IsFxPerformanceAnalysis(fxDriverGlobals);
 
@@ -630,29 +635,17 @@ FxLibraryCommonUnregisterClient(
 
 VOID
 GetEnhancedVerifierOptions(
-    __in PCLIENT_INFO ClientInfo,
-    __out PULONG Options
+    _Inout_ PFX_DRIVER_GLOBALS FxDriverGlobals
     )
 {
     NTSTATUS status;
     ULONG value;
     FxAutoRegKey hKey, hWdf;
-    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Wdf");
     DECLARE_CONST_UNICODE_STRING(valueName, WDF_ENHANCED_VERIFIER_OPTIONS_VALUE_NAME);
 
-    *Options = 0;
-    if (!IsClientInfoValid(ClientInfo) ||
-        Options == NULL) {
-
-        __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
-                 ": Invalid ClientInfo received from wdfldr \n"));
-        return;
-    }
-
-    status = FxRegKey::_OpenKey(NULL,
-                                ClientInfo->RegistryPath,
-                                &hWdf.m_Key,
-                                KEY_READ);
+    status = OpenDriverParamsKeyForRead(FxDriverGlobals,
+                                        &hWdf.m_Key);
     if (!NT_SUCCESS(status)) {
         return;
     }
@@ -672,9 +665,7 @@ GetEnhancedVerifierOptions(
     // Examine key values and set Options only on success.
     //
     if (NT_SUCCESS(status)) {
-        if (value) {
-            *Options = value;
-        }
+        FxDriverGlobals->FxEnhancedVerifierOptions = value;
     }
 }
 

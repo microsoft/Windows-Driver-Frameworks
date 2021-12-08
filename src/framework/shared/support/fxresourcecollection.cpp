@@ -364,7 +364,7 @@ Return Value:
 _Must_inspect_result_
 PCM_RESOURCE_LIST
 FxCmResList::CreateWdmList(
-    __in __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType
+    __in __drv_strictTypeMatch(__drv_typeExpr) POOL_FLAGS PoolFlags
     )
 /*++
 
@@ -373,7 +373,7 @@ Routine Description:
     contents of this collection.
 
 Arguments:
-    PoolType - the pool type from which to allocate the resource list
+    PoolFlags - the pool flags from which to allocate the resource list
 
 Return Value:
     a new resource list upon success, NULL upon failure
@@ -396,7 +396,7 @@ Return Value:
                (sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (Count() - 1));
 
         pWdmResourceList = (PCM_RESOURCE_LIST)
-            MxMemory::MxAllocatePoolWithTag(PoolType, size, pFxDriverGlobals->Tag);
+            MxMemory::MxAllocatePool2(PoolFlags, size, pFxDriverGlobals->Tag);
 
         if (pWdmResourceList != NULL) {
             PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
@@ -437,7 +437,7 @@ FxCmResList::GetCount(
 {
     ULONG count;
     KIRQL irql;
-    
+
     Lock(&irql);
     count = Count();
     Unlock(irql);
@@ -669,7 +669,7 @@ Return Value:
         }
 
         pRequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)
-            MxMemory::MxAllocatePoolWithTag(PagedPool, size, pFxDriverGlobals->Tag);
+            MxMemory::MxAllocatePool2(POOL_FLAG_PAGED, size, pFxDriverGlobals->Tag);
 
         if (pRequirementsList != NULL) {
             PIO_RESOURCE_LIST pList;

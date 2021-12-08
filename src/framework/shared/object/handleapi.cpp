@@ -160,9 +160,9 @@ FxCalculateObjectTotalSize(
 }
 
 PVOID
-FxObjectHandleAlloc(
+FxObjectHandleAllocCommon(
     __in        PFX_DRIVER_GLOBALS FxDriverGlobals,
-    __in        POOL_TYPE PoolType,
+    __in        FxPoolTypeOrPoolFlags TypeOrFlags,
     __in        size_t Size,
     __in        ULONG Tag,
     __in_opt    PWDF_OBJECT_ATTRIBUTES Attributes,
@@ -177,7 +177,7 @@ Routine Description:
 
 Arguments:
     FxDriverGlobals - caller's globals
-    PoolType - type of pool to be used in allocating the object's memory
+    TypeOrFlags - pool type (or pool flags) to be used in allocating the object's memory
     Size - size of the object (as passed to operator new() by the compiler)
     Tag - tag to use when allocating the object's memory
     Attributes - attributes which describe the context to be associated with the
@@ -229,7 +229,14 @@ Return Value:
         return NULL;
     }
 
-    blob = FxPoolAllocateWithTag(FxDriverGlobals, PoolType, totalSize, Tag);
+    if (TypeOrFlags.UsePoolType) {
+        blob = FxPoolAllocateWithTag(
+            FxDriverGlobals, TypeOrFlags.u.PoolType, totalSize, Tag);
+    }
+    else {
+        blob = FxPoolAllocateWithTag2(
+            FxDriverGlobals, TypeOrFlags.u.PoolFlags, totalSize, Tag);
+    }
 
     if (blob != NULL) {
         blob = FxObjectAndHandleHeaderInit(
@@ -243,6 +250,59 @@ Return Value:
 
     return blob;
 }
+
+PVOID
+FxObjectHandleAlloc(
+    _In_        PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_        POOL_TYPE PoolType,
+    _In_        size_t Size,
+    _In_        ULONG Tag,
+    _In_opt_    PWDF_OBJECT_ATTRIBUTES Attributes,
+    _In_        USHORT ExtraSize,
+    _In_        FxObjectType ObjectType
+    )
+{
+    FxPoolTypeOrPoolFlags typeOrFlags;
+
+    typeOrFlags.UsePoolType = TRUE;
+    typeOrFlags.u.PoolType = PoolType;
+
+    return FxObjectHandleAllocCommon(
+                FxDriverGlobals,
+                typeOrFlags,
+                Size,
+                Tag,
+                Attributes,
+                ExtraSize,
+                ObjectType);
+}
+
+PVOID
+FxObjectHandleAlloc2(
+    _In_        PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_        POOL_FLAGS PoolFlags,
+    _In_        size_t Size,
+    _In_        ULONG Tag,
+    _In_opt_    PWDF_OBJECT_ATTRIBUTES Attributes,
+    _In_        USHORT ExtraSize,
+    _In_        FxObjectType ObjectType
+    )
+{
+    FxPoolTypeOrPoolFlags typeOrFlags;
+
+    typeOrFlags.UsePoolType = FALSE;
+    typeOrFlags.u.PoolFlags = PoolFlags;
+
+    return FxObjectHandleAllocCommon(
+                FxDriverGlobals,
+                typeOrFlags,
+                Size,
+                Tag,
+                Attributes,
+                ExtraSize,
+                ObjectType);
+}
+
 
 VOID
 FxContextHeaderInit(
@@ -469,7 +529,7 @@ Return Value:
     }
 
     header = (FxContextHeader*)
-                FxPoolAllocate(fxDriverGlobals, NonPagedPool, size);
+                FxPoolAllocate2(fxDriverGlobals, POOL_FLAG_NON_PAGED, size);
 
     if (header == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;

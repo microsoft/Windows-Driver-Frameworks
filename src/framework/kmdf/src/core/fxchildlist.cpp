@@ -89,7 +89,7 @@ FxDeviceDescriptionEntry::operator new(
 
     UNREFERENCED_PARAMETER(AllocatorBlock);
 
-    p = FxPoolAllocate(FxDriverGlobals, NonPagedPool, TotalDescriptionSize);
+    p = FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_NON_PAGED, TotalDescriptionSize);
 
     if (p != NULL) {
         RtlZeroMemory(p, TotalDescriptionSize);
@@ -2567,7 +2567,7 @@ FxChildList::ProcessBusRelations(
     size = _ComputeRelationsSize(totalCount);
 
     pNewRelations = (PDEVICE_RELATIONS)
-        ExAllocatePoolWithTag(PagedPool, size, pFxDriverGlobals->Tag);
+        ExAllocatePool2(POOL_FLAG_PAGED, size, pFxDriverGlobals->Tag);
 
     if (pNewRelations == NULL) {
         //

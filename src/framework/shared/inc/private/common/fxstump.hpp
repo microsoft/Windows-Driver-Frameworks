@@ -33,17 +33,17 @@ public:
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         )
     {
-        return FxPoolAllocate(FxDriverGlobals, NonPagedPool, Size);
+        return FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_NON_PAGED, Size);
     }
 
     PVOID
     operator new(
         __in size_t Size,
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
-        __in POOL_TYPE PoolType
+        __in POOL_FLAGS PoolFlags
         )
     {
-        return FxPoolAllocate(FxDriverGlobals, PoolType, Size);
+        return FxPoolAllocate2(FxDriverGlobals, PoolFlags, Size);
     }
 
     VOID
@@ -64,7 +64,7 @@ public:
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         )
     {
-        return FxPoolAllocate(FxDriverGlobals, NonPagedPool, Size);
+        return FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_NON_PAGED, Size);
     }
 
     VOID
@@ -76,9 +76,9 @@ public:
             FxPoolFree(pointer);
         }
     }
-    
+
 #endif
-    
+
 };
 
 struct FxGlobalsStump : public FxStump {

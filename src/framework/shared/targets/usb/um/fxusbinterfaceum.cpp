@@ -38,7 +38,7 @@ FxUsbInterface::SetWinUsbHandle(
                             "index %d to relative interface index %d", m_InterfaceNumber,
                             FrameworkInterfaceIndex);
     }
-    
+
     if (FrameworkInterfaceIndex == 0) {
         m_WinUsbHandle = m_UsbDevice->m_WinUsbHandle;
     }
@@ -50,19 +50,19 @@ FxUsbInterface::SetWinUsbHandle(
         urb.UmUrbGetAssociatedInterface.Hdr.Length = sizeof(_UMURB_GET_ASSOCIATED_INTERFACE);
 
         //
-        // If this is using the WinUSB dispatcher, this will ultimately call 
+        // If this is using the WinUSB dispatcher, this will ultimately call
         // WinUsb_GetAssociatedInterface which expects a 0-based index but starts
         // counting from index 1. To get the handle for interface n, we pass n-1
         // and WinUSB will return the handle for (n-1)+1.
         //
         // The NativeUSB dispatcher ultimately calls WdfUsbTargetDeviceGetInterface.
         // Unlike WinUSB.sys, this starts counting from index zero. The NativeUSB
-        // dispatcher expects this framework quirk and adjusts accordingly. See 
-        // WudfNativeUsbDispatcher.cpp for more information. 
+        // dispatcher expects this framework quirk and adjusts accordingly. See
+        // WudfNativeUsbDispatcher.cpp for more information.
         //
         // The actual interface number may differ from the interface index in
         // composite devices. In all cases, the interface index (starting from zero)
-        // must be used. 
+        // must be used.
         //
         urb.UmUrbGetAssociatedInterface.InterfaceIndex = FrameworkInterfaceIndex - 1;
 
@@ -77,7 +77,7 @@ FxUsbInterface::SetWinUsbHandle(
             m_WinUsbHandle = NULL;
         }
     }
-    
+
     return status;
 }
 
@@ -97,8 +97,8 @@ FxUsbInterface::MakeAndConfigurePipes(
     ULONG size = (NumPipes == 0 ? 1 : NumPipes) * sizeof(FxUsbPipe*);
     UMURB urb;
 
-    ppPipes = (FxUsbPipe**)FxPoolAllocate(GetDriverGlobals(), NonPagedPool, size);
-    if (ppPipes == NULL) {        
+    ppPipes = (FxUsbPipe**)FxPoolAllocate2(GetDriverGlobals(), POOL_FLAG_NON_PAGED, size);
+    if (ppPipes == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -138,7 +138,7 @@ FxUsbInterface::MakeAndConfigurePipes(
             goto Done;
         }
     }
-    
+
     if (IsInterfaceConfigured()) {
         //
         // Delete the old pipes
@@ -167,7 +167,7 @@ FxUsbInterface::MakeAndConfigurePipes(
                 "Send UMURB_FUNCTION_QUERY_PIPE failed  %!STATUS!", status);
             goto Done;
         }
-        
+
         m_ConfiguredPipes[iPipe]->InitPipe(&urb.UmUrbQueryPipe.PipeInformation,
                                            m_InterfaceNumber,
                                            this);
@@ -188,7 +188,7 @@ Done:
             ppPipes = NULL;
         }
     }
-    
+
     return status;
 }
 
@@ -217,10 +217,10 @@ FxUsbInterface::UpdatePipeAttributes(
             break;
         }
     }
-    
+
     //
     // Pipe attributes are updated as part of select
-    // config and it is ok for the client driver to configure 
+    // config and it is ok for the client driver to configure
     // twice with the same attributes. In a similar scenario,
     // KMDF will return STATUS_SUCCESS, so we should do the
     // same for UMDF for consistency
@@ -228,7 +228,7 @@ FxUsbInterface::UpdatePipeAttributes(
     if (status == STATUS_OBJECT_NAME_EXISTS) {
         status = STATUS_SUCCESS;
     }
-    
+
     return status;
 }
 

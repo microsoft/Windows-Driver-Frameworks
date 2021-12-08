@@ -242,8 +242,8 @@ Return Value:
             );
     }
     size =  sizeof(FxUsbInterfaceSetting) * m_NumSettings;
-    m_Settings = (FxUsbInterfaceSetting *) FxPoolAllocate(
-        GetDriverGlobals(), NonPagedPool, size);
+    m_Settings = (FxUsbInterfaceSetting *) FxPoolAllocate2(
+        GetDriverGlobals(), POOL_FLAG_NON_PAGED, size);
 
     if (m_Settings == NULL) {
         DoTraceLevelMessage(
@@ -308,16 +308,16 @@ Return Value:
 
         //
         // Only validate the endpoints if the interface reports it has some. We don't
-        // want to validate EP descriptors that may be after the interface descriptor 
+        // want to validate EP descriptors that may be after the interface descriptor
         // that are never used because bNumEndpoints doesn't indicate they are present.
         //
         if (m_Settings[i].InterfaceDescriptor->bNumEndpoints > 0) {
             PVOID pRelativeEnd;
             NTSTATUS status;
 
-            // 
-            // Validate that each endpoint descriptor is the correct size for this alt setting. 
-            // We will use the next inteface descriptor as the end, and if this is the last 
+            //
+            // Validate that each endpoint descriptor is the correct size for this alt setting.
+            // We will use the next inteface descriptor as the end, and if this is the last
             // interface descriptor, use the end of the config descriptor as our end.
             //
             pRelativeEnd = FxUsbFindDescriptorType(
@@ -329,15 +329,15 @@ Return Value:
 
             if (pRelativeEnd == NULL) {
                 //
-                // This is the last alt setting in the config descriptor, use the end of the 
+                // This is the last alt setting in the config descriptor, use the end of the
                 // config descriptor as our end
                 //
-                pRelativeEnd = WDF_PTR_ADD_OFFSET(m_UsbDevice->m_ConfigDescriptor, 
+                pRelativeEnd = WDF_PTR_ADD_OFFSET(m_UsbDevice->m_ConfigDescriptor,
                     m_UsbDevice->m_ConfigDescriptor->wTotalLength);
             }
 
-            // 
-            // Limit the number of endpoints validated to bNumEndpoints. In theory 
+            //
+            // Limit the number of endpoints validated to bNumEndpoints. In theory
             // there could be EP descriptors after N EP descriptors that are never
             // used, thus we don't want to risk valdiating them and failing them
             // (ie an app compat concern, in a perfect world we would validate them)
@@ -433,7 +433,7 @@ Return Value:
     size = GET_SELECT_INTERFACE_REQUEST_SIZE(numEP);
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-    urb = (PURB) FxPoolAllocate(GetDriverGlobals(), NonPagedPool, size);
+    urb = (PURB) FxPoolAllocate2(GetDriverGlobals(), POOL_FLAG_NON_PAGED, size);
 
     if (urb == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -530,7 +530,7 @@ Return Value:
 
     size = GET_SELECT_INTERFACE_REQUEST_SIZE(InterfaceDescriptor->bNumEndpoints);
 
-    urb = (PURB) FxPoolAllocate(GetDriverGlobals(), NonPagedPool, size);
+    urb = (PURB) FxPoolAllocate2(GetDriverGlobals(), POOL_FLAG_NON_PAGED, size);
 
     if (urb == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -558,7 +558,7 @@ FxUsbInterface::CheckAndSelectSettingByIndex(
 /*++
 
 Routine Description:
-    Checks if the give SettingIndex is the current alternate setting 
+    Checks if the give SettingIndex is the current alternate setting
     and if not, selects that setting
 
 Arguments:
@@ -568,15 +568,15 @@ Return Value:
     NTSTATUS
 
   --*/
-{   
-     if (GetConfiguredSettingIndex() != SettingIndex) {    
-         return SelectSettingByIndex(NULL, 
+{
+     if (GetConfiguredSettingIndex() != SettingIndex) {
+         return SelectSettingByIndex(NULL,
                                      SettingIndex);
-     } 
-     else {    
+     }
+     else {
          return STATUS_SUCCESS;
-     }   
-}  
+     }
+}
 
 _Must_inspect_result_
 NTSTATUS
@@ -621,12 +621,12 @@ Return Value:
                             "Failed to initialize FxSyncRequest");
         return status;
     }
-    
+
     //
     // Subtract the size of the embedded pipe.
     //
-    const ULONG interfaceStructSize = sizeof(Urb->UrbSelectInterface.Interface) - 
-                                      sizeof(USBD_PIPE_INFORMATION);  
+    const ULONG interfaceStructSize = sizeof(Urb->UrbSelectInterface.Interface) -
+                                      sizeof(USBD_PIPE_INFORMATION);
 
     //
     // This check will happen twice for SelectSettingByInterface/Descriptor.
@@ -661,15 +661,15 @@ Return Value:
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
-   
+
     //
     // Urb->UrbSelectInterface.Interface.NumberOfPipes is set when the URB
     // completes.  So, we must compute the number of pipes being requested based
     // on the size of the structure and its Length (as set by the caller).
-    // To calculate the number of pipes we need to account for the 
-    // embedded pipe in the structure.    
-    //                                   
-    numPipes = (UCHAR) ((Urb->UrbSelectInterface.Interface.Length - 
+    // To calculate the number of pipes we need to account for the
+    // embedded pipe in the structure.
+    //
+    numPipes = (UCHAR) ((Urb->UrbSelectInterface.Interface.Length -
                          interfaceStructSize) /
                        sizeof(USBD_PIPE_INFORMATION)
                        );
@@ -690,9 +690,9 @@ Return Value:
     // If the interface is already configured don't do anything with the old
     // settings till we allocate new.
     //
-    ppPipes = (FxUsbPipe **) FxPoolAllocate(GetDriverGlobals(), NonPagedPool, size);
+    ppPipes = (FxUsbPipe **) FxPoolAllocate2(GetDriverGlobals(), POOL_FLAG_NON_PAGED, size);
 
-    if (ppPipes == NULL) {        
+    if (ppPipes == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -836,14 +836,17 @@ Arguments:
 
         //
         // Make sure that the Interface Length conveys the exact number of EP's
-        //        
+        //
         ASSERT(
             &Urb->UrbSelectInterface.Interface.Pipes[i] <
             WDF_PTR_ADD_OFFSET(&Urb->UrbSelectInterface.Interface,
                                Urb->UrbSelectInterface.Interface.Length)
             );
 
-        Urb->UrbSelectInterface.Interface.Pipes[i].PipeFlags = 0x0;
+        Urb->UrbSelectInterface.Interface.Pipes[i].PipeFlags =
+            m_UsbDevice->m_SspIsochPipeFlags
+                ? USBD_PF_HANDLES_SSP_HIGH_BANDWIDTH_ISOCH
+                : 0;
         Urb->UrbSelectInterface.Interface.Pipes[i].MaximumTransferSize =
             defaultMaxTransferSize;
     }
@@ -922,7 +925,7 @@ Return Value:
         }
 
         if (pCommonDesc->bDescriptorType == USB_ENDPOINT_DESCRIPTOR_TYPE) {
-            // 
+            //
             // Size of pEndpointDesc has been validated by CreateSettings() and
             // is within the config descriptor
             //

@@ -335,9 +335,10 @@ FxPoxInterface::UpdateIdleTimeoutHint(
     ULONGLONG idleTimeoutHint;
 
     if (FALSE == m_PkgPnp->m_PowerPolicyMachine.m_Owner->m_IdleSettings.
-                                m_TimeoutMgmt.UsingSystemManagedIdleTimeout()) {
+                                m_TimeoutMgmt.UsingSystemManagedIdleTimeoutAndPofxTimer()) {
         //
-        // Driver-managed idle timeout. Nothing to do.
+        // Driver-managed idle timeout, or System-managed idle timeout with WDF timer.
+        // Nothing to do
         //
         return;
     }

@@ -785,6 +785,8 @@ FxInterrupt::DeleteObject(
     if (m_WakeInterruptMachine) {
         delete m_WakeInterruptMachine;
         m_WakeInterruptMachine = NULL;
+
+        m_Device->m_PkgPnp->WakeInterruptDestroyed();
     }
 
     //

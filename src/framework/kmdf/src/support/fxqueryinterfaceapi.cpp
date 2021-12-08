@@ -158,7 +158,7 @@ WDFEXPORT(WdfDeviceAddQueryInterface)(
     // the list of FxQueryInterface's is locked by a lock which does not
     // raise IRQL, we can allocate the structure out paged pool.
     //
-    pQueryInterface = new (pFxDriverGlobals, PagedPool)
+    pQueryInterface = new (pFxDriverGlobals, POOL_FLAG_PAGED)
         FxQueryInterface(pDevice, InterfaceConfig);
 
     if (pQueryInterface == NULL) {
@@ -176,7 +176,7 @@ WDFEXPORT(WdfDeviceAddQueryInterface)(
         // Try to allocate memory for the interface.
         //
         pQueryInterface->m_Interface = (PINTERFACE)
-            FxPoolAllocate(pFxDriverGlobals, PagedPool, pInterface->Size);
+            FxPoolAllocate2(pFxDriverGlobals, POOL_FLAG_PAGED, pInterface->Size);
 
         if (pQueryInterface->m_Interface == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;

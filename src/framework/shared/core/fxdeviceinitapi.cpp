@@ -1033,9 +1033,9 @@ WDFEXPORT(WdfDeviceInitAssignWdmIrpPreprocessCallback)(
         }
 
         DeviceInit->PreprocessInfo->Dispatch[MajorFunction].MinorFunctions =
-            (PUCHAR) FxPoolAllocate(pFxDriverGlobals,
-                                    NonPagedPool,
-                                    sizeof(UCHAR) * NumMinorFunctions);
+            (PUCHAR) FxPoolAllocate2(pFxDriverGlobals,
+                                     POOL_FLAG_NON_PAGED,
+                                     sizeof(UCHAR) * NumMinorFunctions);
 
         if (DeviceInit->PreprocessInfo->Dispatch[MajorFunction].MinorFunctions == NULL) {
 
@@ -2347,7 +2347,7 @@ WDFEXPORT(WdfPdoInitAddDeviceText)(
         return status;
     }
 
-    pDeviceText = new(pFxDriverGlobals, PagedPool) FxDeviceText();
+    pDeviceText = new(pFxDriverGlobals, POOL_FLAG_PAGED) FxDeviceText();
 
     if (pDeviceText == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;

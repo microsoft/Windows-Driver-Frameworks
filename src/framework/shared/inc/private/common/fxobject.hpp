@@ -195,8 +195,8 @@ enum FxObjectDroppedEvent {
         __in PFX_DRIVER_GLOBALS FxDriverGlobals                 \
         )                                                   \
     {                                                       \
-        return FxObjectHandleAlloc(FxDriverGlobals,         \
-                                   NonPagedPool,            \
+        return FxObjectHandleAlloc2(FxDriverGlobals,        \
+                                   POOL_FLAG_NON_PAGED,     \
                                    Size,                    \
                                    0,                       \
                                    WDF_NO_OBJECT_ATTRIBUTES,\
@@ -554,13 +554,13 @@ public:
     {
         UNREFERENCED_PARAMETER(Type);
 
-        return FxObjectHandleAlloc(FxDriverGlobals,
-                                   NonPagedPool,
-                                   Size,
-                                   0,
-                                   WDF_NO_OBJECT_ATTRIBUTES,
-                                   0,
-                                   Type);
+        return FxObjectHandleAlloc2(FxDriverGlobals,
+                                    POOL_FLAG_NON_PAGED,
+                                    Size,
+                                    0,
+                                    WDF_NO_OBJECT_ATTRIBUTES,
+                                    0,
+                                    Type);
     }
 
     PVOID
@@ -572,13 +572,13 @@ public:
         __in USHORT ExtraSize = 0
         )
     {
-        return FxObjectHandleAlloc(FxDriverGlobals,
-                                   NonPagedPool,
-                                   Size,
-                                   0,
-                                   Attributes,
-                                   ExtraSize,
-                                   FxObjectTypeExternal);
+        return FxObjectHandleAlloc2(FxDriverGlobals,
+                                    POOL_FLAG_NON_PAGED,
+                                    Size,
+                                    0,
+                                    Attributes,
+                                    ExtraSize,
+                                    FxObjectTypeExternal);
     }
 
     VOID

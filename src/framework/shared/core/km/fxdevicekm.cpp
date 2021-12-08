@@ -598,7 +598,7 @@ FxDevice::CreateSymbolicLink(
             return status;
         }
 
-        pBuffer = (PWSTR) FxPoolAllocate(FxDriverGlobals, PagedPool, length);
+        pBuffer = (PWSTR) FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_PAGED, length);
         if (pBuffer == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
 

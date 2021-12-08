@@ -75,7 +75,7 @@ private:
     FxIoQueue*  m_DispatchTable[IRP_MJ_MAXIMUM_FUNCTION+1];
 
     //
-    // This is the seed value used to pass to the 
+    // This is the seed value used to pass to the
     // FxRandom for testing forward progress
     //
     ULONG       m_RandomSeed;
@@ -89,14 +89,14 @@ private:
     // TRUE if queues are shutting down (surprise_remove/remove in progress).
     //
     BOOLEAN     m_QueuesAreShuttingDown;
-    
+
     //
     // We'll maintain the dynamic dispatch table "per device" so that it is possible
     // to have different callbacks for each device.
     // Note that each device may be associted with multiple class extension in the future.
     //
     LIST_ENTRY  m_DynamicDispatchInfoListHead;
-    
+
     //
     // If !=NULL, a pre-process callback was registered
     //
@@ -124,18 +124,18 @@ public:
     //
     // Returns the Top level queue for the Io based on the Irp MajorFunction
     //
-    FxIoQueue*  
+    FxIoQueue*
     GetDispatchQueue(
         _In_ UCHAR MajorFunction
         )
     {
         return m_DispatchTable[MajorFunction];
     }
-    
+
     // Do not specify argument names
     FX_DECLARE_VF_FUNCTION_P1(
-    NTSTATUS, 
-    VerifyDispatchContext, 
+    NTSTATUS,
+    VerifyDispatchContext,
         _In_ WDFCONTEXT
         );
 
@@ -184,7 +184,7 @@ Return Value:
         __in    CfxDevice               * Device,
         __inout FxIoQueue               * Queue
         );
-    
+
     //
     // Register the I/O in-caller context callback
     //
@@ -196,21 +196,21 @@ Return Value:
     {
         m_InCallerContextCallback.m_Method = EvtIoInCallerContext;
     }
-    
+
     // Do not specify argument names
     FX_DECLARE_VF_FUNCTION_P2(
-    NTSTATUS, 
-    VerifyEnqueueRequestUpdateFlags, 
-        _In_ FxRequest*, 
-        _Inout_ SHORT* 
+    NTSTATUS,
+    VerifyEnqueueRequestUpdateFlags,
+        _In_ FxRequest*,
+        _Inout_ SHORT*
         );
 
     // Do not specify argument names
     FX_DECLARE_VF_FUNCTION_P2(
-    VOID, 
-    VerifyEnqueueRequestRestoreFlags, 
-        _In_ FxRequest*, 
-        _In_ SHORT 
+    VOID,
+    VerifyEnqueueRequestRestoreFlags,
+        _In_ FxRequest*,
+        _In_ SHORT
         );
 
     //
@@ -233,7 +233,7 @@ Return Value:
     CfxDevice*
     GetDevice(
         VOID
-        ) 
+        )
     {
         return m_Device;
     }
@@ -242,7 +242,7 @@ Return Value:
     FxIoQueue*
     GetDefaultQueue(
         VOID
-        ) 
+        )
     {
         return m_DefaultQueue;
     }
@@ -251,7 +251,7 @@ Return Value:
     BOOLEAN
     IsFilter(
         VOID
-        ) 
+        )
     {
         return m_Filter;
     }
@@ -306,7 +306,7 @@ Return Value:
     //
     _Must_inspect_result_
     NTSTATUS
-    SetFilter( 
+    SetFilter(
         __in BOOLEAN Value
         );
 
@@ -327,9 +327,9 @@ Return Value:
     RemoveQueueReferences(
         __inout FxIoQueue* pQueue
         );
-    
+
     _Must_inspect_result_
-    NTSTATUS 
+    NTSTATUS
     ConfigureDynamicDispatching(
         __in UCHAR               MajorFunction,
         __in_opt FxCxDeviceInfo* CxDeviceInfo,
@@ -379,18 +379,18 @@ Return Value:
         for (index = 0; index <= IRP_MJ_MAXIMUM_FUNCTION; index++) {
           if (m_DispatchTable[index] == Queue) {
               return TRUE;
-          }  
-        }    
-        return FALSE; 
+          }
+        }
+        return FALSE;
     }
 
-    NTSTATUS 
-    DispathToInCallerContextCallback(
+    NTSTATUS
+    DispatchToInCallerContextCallback(
         __in    FxIoInCallerContext *InCallerContextInfo,
         __in    FxRequest *Request,
         __inout MdIrp      Irp
         );
-    
+
     __inline
     FxIoInCallerContext*
     GetIoInCallerContextCallback(
@@ -404,7 +404,7 @@ Return Value:
             return &m_InCallerContextCallback;
         }
     }
-    
+
 private:
 
     VOID
@@ -416,7 +416,7 @@ private:
     RemoveIoQueue(
         __inout FxIoQueue* IoQueue
         );
-    
+
     FxIoQueue*
     GetFirstIoQueueLocked(
         __in FxIoQueueNode* QueueBookmark,

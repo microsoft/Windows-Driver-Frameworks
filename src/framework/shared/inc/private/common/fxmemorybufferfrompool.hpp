@@ -57,6 +57,9 @@ public:
         __in ULONG Tag
         )
     {
+        //
+        // Used by WdfMemoryCreate. Keep POOL_TYPE for compat
+        //
         m_Pool = MxMemory::MxAllocatePoolWithTag(Type, GetBufferSize(), Tag);
         return  m_Pool != NULL ? TRUE : FALSE;
     }

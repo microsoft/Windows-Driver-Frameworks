@@ -227,7 +227,7 @@ Return Value:
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
-            "Interger overflow occured when duplicating string %!STATUS!", 
+            "Interger overflow occured when duplicating string %!STATUS!",
             status);
         return status;
     }
@@ -250,14 +250,14 @@ Return Value:
             RtlZeroMemory(Destination, sizeof(UNICODE_STRING));
         }
 
-        Destination->Buffer = (PWSTR) FxPoolAllocate(
-            FxDriverGlobals, PagedPool, dstMaxCbLength);
+        Destination->Buffer = (PWSTR) FxPoolAllocate2(
+            FxDriverGlobals, POOL_FLAG_PAGED, dstMaxCbLength);
 
         if (Destination->Buffer == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
             DoTraceLevelMessage(
                 FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
-                "Failed to allocate memory when duplicating string %!STATUS!", 
+                "Failed to allocate memory when duplicating string %!STATUS!",
                 status);
             return status;
         }
@@ -291,8 +291,8 @@ FxDuplicateUnicodeStringToString(
 {
     PWSTR pDuplicate;
 
-    pDuplicate = (PWSTR) FxPoolAllocate(
-        FxDriverGlobals, PagedPool, Source->Length + sizeof(UNICODE_NULL));
+    pDuplicate = (PWSTR) FxPoolAllocate2(
+        FxDriverGlobals, POOL_FLAG_PAGED, Source->Length + sizeof(UNICODE_NULL));
 
     if (pDuplicate != NULL) {
         RtlCopyMemory(pDuplicate, Source->Buffer, Source->Length);

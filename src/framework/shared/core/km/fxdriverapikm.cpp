@@ -55,7 +55,7 @@ WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     NTSTATUS status;
     FxDriver* pDriver;
     FxRegKey* pKey;
-    FxAutoRegKey hKey;
+    HANDLE hKey;
     WDFKEY keyHandle;
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
@@ -88,21 +88,50 @@ WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     status = pKey->Commit(KeyAttributes, (WDFOBJECT*)&keyHandle);
 
     if (NT_SUCCESS(status)) {
-        //
-        // Static worker function (no object assignment for opened handled)
-        //
-        status = FxRegKey::_OpenKey(
-            NULL, pDriver->GetRegistryPathUnicodeString(), &hKey.m_Key);
 
-        if (NT_SUCCESS(status)) {
-            DECLARE_CONST_UNICODE_STRING(parameters, L"Parameters");
+        if ((DesiredAccess & ~(KEY_READ | GENERIC_READ | STANDARD_RIGHTS_READ)) != 0) {
+            DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_WARNING, TRACINGAPIERROR,
+                "WdfDriverOpenParametersRegistryKey should not be used for write. "
+                "Consider WdfDriverOpenPersistentStateRegistryKey instead.");
 
             //
-            // This will store the resulting handle in pKey
+            // TODO: Re-enable the breakpoint after fixing known violators
             //
-            status = pKey->Create(hKey.m_Key, &parameters, DesiredAccess);
+            // FxVerifierDbgBreakPoint(pFxDriverGlobals);
+
+            //
+            // Static worker function (no object assignment for opened handled)
+            //
+            status = FxRegKey::_OpenKey(
+                NULL, pDriver->GetRegistryPathUnicodeString(), &hKey);
 
             if (NT_SUCCESS(status)) {
+                DECLARE_CONST_UNICODE_STRING(parameters, L"Parameters");
+
+                //
+                // This will store the resulting handle in pKey
+                //
+                status = pKey->Create(hKey, &parameters, DesiredAccess);
+                if (NT_SUCCESS(status)) {
+                    *Key = keyHandle;
+                }
+
+                FxRegKey::_Close(hKey);
+            }
+        }
+        else {
+            status = IoOpenDriverRegistryKey(pDriver->GetDriverObject(),
+                                             DriverRegKeyParameters,
+                                             DesiredAccess,
+                                             0, // Flags - Must be 0
+                                             &hKey);
+            if (!NT_SUCCESS(status)) {
+                DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGAPIERROR,
+                    "WdfDriverOpenParametersRegistryKey failed with %!STATUS!",
+                    status);
+            }
+            else {
+                pKey->SetHandle(hKey);
                 *Key = keyHandle;
             }
         }
@@ -228,7 +257,7 @@ WDFEXPORT(WdfDeviceMiniportCreate)(
     }
 
     if (AttachedDeviceObject != NULL) {
-        status = pMpDevice->AllocateTarget(&pMpDevice->m_DefaultTarget, 
+        status = pMpDevice->AllocateTarget(&pMpDevice->m_DefaultTarget,
                                            FALSE /*SelfTarget=FALSE*/);
         if (!NT_SUCCESS(status)) {
             goto Done;

@@ -130,7 +130,7 @@ Routine Description:
     NOTE: Caller must free allocation for returned PWDF_IFR_HEADER.
 
 Arguments:
-    DriverName 
+    DriverName
     FxGlobalsForTracing - To be used for DoTraceMessage
 
 Returns:
@@ -178,7 +178,7 @@ Returns:
     }
 
     //
-    // Attempt to take a reference on the IFR buffer. 
+    // Attempt to take a reference on the IFR buffer.
     //
     if (0 == FxInterlockedIncrementGTZero(&(fxGlobals->WdfLogHeaderRefCount))) {
         //
@@ -201,9 +201,9 @@ Returns:
         goto DoneReleaseLock;
     }
 
-    pHeaderCopy = (PWDF_IFR_HEADER)ExAllocatePoolWithTag(NonPagedPool,
-                                                        totalIFRsize,
-                                                        WDF_IFR_LOG_TAG);
+    pHeaderCopy = (PWDF_IFR_HEADER)ExAllocatePool2(POOL_FLAG_NON_PAGED,
+                                                   totalIFRsize,
+                                                   WDF_IFR_LOG_TAG);
     if (pHeaderCopy == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto DoneReleaseLock;
@@ -274,7 +274,7 @@ Returns:
 
     //
     // An IFR record should never be read beyond ifrMaxValidPtr.
-    // 
+    //
     status = RtlULongPtrAdd((ULONG_PTR)ifrBase,
                             ((HeaderCopy)->Size-1),
                             (ULONG_PTR*)&ifrMaxValidPtr);
@@ -283,7 +283,7 @@ Returns:
     }
 
     //
-    // A ptr to an IFR record's header should never exceed ifrHeaderMaxValidPtr 
+    // A ptr to an IFR record's header should never exceed ifrHeaderMaxValidPtr
     //
     status = RtlULongPtrSub((ULONG_PTR)ifrMaxValidPtr,
                             sizeof(WDF_IFR_RECORD),
@@ -323,12 +323,12 @@ Returns:
     atBase = FALSE;
 
     //
-    // Push the offsets onto a stack (array) so they can be redirected to WPP 
+    // Push the offsets onto a stack (array) so they can be redirected to WPP
     // in the order they were written to IFR.
     //
-    offsetList = (PUSHORT)ExAllocatePoolWithTag(PagedPool,
-                                            maxIfrRecords*sizeof(USHORT),
-                                            WDF_IFR_LOG_TAG);
+    offsetList = (PUSHORT)ExAllocatePool2(POOL_FLAG_PAGED,
+                                          maxIfrRecords*sizeof(USHORT),
+                                          WDF_IFR_LOG_TAG);
     if (offsetList == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Done;
@@ -341,13 +341,13 @@ Returns:
     //
     while (count < maxIfrRecords) {
 
-        status = FxIFRValidateRecord(currentIfrRecord, 
-                                    (ULONG_PTR)ifrHeaderMaxValidPtr, 
+        status = FxIFRValidateRecord(currentIfrRecord,
+                                    (ULONG_PTR)ifrHeaderMaxValidPtr,
                                     (ULONG_PTR)ifrMaxValidPtr);
         if (!NT_SUCCESS(status)) {
             break;
         }
-        
+
         if (currentIfrRecord->Signature != WDF_IFR_RECORD_SIGNATURE) {
             break;
         }
@@ -381,7 +381,7 @@ Returns:
         }
 
         if (wrappedBase && previousOffset <= startingOffset) {
-            // 
+            //
             // We've wrapped around and read upto the start offset.
             //
             break;
@@ -412,7 +412,7 @@ Returns:
 
         //
         // Invoke WMI trace message such that the ETW event built up by it
-        // is effectively no different than the one built up from an actual 
+        // is effectively no different than the one built up from an actual
         // WPP trace call (via DoTraceLevelMessage).
         //
         if (currentIfrRecord->Length > sizeof(WDF_IFR_RECORD)) {
@@ -467,7 +467,7 @@ Arguments:
     ValueLengthQueried - Size required to copy the buffer.
 
 Returns:
-    NTSTATUS - Status of operation. 
+    NTSTATUS - Status of operation.
 --*/
 {
     FxAutoRegKey hWdf;
@@ -550,9 +550,9 @@ Returns:
 
     //
     // Note: Following is necessary because we do not want trace msg calls from
-    // this module to land in IFR . If they do, they will get replayed and 
-    // show up as redundant entries in the replayed trace. This also lets us 
-    // generate trace msgs without having located the actual Fx_Driver_Globals 
+    // this module to land in IFR . If they do, they will get replayed and
+    // show up as redundant entries in the replayed trace. This also lets us
+    // generate trace msgs without having located the actual Fx_Driver_Globals
     // for any driver.
     //
     fxGlobalsForReplay.WdfLogHeader = NULL;
@@ -571,7 +571,7 @@ Returns:
 
     //
     // Obtain the list of drivers from the registry
-    // 
+    //
     status = FxIFRGetDriverMultiString(multiStringLength,
                                     driverMultiString,
                                     &multiStringLength);
@@ -580,9 +580,9 @@ Returns:
     }
 
     ASSERT(multiStringLength != 0);
-    driverMultiString = (PWCHAR)ExAllocatePoolWithTag(PagedPool, 
-                                                    multiStringLength, 
-                                                    WDF_IFR_LOG_TAG);
+    driverMultiString = (PWCHAR)ExAllocatePool2(POOL_FLAG_PAGED,
+                                                multiStringLength,
+                                                WDF_IFR_LOG_TAG);
     if (driverMultiString == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Done;
@@ -599,13 +599,13 @@ Returns:
     // For each driver in the list, obtain it's IFR snapshot and redirect
     // it to WPP.
     //
-    for (pdriverWChar = driverMultiString; 
-        *pdriverWChar != UNICODE_NULL; 
+    for (pdriverWChar = driverMultiString;
+        *pdriverWChar != UNICODE_NULL;
         pdriverWChar += wcslen(pdriverWChar) + 1) {
 
         //
         // Convert the unicode string to ansi
-        // 
+        //
         RtlInitUnicodeString(&currentDriverUnicode, pdriverWChar);
         RtlZeroMemory(driverChar, sizeof(driverChar));
         RtlInitEmptyAnsiString(&currentDriverAnsi, driverChar, sizeof(driverChar));

@@ -527,6 +527,7 @@ protected:
 
     static const FxPowerIdleTargetState m_StoppedStates[];
     static const FxPowerIdleTargetState m_StartedStates[];
+    static const FxPowerIdleTargetState m_StartedPowerFailedStates[];
     static const FxPowerIdleTargetState m_DisabledStates[];
     static const FxPowerIdleTargetState m_BusyStates[];
     static const FxPowerIdleTargetState m_TimerRunningStates[];

@@ -41,10 +41,10 @@ FxUsbDeviceControlContext::FxUsbDeviceControlContext(
     m_PartialMdl = NULL;
     m_UnlockPages = FALSE;
     m_USBDHandle = NULL;
-    
+
     if (FxUrbType == FxUrbTypeLegacy) {
         m_Urb = &m_UrbLegacy;
-    } 
+    }
     else {
         m_Urb = NULL;
     }
@@ -79,8 +79,8 @@ FxUsbDeviceControlContext::AllocateUrb(
     }
 
     m_USBDHandle = USBDHandle;
-    
-Done: 
+
+Done:
     return status;
 }
 
@@ -89,11 +89,11 @@ FxUsbDeviceControlContext::Dispose(
     VOID
     )
 {
-    if (m_Urb && (m_Urb != &m_UrbLegacy)){ 
+    if (m_Urb && (m_Urb != &m_UrbLegacy)){
         USBD_UrbFree(m_USBDHandle, (PURB) m_Urb);
         m_Urb = NULL;
         m_USBDHandle = NULL;
-    }    
+    }
 }
 
 VOID
@@ -105,9 +105,9 @@ FxUsbDeviceControlContext::CopyParameters(
     m_CompletionParams.IoStatus.Information = m_Urb->TransferBufferLength;
     m_UsbParameters.Parameters.DeviceControlTransfer.Length = m_Urb->TransferBufferLength;
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
-    // 
+    //
     // In case of UMDF since the URB itself is not sent down the stack
-    // we propagate the transfer length into the URB via the UM IRP 
+    // we propagate the transfer length into the URB via the UM IRP
     //
     m_UmUrb.UmUrbControlTransfer.TransferBufferLength = (ULONG)m_CompletionParams.IoStatus.Information;
 
@@ -156,13 +156,13 @@ FxUsbDeviceStringContext::FxUsbDeviceStringContext(
     m_StringDescriptor = NULL;
     m_StringDescriptorLength = 0;
     RtlZeroMemory(&m_UrbLegacy, sizeof(m_UrbLegacy));
-    
+
     if (FxUrbType == FxUrbTypeLegacy) {
         m_Urb = &m_UrbLegacy;
         m_Urb->Hdr.Function =  URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE;
         m_Urb->Hdr.Length = sizeof(*m_Urb);
         m_Urb->DescriptorType = USB_STRING_DESCRIPTOR_TYPE;
-    } 
+    }
     else {
         m_Urb = NULL;
     }
@@ -177,9 +177,9 @@ FxUsbDeviceStringContext::~FxUsbDeviceStringContext(
         m_StringDescriptor = NULL;
     }
 
-    if (m_Urb && (m_Urb != &m_UrbLegacy)){ 
+    if (m_Urb && (m_Urb != &m_UrbLegacy)){
         USBD_UrbFree(m_USBDHandle, (PURB) m_Urb);
-    }    
+    }
     m_Urb = NULL;
     m_USBDHandle = NULL;
 }
@@ -194,20 +194,20 @@ FxUsbDeviceStringContext::AllocateUrb(
 
     ASSERT(USBDHandle != NULL);
     ASSERT(m_Urb == NULL);
-    
+
     status = USBD_UrbAllocate(USBDHandle, (PURB*)&m_Urb);
 
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
-    
+
     m_USBDHandle = USBDHandle;
-    
+
     m_Urb->Hdr.Function =  URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE;
     m_Urb->Hdr.Length = sizeof(*m_Urb);
     m_Urb->DescriptorType = USB_STRING_DESCRIPTOR_TYPE;
 
-Done: 
+Done:
     return status;
 }
 
@@ -216,11 +216,11 @@ FxUsbDeviceStringContext::Dispose(
     VOID
     )
 {
-    if (m_Urb && (m_Urb != &m_UrbLegacy)){ 
+    if (m_Urb && (m_Urb != &m_UrbLegacy)){
         USBD_UrbFree(m_USBDHandle, (PURB) m_Urb);
         m_Urb = NULL;
         m_USBDHandle = NULL;
-    }    
+    }
 
 }
 
@@ -289,7 +289,7 @@ FxUsbDeviceStringContext::SetUrbInfo(
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
     m_UmUrb.UmUrbDescriptorRequest.Buffer = m_StringDescriptor;
     m_UmUrb.UmUrbDescriptorRequest.BufferLength = m_StringDescriptorLength;
-    
+
     m_UmUrb.UmUrbDescriptorRequest.Index = StringIndex;
     m_UmUrb.UmUrbDescriptorRequest.LanguageID = LangID;
 #endif
@@ -321,9 +321,9 @@ FxUsbDeviceStringContext::AllocateDescriptor(
     length = sizeof(USB_STRING_DESCRIPTOR) - sizeof(pDescriptor->bString[0]) +
              BufferSize;
 
-    pDescriptor = (PUSB_STRING_DESCRIPTOR) FxPoolAllocate(
+    pDescriptor = (PUSB_STRING_DESCRIPTOR) FxPoolAllocate2(
         FxDriverGlobals,
-        NonPagedPool,
+        POOL_FLAG_NON_PAGED,
         length);
 
     if (pDescriptor == NULL) {
@@ -348,7 +348,7 @@ FxUsbUrb::FxUsbUrb(
     __in USBD_HANDLE USBDHandle,
     __in_bcount(BufferSize) PVOID Buffer,
     __in size_t BufferSize
-    ) : 
+    ) :
     FxMemoryBufferPreallocated(FxDriverGlobals, sizeof(*this), Buffer, BufferSize),
     m_USBDHandle(USBDHandle)
 {
@@ -369,7 +369,7 @@ FxUsbUrb::Dispose(
     USBD_UrbFree(m_USBDHandle, (PURB)m_pBuffer);
     m_pBuffer = NULL;
     m_USBDHandle = NULL;
-    
+
     return __super::Dispose();
 }
 
@@ -398,6 +398,7 @@ FxUsbDevice::FxUsbDevice(
 
     m_USBDHandle = NULL;
     m_UrbType = FxUrbTypeLegacy;
+    m_SspIsochPipeFlags = FALSE;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
     m_pHostTargetFile = NULL;
@@ -415,7 +416,7 @@ FxUsbDevice::Dispose(
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
     KeFlushQueuedDpcs();
 #endif
-    
+
     if (m_USBDHandle) {
         USBD_CloseHandle(m_USBDHandle);
         m_USBDHandle = NULL;
@@ -427,7 +428,7 @@ FxUsbDevice::Dispose(
 
     device = m_DeviceBase->GetDeviceObject();
     devstack = device->GetDeviceStackInterface();
-    
+
     if (m_pHostTargetFile) {
         devstack->CloseFile(m_pHostTargetFile);
         SAFE_RELEASE(m_pHostTargetFile);
@@ -440,7 +441,7 @@ FxUsbDevice::Dispose(
 FxUsbDevice::~FxUsbDevice()
 {
     UCHAR i;
-    
+
     if (m_BusInterfaceDereference != NULL) {
         m_BusInterfaceDereference(m_BusInterfaceContext);
         m_BusInterfaceDereference = NULL;
@@ -577,7 +578,7 @@ FxUsbDevice::Start(
         }
 
         //
-        // Drain the list of pended requests.  
+        // Drain the list of pended requests.
         //
         while (!IsListEmpty(&head)) {
             FxIoTarget* pTarget;
@@ -653,7 +654,7 @@ FxUsbDevice::Stop(
                         &head,
                         &wait,
                         TRUE
-                        ); 
+                        );
                 }
             }
         }
@@ -661,8 +662,8 @@ FxUsbDevice::Stop(
     Unlock(irql);
 
     //
-    // If we are leaving sent IO pending, the io target will set the IO 
-    // completion event during stop even if there is still outstanding IO. 
+    // If we are leaving sent IO pending, the io target will set the IO
+    // completion event during stop even if there is still outstanding IO.
     //
 
     if (head.Next != NULL) {
@@ -689,7 +690,7 @@ FxUsbDevice::Stop(
             }
         }
     }
-    
+
     if (Action != WdfIoTargetLeaveSentIoPending) {
         ReleaseInterfaceIterationLock();
     }
@@ -704,7 +705,7 @@ FxUsbDevice::Purge(
     SINGLE_LIST_ENTRY   sentHead;
     ULONG               iPipe, iInterface;
     KIRQL               irql;
-    
+
     sentHead.Next = NULL;
 
     //
@@ -750,7 +751,7 @@ FxUsbDevice::Purge(
                         &wait,
                         TRUE
                         );
-                    
+
                     //
                     // Complete any requests pulled off from this pipe.
                     //
@@ -787,7 +788,7 @@ FxUsbDevice::Purge(
             }
         }
     }
-    
+
     if (Action != WdfIoTargetPurgeIo) {
         ReleaseInterfaceIterationLock();
     }
@@ -823,7 +824,7 @@ FxUsbDevice::PipesGotoRemoveState(
     LIST_ENTRY pendHead, interfaceHead;
     FxUsbInterface* pUsbInterface;
     ULONG iPipe, intfIndex;
-    KIRQL irql;   
+    KIRQL irql;
 
     sentHead.Next = NULL;
     InitializeListHead(&pendHead);
@@ -853,7 +854,7 @@ FxUsbDevice::PipesGotoRemoveState(
                         &sentHead,
                         TRUE,
                         &wait);
-                    
+
                 }
             }
         }
@@ -917,8 +918,8 @@ FxUsbDevice::CreateInterfaces(
     totalLength = m_ConfigDescriptor->wTotalLength;
 
     //
-    // Make sure each PCOMMON_DESCRIPTOR_HEADER within the entire config descriptor is well formed. 
-    // If successful, we can walk the config descriptor using common headers without any more top 
+    // Make sure each PCOMMON_DESCRIPTOR_HEADER within the entire config descriptor is well formed.
+    // If successful, we can walk the config descriptor using common headers without any more top
     // level error checking. Task specific checking of the specialized header types must still occur.
     //
     status = FxUsbValidateConfigDescriptorHeaders(
@@ -936,7 +937,7 @@ FxUsbDevice::CreateInterfaces(
     }
 
     //
-    // Validate all interface descriptors in config descriptor are at least 
+    // Validate all interface descriptors in config descriptor are at least
     // sizeof(USB_INTERFACE_DESCRIPTOR).
     //
 
@@ -978,7 +979,7 @@ FxUsbDevice::CreateInterfaces(
     // Allocate an array large enough to hold pointers to interfaces
     //
     m_Interfaces = (FxUsbInterface**)
-        FxPoolAllocate(pFxDriverGlobals, NonPagedPool, size);
+        FxPoolAllocate2(pFxDriverGlobals, POOL_FLAG_NON_PAGED, size);
 
     if (m_Interfaces == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1011,7 +1012,7 @@ FxUsbDevice::CreateInterfaces(
 
     while (pInterfaceDescriptor != NULL &&
            iInterface < m_ConfigDescriptor->bNumInterfaces) {
-           
+
         //
         // This function will retun false if the bit wasn't already set
         //
@@ -1054,7 +1055,7 @@ FxUsbDevice::CreateInterfaces(
             if (!NT_SUCCESS(status)) {
                 goto Done;
             }
-            
+
             status = pInterface->MakeAndConfigurePipes(WDF_NO_OBJECT_ATTRIBUTES,
                                                        pInterfaceDescriptor->bNumEndpoints);
             if (!NT_SUCCESS(status)) {
@@ -1168,7 +1169,7 @@ FxUsbDevice::GetPortStatus(
         WDF_REQUEST_SEND_OPTIONS_INIT(
             &options, WDF_REQUEST_SEND_OPTION_IGNORE_TARGET_STATE);
 
-        status = SubmitSync(syncRequest.m_TrueRequest, &options);       
+        status = SubmitSync(syncRequest.m_TrueRequest, &options);
     }
 
     return status;
@@ -1184,15 +1185,15 @@ FxUsbDevice::IsEnabled(
     NTSTATUS status;
     ULONG portStatus;
     BOOLEAN enabled;
-    
+
     enabled = TRUE;
     status = GetPortStatus(&portStatus);
 
     //
-    // Inability to get STATUS_SUCCESS from GetPortStatus is more likely a resource 
-    // issue rather than a device issue so return FALSE from this function only if 
-    // we were able to read the PortStatus and the port was disabled. 
-    // What you don't want is to continuosly reset the device (by returning FALSE)  
+    // Inability to get STATUS_SUCCESS from GetPortStatus is more likely a resource
+    // issue rather than a device issue so return FALSE from this function only if
+    // we were able to read the PortStatus and the port was disabled.
+    // What you don't want is to continuosly reset the device (by returning FALSE)
     // instead of resetting pipe (by returning TRUE) under low memory conditions.
     //
     if (NT_SUCCESS(status) && (portStatus & USBD_PORT_ENABLED) == 0) {
@@ -1246,18 +1247,18 @@ FxUsbDevice::CyclePort(
                             "Failed to initialize FxSyncRequest");
         return status;
     }
-    
+
     status = FormatCycleRequest(request.m_TrueRequest);
 
     if (NT_SUCCESS(status)) {
-        CancelSentIo();        
+        CancelSentIo();
         status = SubmitSyncRequestIgnoreTargetState(request.m_TrueRequest, NULL);
         //
-        // NOTE: CyclePort causes the device to be removed and re-enumerated so 
-        // don't do anymore operations after this point. 
+        // NOTE: CyclePort causes the device to be removed and re-enumerated so
+        // don't do anymore operations after this point.
         //
     }
-   
+
     return status;
 }
 
@@ -1358,8 +1359,8 @@ FxUsbDevice::SelectConfigDescriptor(
         return status;
     }
 
-    pInterfaces = (PUSBD_INTERFACE_LIST_ENTRY) FxPoolAllocate(
-        pFxDriverGlobals, NonPagedPool, size);
+    pInterfaces = (PUSBD_INTERFACE_LIST_ENTRY) FxPoolAllocate2(
+        pFxDriverGlobals, POOL_FLAG_NON_PAGED, size);
 
     if (pInterfaces == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1393,10 +1394,7 @@ FxUsbDevice::SelectConfigDescriptor(
     // device, not the provided one), and if that validation fails, we return
     // !NT_SUCCESS from SelectConfig().
     //
-    urb = FxUsbCreateConfigRequest(GetDriverGlobals(),
-                                   configurationDescriptor,
-                                   pInterfaces,
-                                   GetDefaultMaxTransferSize());
+    urb = CreateConfigRequest(configurationDescriptor, pInterfaces);
     if (urb == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -1467,7 +1465,7 @@ Return Value:
 
     pFxDriverGlobals = GetDriverGlobals();
     FxSyncRequest request(GetDriverGlobals(), NULL);
-    
+
     pIface = NULL;
     maxNumPipes = 0;
     size = 0;
@@ -1518,8 +1516,8 @@ Return Value:
         numPipesAllocated = m_NumInterfaces;
     }
 
-    pPipeInfo = (FxInterfacePipeInformation*) FxPoolAllocate(
-        pFxDriverGlobals, NonPagedPool, size
+    pPipeInfo = (FxInterfacePipeInformation*) FxPoolAllocate2(
+        pFxDriverGlobals, POOL_FLAG_NON_PAGED, size
         );
 
     if (pPipeInfo == NULL) {
@@ -1574,7 +1572,7 @@ Return Value:
         }
 
         numPipes = (UCHAR) pIface->NumberOfPipes;
-        
+
         //
         // Track the maximum number of pipes we have seen in an interface in
         // case we need to allocate a select interface URB.
@@ -1595,9 +1593,9 @@ Return Value:
             size = sizeof(FxUsbPipe*);
         }
 
-        ppPipes = (FxUsbPipe**) FxPoolAllocate(
+        ppPipes = (FxUsbPipe**) FxPoolAllocate2(
             pFxDriverGlobals,
-            NonPagedPool,
+            POOL_FLAG_NON_PAGED,
             size
             );
 
@@ -1678,10 +1676,10 @@ Return Value:
     if (m_NumInterfaces > 1 && maxNumPipes > 0) {
         size = GET_SELECT_INTERFACE_REQUEST_SIZE(maxNumPipes);
 
-        pSelectUrb = (PURB) FxPoolAllocate(GetDriverGlobals(),
-                                           NonPagedPool,
-                                           size
-                                           );
+        pSelectUrb = (PURB) FxPoolAllocate2(GetDriverGlobals(),
+                                            POOL_FLAG_NON_PAGED,
+                                            size
+                                            );
 
         if (pSelectUrb == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1781,13 +1779,13 @@ Return Value:
                         );
                     irp = request.m_TrueRequest->GetSubmitFxIrp();
                     irp->Reuse(STATUS_SUCCESS);
-                    
+
                     request.m_TrueRequest->ClearFieldsForReuse();
-                    FxFormatUsbRequest(request.m_TrueRequest, 
-                                       pSelectUrb, 
+                    FxFormatUsbRequest(request.m_TrueRequest,
+                                       pSelectUrb,
                                        FxUrbTypeLegacy,
                                        NULL);
-                    
+
                     status = SubmitSync(request.m_TrueRequest, &options);
                     if (!NT_SUCCESS(status)) {
                         DoTraceLevelMessage(
@@ -1963,9 +1961,9 @@ FxUsbDevice::SelectConfigInterfaces(
         }
     }
 
-    pInterfaces = (PUSBD_INTERFACE_LIST_ENTRY) FxPoolAllocate(
+    pInterfaces = (PUSBD_INTERFACE_LIST_ENTRY) FxPoolAllocate2(
         pFxDriverGlobals,
-        NonPagedPool,
+        POOL_FLAG_NON_PAGED,
         size
         );
 
@@ -1990,10 +1988,7 @@ FxUsbDevice::SelectConfigInterfaces(
         ConfigurationDescriptor = m_ConfigDescriptor;
     }
 
-    urb = FxUsbCreateConfigRequest(GetDriverGlobals(),
-                                   ConfigurationDescriptor,
-                                   pInterfaces,
-                                   GetDefaultMaxTransferSize());
+    urb = CreateConfigRequest(ConfigurationDescriptor, pInterfaces);
     if (urb == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -2150,13 +2145,13 @@ FxUsbDevice::CreateUrb(
     status = FxValidateObjectAttributesForParentHandle(pFxDriverGlobals, Attributes);
 
     if (NT_SUCCESS(status)) {
-        
+
         FxObjectHandleGetPtrAndGlobals(pFxDriverGlobals,
                                        Attributes->ParentObject,
                                        FX_TYPE_OBJECT,
                                        (PVOID*)&pParent,
                                        &pFxDriverGlobals);
-        
+
         if (FALSE == IsObjectDisposedOnRemove(pParent)) {
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -2165,14 +2160,14 @@ FxUsbDevice::CreateUrb(
             goto Done;
         }
 
-    } 
+    }
     else if (status == STATUS_WDF_PARENT_NOT_SPECIFIED) {
-        
+
         pFxDriverGlobals = GetDriverGlobals();
-        pParent = this;            
+        pParent = this;
         status = STATUS_SUCCESS;
-    
-    } 
+
+    }
     else {
 
         goto Done;
@@ -2182,15 +2177,15 @@ FxUsbDevice::CreateUrb(
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
-    
+
     FxPointerNotNull(pFxDriverGlobals, UrbMemory);
 
     *UrbMemory = NULL;
-    
+
     status = USBD_UrbAllocate(m_USBDHandle, &urbLocal);
 
     if (!NT_SUCCESS(status)) {
-        
+
         urbLocal = NULL;
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -2198,7 +2193,7 @@ FxUsbDevice::CreateUrb(
             status);
 
         goto Done;
-   
+
     }
 
     pUrb = new(pFxDriverGlobals, Attributes)
@@ -2268,13 +2263,13 @@ FxUsbDevice::CreateIsochUrb(
     status = FxValidateObjectAttributesForParentHandle(pFxDriverGlobals, Attributes);
 
     if (NT_SUCCESS(status)) {
-        
+
         FxObjectHandleGetPtrAndGlobals(pFxDriverGlobals,
                                        Attributes->ParentObject,
                                        FX_TYPE_OBJECT,
                                        (PVOID*)&pParent,
                                        &pFxDriverGlobals);
-        
+
         if (FALSE == IsObjectDisposedOnRemove(pParent)) {
             DoTraceLevelMessage(
                 GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -2283,14 +2278,14 @@ FxUsbDevice::CreateIsochUrb(
             goto Done;
         }
 
-    } 
+    }
     else if (status == STATUS_WDF_PARENT_NOT_SPECIFIED) {
-        
+
         pFxDriverGlobals = GetDriverGlobals();
-        pParent = this;            
+        pParent = this;
         status = STATUS_SUCCESS;
-    
-    } 
+
+    }
     else {
 
         goto Done;
@@ -2300,15 +2295,15 @@ FxUsbDevice::CreateIsochUrb(
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
-    
+
     FxPointerNotNull(pFxDriverGlobals, UrbMemory);
 
     *UrbMemory = NULL;
-    
+
     status = USBD_IsochUrbAllocate(m_USBDHandle, NumberOfIsochPackets, &urbLocal);
 
     if (!NT_SUCCESS(status)) {
-        
+
         urbLocal = NULL;
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -2316,7 +2311,7 @@ FxUsbDevice::CreateIsochUrb(
             status);
 
         goto Done;
-   
+
     }
 
     size = GET_ISO_URB_SIZE(NumberOfIsochPackets);
@@ -2367,28 +2362,28 @@ FxUsbDevice::IsObjectDisposedOnRemove(
 /*++
 
 Routine Description:
-    This routine determines if the Object being passed is guranteed to be disposed on a 
-    Pnp remove operation. 
-    
-    The object will be disposed on Pnp remove operation if it is a somewhere in the child 
-    tree of the FxDevice assocaited with this FxUsbDevice object, or in the child tree of an 
+    This routine determines if the Object being passed is guranteed to be disposed on a
+    Pnp remove operation.
+
+    The object will be disposed on Pnp remove operation if it is a somewhere in the child
+    tree of the FxDevice assocaited with this FxUsbDevice object, or in the child tree of an
     Io Allocated Request.
 
 Arguments:
 
-    Object - The Object being checked    
+    Object - The Object being checked
 
 Return Value:
-    
+
     TRUE if the Object is guranteed to be disposed on a pnp remove operation
-    FALSE otherwise. 
-    
+    FALSE otherwise.
+
   --*/
 {
     FxObject * obj;
     FxObject * parent;
     BOOLEAN isObjectDisposedOnRemove = FALSE;
-    
+
     obj = Object;
 
     //
@@ -2397,37 +2392,37 @@ Return Value:
     // reference on exit.
     //
     obj->ADDREF(Object);
-    
+
     while (obj != NULL) {
 
         if (obj == (FxObject*) m_Device) {
-            
+
             isObjectDisposedOnRemove = TRUE;
-            break;            
+            break;
         }
 
         if (FxObjectCheckType(obj, FX_TYPE_REQUEST)) {
-            
+
             FxRequestBase* request = (FxRequestBase*) obj;
             if (request->IsAllocatedFromIo()) {
-                
+
                 isObjectDisposedOnRemove = TRUE;
                 break;
             }
         }
 
         parent = obj->GetParentObjectReferenced(Object);
-        
+
         //
         // Release the reference previously taken by the top of the function
         // or GetParentObjectReferenced in a previous pass in the loop.
         //
         obj->RELEASE(Object);
         obj = parent;
-    } 
+    }
 
     if (obj != NULL) {
-        
+
         //
         // Release the reference previously taken by the top of the function
         // or GetParentObjectReferenced in a last pass in the loop.
@@ -2445,23 +2440,23 @@ FxUsbDevice::GetFxUrbTypeForRequest(
 /*++
 
 Routine Description:
-    This routine essentially determines whether this routine can use a urb allocated by 
+    This routine essentially determines whether this routine can use a urb allocated by
     the USBD_xxxUrbAllocate APIs
-    
-    The USBD_xxxUrbAllocate APIs are only used for those requests that could be disposed at the 
-    time the client driver devnode is being removed. 
 
-    If we cannot make that gurantee about that request, FxUrbTypeLegacy is returned and the 
-    USBD_xxxUrbAllocate api's must not be used to allocate an Urb. 
-    
+    The USBD_xxxUrbAllocate APIs are only used for those requests that could be disposed at the
+    time the client driver devnode is being removed.
+
+    If we cannot make that gurantee about that request, FxUrbTypeLegacy is returned and the
+    USBD_xxxUrbAllocate api's must not be used to allocate an Urb.
+
     Else FxUrbTypeUsbdAllocated is returned.
 
 Arguments:
-    
+
     Request - FxRequest
 
 Return Value:
-    
+
     FxUrbTypeUsbdAllocated, or FxUrbTypeLegacy
 
   --*/

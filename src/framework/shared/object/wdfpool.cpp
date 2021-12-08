@@ -71,12 +71,32 @@ Returns:
     }
 }
 
+BOOLEAN
+FxIsPagedPoolFlags(
+    _In_ POOL_FLAGS Flags
+    )
+{
+    return (Flags & POOL_FLAG_PAGED) != 0;
+}
+
+BOOLEAN
+FxIsPagedPoolTypeOrFlags(
+    _In_ FxPoolTypeOrPoolFlags TypeOrFlags
+    )
+{
+    if (TypeOrFlags.UsePoolType) {
+        return FxIsPagedPoolType(TypeOrFlags.u.PoolType);
+    }
+    else {
+        return FxIsPagedPoolFlags(TypeOrFlags.u.PoolFlags);
+    }
+}
 
 PVOID
 FxPoolAllocator(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PFX_POOL  Pool,
-    __in POOL_TYPE Type,
+    __in FxPoolTypeOrPoolFlags TypeOrFlags,
     __in SIZE_T    Size,
     __in ULONG     Tag,
     __in PVOID     Caller
@@ -91,7 +111,7 @@ Arguments:
 
     Pool    - FX_POOL object for tracking allocations
 
-    Type    - POOL_TYPE from ntddk.h
+    TypeOrFlags - FxPoolTypeOrPoolFlags
 
     Size    - Size in bytes of the allocation
 
@@ -184,7 +204,7 @@ Remarks:
         // This if is the same as
         // Size + sizeof(FX_POOL_TRACKER) + FX_POOL_HEADER_SIZE >= PAGE_SIZE
         // BUT with no integer overflow
-        if (Mx::IsKM() && 
+        if (Mx::IsKM() &&
             (Size >= PAGE_SIZE - sizeof(FX_POOL_TRACKER) - FX_POOL_HEADER_SIZE)
             ) {
 
@@ -196,7 +216,12 @@ Remarks:
                 Size = PAGE_SIZE;
             }
 
-            ptr = MxMemory::MxAllocatePoolWithTag(Type, Size, Tag);
+            if (TypeOrFlags.UsePoolType) {
+                ptr = MxMemory::MxAllocatePoolWithTag(TypeOrFlags.u.PoolType, Size, Tag);
+            }
+            else {
+                ptr = MxMemory::MxAllocatePool2(TypeOrFlags.u.PoolFlags, Size, Tag);
+            }
 
             //
             // The current system allocator returns paged aligned memory
@@ -221,11 +246,14 @@ Remarks:
                 return NULL;
             }
 
-            pTrueBase = (PCHAR) MxMemory::MxAllocatePoolWithTag(
-                Type,
-                allocationSize,
-                Tag
-                );
+            if (TypeOrFlags.UsePoolType) {
+                pTrueBase = (PCHAR) MxMemory::MxAllocatePoolWithTag(
+                    TypeOrFlags.u.PoolType, allocationSize, Tag);
+            }
+            else {
+                pTrueBase = (PCHAR) MxMemory::MxAllocatePool2(
+                    TypeOrFlags.u.PoolFlags, allocationSize, Tag);
+            }
 
             if (pTrueBase == NULL) {
                 return NULL;
@@ -263,7 +291,7 @@ Remarks:
             // the lock held differs as to whether we can accept
             // page faults and block in the allocator.
             //
-            if (FxIsPagedPoolType(Type)) {
+            if (FxIsPagedPoolTypeOrFlags(TypeOrFlags)) {
                 //
                 // Format and insert the Tracker in the PagedHeader list.
                 //
@@ -326,13 +354,27 @@ Remarks:
             // allocation so that we know to just free the memory pointer as is
             // when it is freed.
             //
-            ptr = MxMemory::MxAllocatePoolWithTag(Type, allocationSize, Tag);
+            if (TypeOrFlags.UsePoolType) {
+                ptr = MxMemory::MxAllocatePoolWithTag(
+                    TypeOrFlags.u.PoolType, allocationSize, Tag);
+            }
+            else {
+                ptr = MxMemory::MxAllocatePool2(
+                    TypeOrFlags.u.PoolFlags, allocationSize, Tag);
+            }
+
             ASSERT(((ULONG_PTR)ptr & (PAGE_SIZE-1)) == 0);
         }
         else {
-            pTrueBase = (PCHAR) MxMemory::MxAllocatePoolWithTag(Type,
-                                                      allocationSize,
-                                                      Tag);
+
+            if (TypeOrFlags.UsePoolType) {
+                pTrueBase = (PCHAR) MxMemory::MxAllocatePoolWithTag(
+                    TypeOrFlags.u.PoolType, allocationSize, Tag);
+            }
+            else {
+                pTrueBase = (PCHAR) MxMemory::MxAllocatePool2(
+                    TypeOrFlags.u.PoolFlags, allocationSize, Tag);
+            }
 
             if (pTrueBase != NULL) {
 

@@ -75,9 +75,9 @@ public:
         PFX_DRIVER_GLOBALS fxDriverGlobals;
 
         fxDriverGlobals = GetDriverGlobals();
-        m_Lock = (MxPagedLock*) FxPoolAllocate(fxDriverGlobals,
-                                               NonPagedPool,
-                                               sizeof(MxPagedLock));
+        m_Lock = (MxPagedLock*) FxPoolAllocate2(fxDriverGlobals,
+                                                POOL_FLAG_NON_PAGED,
+                                                sizeof(MxPagedLock));
         if (m_Lock != NULL) {
             return m_Lock->Initialize();
         }

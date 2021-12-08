@@ -278,7 +278,7 @@ FxPkgPnp::ReadRegistryS0Idle(
 }
 
 VOID
-FxPkgPnp::ReadRegistryPofxDirectredTransition(
+FxPkgPnp::ReadRegistryWdfSetting(
     _In_    PCUNICODE_STRING ValueName,
     _Inout_ BOOLEAN *Enabled
     )

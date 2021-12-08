@@ -14,16 +14,16 @@ extern "C" {
 //  2) For a failed completion use a workitem which works if the IoTarget is in Started state.
 //  3) On moving to the start state the Repeater requests are inserted into the
 //      Iotargets Pended Queue directly.
-//  
-//  The function ResubmitRepeater calls SubmitLocked. If the action we get back 
-//  from SubmitLocked is "SubmitSend", (SubmitQueued is treated as failure because 
-//  of WDF_REQUEST_SEND_INTERNAL_OPTION_FAIL_ON_PEND flag) we are guaranteed to 
-//  call IoCallDriver in the workitem or  the DPC and hence the completion routine 
-//  being called. 
-//  This is very important because we increment the m_IoCount in SubmitLocked and 
-//  decrement in the completion routine.  So if there was a code path where  
+//
+//  The function ResubmitRepeater calls SubmitLocked. If the action we get back
+//  from SubmitLocked is "SubmitSend", (SubmitQueued is treated as failure because
+//  of WDF_REQUEST_SEND_INTERNAL_OPTION_FAIL_ON_PEND flag) we are guaranteed to
+//  call IoCallDriver in the workitem or  the DPC and hence the completion routine
+//  being called.
+//  This is very important because we increment the m_IoCount in SubmitLocked and
+//  decrement in the completion routine.  So if there was a code path where
 //  SubmitLocked was called and IoCallDriver(hence the completion routine) wasn't,
-//  the IoTarget could stop responding in Dispose.                                           
+//  the IoTarget could stop responding in Dispose.
 //
 
 
@@ -66,9 +66,9 @@ FxUsbPipeContinuousReader::~FxUsbPipeContinuousReader()
             DeleteMemory(reader[i].Request);
 
             reader[i].Request->DeleteObject();
-            reader[i].Request = NULL; 
+            reader[i].Request = NULL;
         }
- 
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
         reader[i].ReadCompletedEvent.Uninitialize();
         reader[i].m_ReadWorkItem.Free();
@@ -92,10 +92,10 @@ FxUsbPipeContinuousReader::QueueWorkItemLocked(
 {
     BOOLEAN queued;
     PFX_DRIVER_GLOBALS fxDriverGlobals;
-    
+
     queued = FALSE;
     fxDriverGlobals = m_Pipe->GetDriverGlobals();
-    
+
     if (m_Pipe->m_State == WdfIoTargetStarted && m_WorkItemQueued == FALSE) {
         //
         // No item queued, queue it up now.
@@ -152,9 +152,9 @@ FxUsbPipeContinuousReader::ResubmitRepeater(
     status = FormatRepeater(Repeater);
 
     m_Pipe->Lock(&irql);
-    
+
     //
-    // Do not re-submit repeaters if there is a queued/running work-item to 
+    // Do not re-submit repeaters if there is a queued/running work-item to
     // reset pipe. Work-item will restart this repeater later.
     // This check needs to be done after the FormatRepeater() call above to
     // prevent a race condition where we are not detecting when the repeater
@@ -166,12 +166,12 @@ FxUsbPipeContinuousReader::ResubmitRepeater(
         // this request was not sent.
         //
         status = STATUS_CANCELLED;
-        
+
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGIOTARGET,
             "WDFUSBPIPE %p is being reset, continuous reader %p FxRequest %p"
             " PIRP %p is deferred for later.",
-            m_Pipe->GetHandle(), Repeater, Repeater->Request, 
+            m_Pipe->GetHandle(), Repeater, Repeater->Request,
             Repeater->RequestIrp);
     }
     else if (NT_SUCCESS(status)) {
@@ -192,7 +192,7 @@ FxUsbPipeContinuousReader::ResubmitRepeater(
         }
         else if (action & SubmitQueued) {
             //
-            // Request got canceled asynchronously. The other thread is now 
+            // Request got canceled asynchronously. The other thread is now
             // responsible for calling its completion callback.
             //
             status = STATUS_CANCELLED;
@@ -250,7 +250,7 @@ FxUsbPipeContinuousReader::ResubmitRepeater(
                 "in started state", m_Pipe->GetHandle());
         }
     }
-    
+
     m_Pipe->Unlock(irql);
 
     *Status = status;
@@ -302,7 +302,7 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestComplete(
         action = pThis->ResubmitRepeater(pRepeater, &status);
     }
     else if (status != STATUS_CANCELLED) {
-        KIRQL irql;                
+        KIRQL irql;
 
         DoTraceLevelMessage(
             pPipe->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGIOTARGET,
@@ -310,19 +310,19 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestComplete(
             "%!STATUS!", pPipe->GetHandle(), pRepeater->Request ,
             pRepeater->RequestIrp, status);
 
-        
+
         pPipe->Lock(&irql);
 
         pRepeater->ReadCompletedEvent.Set();
         readCompletedEventSet = TRUE;
-        
+
         //
         // Queue a work item to clear problem.
         //
         pThis->QueueWorkItemLocked(pRepeater);
-                
+
         pPipe->Unlock(irql);
-        
+
         ASSERT(!NT_SUCCESS(status));
     }
     else {
@@ -367,16 +367,16 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestComplete(
     }
     else if (action & SubmitQueued) {
         //
-        // I/O got canceled asynchronously; the other thread is now 
+        // I/O got canceled asynchronously; the other thread is now
         // responsible for re-invoking this completion routine.
         //
         ASSERT(STATUS_CANCELLED == status);
-        
+
         DoTraceLevelMessage(
             pPipe->GetDriverGlobals(), TRACE_LEVEL_INFORMATION, TRACINGIOTARGET,
-            "WDFUSBPIPE %p continuous reader %p FxRequest %p PIRP %p got" 
+            "WDFUSBPIPE %p continuous reader %p FxRequest %p PIRP %p got"
             " asynchronously canceled",
-            pPipe->GetHandle(), pRepeater, pRepeater->Request , 
+            pPipe->GetHandle(), pRepeater, pRepeater->Request ,
             pRepeater->RequestIrp);
 
         DO_NOTHING();
@@ -421,15 +421,15 @@ FxUsbPipeContinuousReader::FxUsbPipeRequestWorkItemHandler(
     usbCompletionParams = context->m_CompletionParams.Parameters.Usb.Completion;
 
     //
-    // In case FormatRepeater fails to allocate memory usbCompletionParams 
+    // In case FormatRepeater fails to allocate memory usbCompletionParams
     // pointer is not set.
     //
-    // usbCompletionParams are part of the context and 
+    // usbCompletionParams are part of the context and
     // not really allocated at the time of every Format but
     // the pointer gets cleared by request->Reuse and gets set again by
-    // context->SetUsbType. 
+    // context->SetUsbType.
     //
-    // In FormatRepeater, context->SetUsbType is skipped 
+    // In FormatRepeater, context->SetUsbType is skipped
     // if a memory failure occurs before this step.
     //
     // Hence retrieve usbdStatus only when usbCompletionParams is set.
@@ -442,26 +442,26 @@ FxUsbPipeContinuousReader::FxUsbPipeRequestWorkItemHandler(
         // Set usbdStatus to success as we didn't receive a failure from
         // USB stack.
         //
-        // This path is reached during memory allocation failure. In such 
+        // This path is reached during memory allocation failure. In such
         // case failedStatus would already be set appropriately. (usbdStatus
         // and failedStatus are passed to m_ReadersFailedCallback below.)
         //
         usbdStatus = STATUS_SUCCESS;
-    }    
+    }
 
     //
-    // No read requests should be in progress when the framework calls the 
-    // EvtUsbTargetPipeReadersFailed callback function. This is part of the 
-    // contract so that the Driver doesn't need to bother with the 
-    // Completion calllback while taking corrective action. 
+    // No read requests should be in progress when the framework calls the
+    // EvtUsbTargetPipeReadersFailed callback function. This is part of the
+    // contract so that the Driver doesn't need to bother with the
+    // Completion calllback while taking corrective action.
     //
     CancelRepeaters();
     pDevice = m_Pipe->m_UsbDevice;
 
     if (m_ReadersFailedCallback != NULL) {
         //
-        // Save the current thread object pointer. This value is 
-        // used for not deadlocking when misbehaved drivers (< v1.9) call 
+        // Save the current thread object pointer. This value is
+        // used for not deadlocking when misbehaved drivers (< v1.9) call
         // WdfIoTargetStop from EvtUsbTargetPipeReadersFailed callback
         //
         ASSERT(NULL == m_WorkItemThread);
@@ -472,7 +472,7 @@ FxUsbPipeContinuousReader::FxUsbPipeRequestWorkItemHandler(
             failedStatus,
             usbdStatus
             );
-        
+
         m_WorkItemThread = NULL;
     }
     else {
@@ -488,40 +488,40 @@ FxUsbPipeContinuousReader::FxUsbPipeRequestWorkItemHandler(
         if (NT_SUCCESS(status)) {
 
             //
-            // for v1.9 or higher use the error recovery procedure prescribed 
+            // for v1.9 or higher use the error recovery procedure prescribed
             // by the USB team.
             //
             if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,9)) {
 
                 if (pDevice->IsEnabled()) {
                     //
-                    // Reset the pipe if port status is enabled 
+                    // Reset the pipe if port status is enabled
                     //
                     m_Pipe->Reset();
-                }                
+                }
                 else {
                     //
-                    // Reset the device if port status is disabled 
+                    // Reset the device if port status is disabled
                     //
                     status = pDevice->Reset();
                 }
             }
             else {
                 //
-                // Reset the device if port status is disabled 
+                // Reset the device if port status is disabled
                 //
                 status = pDevice->Reset();
             }
         }
         else {
             //
-            // if port status is disconnected we would get back 
-            // a !NT_SUCCESS. This would mean that we would not 
+            // if port status is disconnected we would get back
+            // a !NT_SUCCESS. This would mean that we would not
             // send the readers again and treat it like a failed reader.
             //
             DO_NOTHING();
         }
-        
+
     }
     else {
         //
@@ -542,9 +542,9 @@ FxUsbPipeContinuousReader::FxUsbPipeRequestWorkItemHandler(
 
     if (NT_SUCCESS(status)) {
         ULONG action;
-        
+
         //
-        // Reset the count to zero.  This is safe since we stopped all the 
+        // Reset the count to zero.  This is safe since we stopped all the
         // readers at the beginning of this function.
         //
         m_NumFailedReaders = 0;
@@ -556,13 +556,13 @@ FxUsbPipeContinuousReader::FxUsbPipeRequestWorkItemHandler(
             FxUsbPipeRepeatReader* pRepeater;
 
             pRepeater = &m_Readers[i];
-            
+
             action = ResubmitRepeater(pRepeater, &status);
 
             if (action & SubmitSend) {
                 //
                 // Ignore the return value because once we have sent the
-                // request, we want all processing to be done in the 
+                // request, we want all processing to be done in the
                 // completion routine.
                 //
                 (void) pRepeater->Request->GetSubmitFxIrp()->CallDriver(m_Pipe->m_TargetDevice);
@@ -577,7 +577,7 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestWorkItemThunk(
     )
 /*
     Only one work-item can be in-progress at any given time and
-    only one additional work-item can be queued at any given time. 
+    only one additional work-item can be queued at any given time.
     This logic and m_WorkItemQueued makes this happen.
 */
 {
@@ -600,10 +600,10 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestWorkItemThunk(
         // Yes, just let the other thread re-run this logic.
         //
         inprogress = TRUE;
-        
+
         ASSERT((pThis->m_WorkItemFlags & FX_USB_WORKITEM_RERUN) == 0);
         pThis->m_WorkItemFlags |= FX_USB_WORKITEM_RERUN;
-        
+
         ASSERT(NULL == pThis->m_WorkItemRerunContext);
         pThis->m_WorkItemRerunContext = Context;
     }
@@ -612,7 +612,7 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestWorkItemThunk(
         // No, it not running.
         //
         inprogress = FALSE;
-        
+
         pThis->m_WorkItemFlags |= FX_USB_WORKITEM_IN_PROGRESS;
         ASSERT((pThis->m_WorkItemFlags & FX_USB_WORKITEM_RERUN) == 0);
     }
@@ -630,7 +630,7 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestWorkItemThunk(
         // Cleanup and restart the repeters.
         //
         pThis->FxUsbPipeRequestWorkItemHandler(pFailedRepeater);
-        
+
         //
         // Check if callback needs to be re-run.
         //
@@ -640,13 +640,13 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestWorkItemThunk(
             // Yes, a new work item was requested while it was already running.
             //
             rerun = TRUE;
-            
+
             pThis->m_WorkItemFlags &= ~FX_USB_WORKITEM_RERUN;
-            
+
             ASSERT(pThis->m_WorkItemRerunContext != NULL);
             pFailedRepeater = (FxUsbPipeRepeatReader*)pThis->m_WorkItemRerunContext;
             pThis->m_WorkItemRerunContext = NULL;
-            
+
             ASSERT(pThis == (FxUsbPipeContinuousReader*)pFailedRepeater->Parent);
         }
         else {
@@ -654,14 +654,14 @@ FxUsbPipeContinuousReader::_FxUsbPipeRequestWorkItemThunk(
             // No, all done.
             //
             rerun = FALSE;
-            
+
             ASSERT(pThis->m_WorkItemFlags & FX_USB_WORKITEM_IN_PROGRESS);
             pThis->m_WorkItemFlags &= ~FX_USB_WORKITEM_IN_PROGRESS;
-            
-            ASSERT(NULL == pThis->m_WorkItemRerunContext);          
-        }       
+
+            ASSERT(NULL == pThis->m_WorkItemRerunContext);
+        }
         pPipe->Unlock(irql);
-    
+
     }
     while (rerun);
 }
@@ -675,9 +675,9 @@ FxUsbPipeContinuousReader::operator new(
 {
     ASSERT(NumReaders >= 1);
 
-    return FxPoolAllocate(
+    return FxPoolAllocate2(
         FxDriverGlobals,
-        NonPagedPool,
+        POOL_FLAG_NON_PAGED,
         Size + (NumReaders-1) * sizeof(FxUsbPipeRepeatReader)
         );
 }
@@ -727,7 +727,7 @@ FxUsbPipeContinuousReader::FormatRepeater(
 
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-        
+
     RtlZeroMemory(pMemory->GetBuffer(), pMemory->GetBufferSize());
 
     buf.SetMemory(pMemory, &m_Offsets);
@@ -760,7 +760,7 @@ FxUsbPipeContinuousReader::FormatRepeater(
         pMemory->GetObjectHandle();
 
     pRequest->SetCompletionRoutine(_FxUsbPipeRequestComplete, Repeater);
-    return status;       
+    return status;
 }
 
 
@@ -776,8 +776,8 @@ FxUsbPipeContinuousReader::CancelRepeaters(
     for (i = 0; i < m_NumReaders; i++) {
         m_Readers[i].Request->Cancel();
         m_Pipe->GetDriverGlobals()->WaitForSignal(
-                m_Readers[i].ReadCompletedEvent.GetSelfPointer(), 
-                "waiting for continuous reader to finish, WDFUSBPIPE", 
+                m_Readers[i].ReadCompletedEvent.GetSelfPointer(),
+                "waiting for continuous reader to finish, WDFUSBPIPE",
                 m_Pipe->GetHandle(),
                 m_Pipe->GetDriverGlobals()->FxVerifierDbgWaitForSignalTimeoutInSec,
                 WaitSignalBreakUnderVerifier);
@@ -786,7 +786,7 @@ FxUsbPipeContinuousReader::CancelRepeaters(
 
     Mx::MxLeaveCriticalRegion();
     //
-    // Checking for IO Count <= 1 is not a good idea here because there could be always other IO 
+    // Checking for IO Count <= 1 is not a good idea here because there could be always other IO
     // besides that from the continous reader going on the Read Pipe.
     //
 }
@@ -799,10 +799,10 @@ FxUsbPipeTransferContext::FxUsbPipeTransferContext(
     m_UnlockPages = FALSE;
     m_PartialMdl = NULL;
     m_USBDHandle = NULL;
-    
+
     if (FxUrbType == FxUrbTypeLegacy) {
         m_Urb = &m_UrbLegacy;
-    } 
+    }
     else {
         m_Urb = NULL;
     }
@@ -840,8 +840,8 @@ FxUsbPipeTransferContext::AllocateUrb(
     }
 
     m_USBDHandle = USBDHandle;
-    
-Done: 
+
+Done:
     return status;
 }
 
@@ -850,11 +850,11 @@ FxUsbPipeTransferContext::Dispose(
     VOID
     )
 {
-    if (m_Urb && (m_Urb != &m_UrbLegacy)){ 
+    if (m_Urb && (m_Urb != &m_UrbLegacy)){
         USBD_UrbFree(m_USBDHandle, (PURB) m_Urb);
         m_Urb = NULL;
         m_USBDHandle = NULL;
-    }    
+    }
 }
 
 VOID
@@ -885,9 +885,9 @@ FxUsbPipeTransferContext::CopyParameters(
     )
 {
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-    // 
+    //
     // In case of UMDF since the URB itself is not sent down the stack
-    // we propagate the transfer length into the URB via the UM IRP 
+    // we propagate the transfer length into the URB via the UM IRP
     //
     m_UmUrb.UmUrbBulkOrInterruptTransfer.TransferBufferLength = (ULONG)m_CompletionParams.IoStatus.Information;
 #endif
@@ -975,10 +975,10 @@ FxUsbPipeRequestContext::FxUsbPipeRequestContext(
     FxUsbRequestContext(FX_RCT_USB_PIPE_REQUEST)
 {
     m_USBDHandle = NULL;
-    
+
     if (FxUrbType == FxUrbTypeLegacy) {
         m_Urb = &m_UrbLegacy;
-    } 
+    }
     else {
         m_Urb = NULL;
     }
@@ -986,7 +986,7 @@ FxUsbPipeRequestContext::FxUsbPipeRequestContext(
 
 FxUsbPipeRequestContext::~FxUsbPipeRequestContext(
     VOID
-    ) 
+    )
 {
     if (m_Urb && (m_Urb != &m_UrbLegacy)) {
         USBD_UrbFree(m_USBDHandle, (PURB)m_Urb);
@@ -1016,7 +1016,7 @@ FxUsbPipeRequestContext::AllocateUrb(
 
     m_USBDHandle = USBDHandle;
 
-Done: 
+Done:
     return status;
 }
 
@@ -1025,11 +1025,11 @@ FxUsbPipeRequestContext::Dispose(
     VOID
     )
 {
-    if (m_Urb && (m_Urb != &m_UrbLegacy)){ 
+    if (m_Urb && (m_Urb != &m_UrbLegacy)){
         USBD_UrbFree(m_USBDHandle, (PURB) m_Urb);
         m_Urb = NULL;
         m_USBDHandle = NULL;
-    }    
+    }
 }
 
 VOID
@@ -1064,9 +1064,6 @@ FxUsbPipe::FxUsbPipe(
 {
     InitializeListHead(&m_ListEntry);
     RtlZeroMemory(&m_PipeInformation, sizeof(m_PipeInformation));
-#if (FX_CORE_MODE == FX_CORE_USER_MODE)
-    RtlZeroMemory(&m_PipeInformationUm, sizeof(m_PipeInformationUm));
-#endif
     m_InterfaceNumber = 0;
     m_Reader = NULL;
     m_UsbInterface = NULL;
@@ -1110,15 +1107,15 @@ BOOLEAN
 FxUsbPipe::Dispose()
 {
     BOOLEAN callCleanup;
-    
+
     //
     // Call base class: callbacks, terminates I/Os, etc.
     //
     callCleanup = __super::Dispose();
-    
+
     //
     // Don't need the reader anymore. The reader is deleted after calling the
-    // parent class Dispose() to preserve the existing deletion order (it was 
+    // parent class Dispose() to preserve the existing deletion order (it was
     // deleted in the Pipe's dtor() before this change).
     //
     if (m_Reader != NULL)
@@ -1199,9 +1196,9 @@ FxUsbPipe::GotoStartState(
             pRequest->ADDREF(this);
 
             //
-            // NOTE: This is an elusive backdoor to send the Request down 
-            // since it is inserted directly into the IoTargets pended list. 
-            // The IoTarget is not started so we add the request to the 
+            // NOTE: This is an elusive backdoor to send the Request down
+            // since it is inserted directly into the IoTargets pended list.
+            // The IoTarget is not started so we add the request to the
             // pended list so that it is processed when the IoTarget starts.
             //
             m_Reader->m_Pipe->IncrementIoCount();
@@ -1231,7 +1228,7 @@ FxUsbPipe::GotoStopState(
 {
     KIRQL irql;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    
+
     irql = PASSIVE_LEVEL;
     pFxDriverGlobals = GetDriverGlobals();
 
@@ -1273,14 +1270,14 @@ FxUsbPipe::GotoStopState(
                 " callback", GetHandle());
 
             if (pFxDriverGlobals->IsVerificationEnabled(1, 9, OkForDownLevel)) {
-                FxVerifierDbgBreakPoint(pFxDriverGlobals);  
+                FxVerifierDbgBreakPoint(pFxDriverGlobals);
             }
         }
 
         //
-        // Do not deadlock when misbehaved drivers (< v1.9) call 
+        // Do not deadlock when misbehaved drivers (< v1.9) call
         // WdfIoTargetStop from EvtUsbTargetPipeReadersFailed callback.
-        //        
+        //
         if (m_Reader->m_WorkItemThread != Mx::MxGetCurrentThread() ||
             pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,9)) {
             //
@@ -1309,7 +1306,7 @@ FxUsbPipe::GotoPurgeState(
 {
     KIRQL irql;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    
+
     irql = PASSIVE_LEVEL;
     pFxDriverGlobals = GetDriverGlobals();
 
@@ -1331,10 +1328,10 @@ FxUsbPipe::GotoPurgeState(
         Action = WdfIoTargetPurgeIoAndWait;
     }
 
-    __super::GotoPurgeState(Action, 
-                            PendedRequestListHead, 
-                            SentRequestListHead, 
-                            Wait, 
+    __super::GotoPurgeState(Action,
+                            PendedRequestListHead,
+                            SentRequestListHead,
+                            Wait,
                             FALSE);
 
     if (m_Reader != NULL) {
@@ -1354,7 +1351,7 @@ FxUsbPipe::GotoPurgeState(
                 "WDFUSBPIPE %p is purged from EvtUsbTargetPipeReadersFailed"
                 " callback", GetHandle());
 
-            FxVerifierDbgBreakPoint(pFxDriverGlobals);  
+            FxVerifierDbgBreakPoint(pFxDriverGlobals);
         }
 
         //
@@ -1391,7 +1388,7 @@ FxUsbPipe::GotoRemoveState(
     if (m_Reader != NULL && m_Reader->m_ReadersSubmitted &&
         WdfIoTargetStarted == m_State) {
         //
-        // Driver forgot to stop the pipe on D0Exit. In case of miniport wdf driver, it 
+        // Driver forgot to stop the pipe on D0Exit. In case of miniport wdf driver, it
         // forgot to stop the pipe in EvtCleanupCallback of the framework device object.
         //
         DoTraceLevelMessage(
@@ -1403,19 +1400,19 @@ FxUsbPipe::GotoRemoveState(
                 "in EvtDeviceD0Exit callback");
 
         if (GetDriverGlobals()->IsVerificationEnabled(1,9,OkForDownLevel)) {
-            FxVerifierDbgBreakPoint(GetDriverGlobals());            
+            FxVerifierDbgBreakPoint(GetDriverGlobals());
         }
     }
 
-    __super::GotoRemoveState(NewState, 
-                             PendedRequestListHead, 
-                             SentRequestListHead, 
-                             FALSE, 
+    __super::GotoRemoveState(NewState,
+                             PendedRequestListHead,
+                             SentRequestListHead,
+                             FALSE,
                              Wait);
     if (m_Reader != NULL) {
         //
         // Make sure work item is done. It is possible for the upper class to
-        // return wait = false if the list of sent requests is empty. We still 
+        // return wait = false if the list of sent requests is empty. We still
         // want to wait anyway for making sure work item is not about to run or
         // it is running.
         //
@@ -1441,7 +1438,7 @@ FxUsbPipe::WaitForSentIoToComplete(
         //
         // First, wait for the work item to complete if it is running.
         //
-        // NOTE: We don't wait for the DPC  to complete because  
+        // NOTE: We don't wait for the DPC  to complete because
         //  they are flushed in FxUsbDevice::Dispose
         //
         m_Reader->m_WorkItem->WaitForExit();
@@ -1740,7 +1737,7 @@ FxUsbPipe::FormatAbortRequest(
         pContext = (FxUsbPipeRequestContext*) Request->GetContext();
     }
     else {
-        
+
         urbType = m_UsbDevice->GetFxUrbTypeForRequest(Request);
         pContext = new(GetDriverGlobals()) FxUsbPipeRequestContext(urbType);
         if (pContext == NULL) {
@@ -1748,7 +1745,7 @@ FxUsbPipe::FormatAbortRequest(
         }
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-        if (urbType == FxUrbTypeUsbdAllocated) {            
+        if (urbType == FxUrbTypeUsbdAllocated) {
             status = pContext->AllocateUrb(m_USBDHandle);
             if (!NT_SUCCESS(status)) {
                 delete pContext;
@@ -1762,7 +1759,7 @@ FxUsbPipe::FormatAbortRequest(
             Request->EnableContextDisposeNotification();
         }
 #endif
-        
+
         Request->SetContext(pContext);
     }
 
@@ -1773,16 +1770,16 @@ FxUsbPipe::FormatAbortRequest(
 
     if (pContext->m_Urb == &pContext->m_UrbLegacy) {
         urbType = FxUrbTypeLegacy;
-    } 
+    }
     else {
         urbType = FxUrbTypeUsbdAllocated;
     }
-    
+
     FxFormatUsbRequest(Request, (PURB)pContext->m_Urb, urbType, m_USBDHandle);
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
     pContext->SetInfo(WdfUsbRequestTypePipeAbort,
                       m_UsbInterface->m_WinUsbHandle,
-                      m_PipeInformationUm.PipeId,
+                      GetPipeId(),
                       UMURB_FUNCTION_ABORT_PIPE);
     FxUsbUmFormatRequest(Request, &pContext->m_UmUrb.UmUrbPipeRequest.Hdr, m_UsbDevice->m_pHostTargetFile);
 #endif
@@ -1820,7 +1817,7 @@ FxUsbPipe::FormatResetRequest(
         }
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-        if (urbType == FxUrbTypeUsbdAllocated) {            
+        if (urbType == FxUrbTypeUsbdAllocated) {
             status = pContext->AllocateUrb(m_USBDHandle);
             if (!NT_SUCCESS(status)) {
                 delete pContext;
@@ -1849,16 +1846,16 @@ FxUsbPipe::FormatResetRequest(
 
     if (pContext->m_Urb == &pContext->m_UrbLegacy) {
         urbType = FxUrbTypeLegacy;
-    } 
+    }
     else {
         urbType = FxUrbTypeUsbdAllocated;
     }
-    
+
     FxFormatUsbRequest(Request, (PURB)pContext->m_Urb, urbType, m_USBDHandle);
 #elif (FX_CORE_MODE == FX_CORE_USER_MODE)
     pContext->SetInfo(WdfUsbRequestTypePipeReset,
                       m_UsbInterface->m_WinUsbHandle,
-                      m_PipeInformationUm.PipeId,
+                      GetPipeId(),
                       UMURB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL);
     FxUsbUmFormatRequest(Request, &pContext->m_UmUrb.UmUrbPipeRequest.Hdr, m_UsbDevice->m_pHostTargetFile);
 #endif
@@ -1885,20 +1882,37 @@ FxUsbPipe::Reset(
                             "Failed to initialize FxSyncRequest");
         return status;
     }
-        
+
     status = FormatResetRequest(request.m_TrueRequest);
     if (NT_SUCCESS(status)) {
         if (m_Reader != NULL) {
             //
-            // This assumes that no other I/O besides reader I/O is going on.            
+            // This assumes that no other I/O besides reader I/O is going on.
             //
-            m_Reader->CancelRepeaters(); 
-        }      
+            m_Reader->CancelRepeaters();
+        }
         else {
-             CancelSentIo(); 
+             CancelSentIo();
         }
         status = SubmitSyncRequestIgnoreTargetState(request.m_TrueRequest, NULL);
     }
     return status;
 }
 
+VOID
+FxUsbPipe::GetInformation(
+    __out PWDF_USB_PIPE_INFORMATION PipeInformation
+    )
+{
+    //
+    // Do a field by field copy for the WDF structure, since fields could change.
+    //
+    PipeInformation->MaximumPacketSize = GetMaxPacketSize();
+    PipeInformation->EndpointAddress = m_PipeInformation.EndpointAddress;
+    PipeInformation->Interval = m_PipeInformation.Interval;
+    PipeInformation->PipeType = GetType();
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    PipeInformation->MaximumTransferSize = m_PipeInformation.MaximumTransferSize;
+#endif
+    PipeInformation->SettingIndex = m_UsbInterface->GetConfiguredSettingIndex();
+}

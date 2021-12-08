@@ -60,7 +60,30 @@ friend class FxWmiIrpHandler;
 private:
 
     MxDriverObject m_DriverObject;
+
+    //
+    // A copy of RegistryPath parameter to DriverEntry API.
+    //
+    //  - Buffer field may be NULL, if memory allocation fails. When not NULL,
+    //    it is always properly NULL-terminated.
+    //  - Length field is the byte size of the buffer, excluding trailing NULL.
+    //  - MaximumLength field is Length + sizeof(UNICODE_NULL)
+    //
     UNICODE_STRING m_RegistryPath;
+
+    //
+    // The service name of the driver. From INF file:
+    //
+    //    KMDF: "AddService=<name>"  in [DDInstall.Services] section
+    //    UMDF: "UmdfService=<name>" in [DDInstall.Wdf] section
+    //
+    // FxDriverGlobals.Public.DriverName[32] serves similiar purpose but that
+    // is limited to the first 31 char of the services name. Newer code should
+    // use m_ServiceName instead.
+    //
+    // The field can be NULL e.g. allocating m_RegistryPath.Buffer fails.
+    //
+    PCWSTR m_ServiceName;
 
     BOOLEAN m_DebuggerConnected;
 

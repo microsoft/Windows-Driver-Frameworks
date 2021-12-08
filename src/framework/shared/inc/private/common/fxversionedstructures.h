@@ -756,3 +756,66 @@ typedef struct _WDFCX_PNPPOWER_EVENT_CALLBACKS_V1_29 {
     PFN_WDFCX_DEVICE_POST_SELF_MANAGED_IO_CLEANUP        EvtCxDevicePostSelfManagedIoCleanup;
 
 } WDFCX_PNPPOWER_EVENT_CALLBACKS_V1_29, *PWDFCX_PNPPOWER_EVENT_CALLBACKS_V1_29;
+
+typedef struct _WDF_POWER_FRAMEWORK_SETTINGS_V1_31 {
+    //
+    // Size of the structure, in bytes.
+    //
+    ULONG Size;
+
+    //
+    // Client driver's callback function that is invoked after KMDF has
+    // registered with the power framework. This field can be NULL if the
+    // client driver does not wish to specify this callback.
+    //
+    PFN_WDFDEVICE_WDM_POST_PO_FX_REGISTER_DEVICE EvtDeviceWdmPostPoFxRegisterDevice;
+
+    //
+    // Client driver's callback function that is invoked before KMDF
+    // unregisters with the power framework. This field can be NULL if the
+    // client driver does not wish to specify this callback.
+    //
+    PFN_WDFDEVICE_WDM_PRE_PO_FX_UNREGISTER_DEVICE EvtDeviceWdmPrePoFxUnregisterDevice;
+
+    //
+    // Pointer to a PO_FX_COMPONENT structure that describes the only component
+    // in the single-component device. This field can be NULL if the client
+    // driver wants KMDF to use the default specification for this component
+    // (i.e. support for F0 only).
+    //
+    PPO_FX_COMPONENT Component;
+
+    //
+    // Client driver's PO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK callback
+    // function. This field can be NULL if the client driver does not wish to
+    // specify this callback.
+    //
+    PPO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK ComponentActiveConditionCallback;
+
+    //
+    // Client driver's PO_FX_COMPONENT_IDLE_CONDITION_CALLBACK callback
+    // function. This field can be NULL if the client driver does not wish to
+    // specify this callback.
+    //
+    PPO_FX_COMPONENT_IDLE_CONDITION_CALLBACK ComponentIdleConditionCallback;
+
+    //
+    // Client driver's PO_FX_COMPONENT_IDLE_STATE_CALLBACK callback function.
+    // This field can be NULL if the client driver does not wish to specify
+    // this callback.
+    //
+    PPO_FX_COMPONENT_IDLE_STATE_CALLBACK ComponentIdleStateCallback;
+
+    //
+    // Client driver's PO_FX_POWER_CONTROL_CALLBACK callback function. This
+    // field can be NULL if the client driver does not wish to specify this
+    // callback.
+    //
+    PPO_FX_POWER_CONTROL_CALLBACK PowerControlCallback;
+
+    //
+    // Context value that is passed in to the ComponentIdleStateCallback and
+    // PowerControlCallback callback functions.
+    //
+    PVOID PoFxDeviceContext;
+} WDF_POWER_FRAMEWORK_SETTINGS_V1_31, *PWDF_POWER_FRAMEWORK_SETTINGS_V1_31;

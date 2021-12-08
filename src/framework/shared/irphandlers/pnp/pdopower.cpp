@@ -178,9 +178,17 @@ FxPkgPdo::DispatchDeviceSetPower(
                 m_Device->GetHandle(),
                 m_Device->GetDeviceObject());
 
-            ASSERTMSG("Received set device power irp but the irp was not "
-                "requested by the device (the power policy owner)\n",
-                FALSE);
+            //
+
+            //
+            if (GetDriverGlobals()->FxVerifierOn) {
+                FxVerifierBugCheck(GetDriverGlobals(),          // globals
+                       WDF_POWER_MULTIPLE_PPO,                  // specific type
+                       (ULONG_PTR)m_Device->GetDeviceObject(),  // parm 2
+                       (ULONG_PTR)Irp->GetIrp());               // parm 3
+
+                /* NOTREACHED */
+            }
         }
 
         //

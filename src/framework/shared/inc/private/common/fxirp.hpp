@@ -85,19 +85,19 @@ Revision History:
 
 
     // A function for when not assigning
-    
+
     MdIrp
     GetIrp(
         VOID
         );
 
-    
+
     VOID
     CompleteRequest(
         __in_opt CCHAR PriorityBoost=IO_NO_INCREMENT
         );
 
-    
+
     NTSTATUS
     CallDriver(
         __in MdDeviceObject DeviceObject
@@ -108,22 +108,22 @@ Revision History:
 
 
 
-    
+
     NTSTATUS
     PoCallDriver(
         __in MdDeviceObject DeviceObject
         );
 
-    
+
     VOID
     StartNextPowerIrp(
         );
 
-    MdCompletionRoutine 
+    MdCompletionRoutine
     GetNextCompletionRoutine(
         VOID
-        );    
-    
+        );
+
     VOID
     SetCompletionRoutine(
         __in MdCompletionRoutine CompletionRoutine,
@@ -142,18 +142,18 @@ Revision History:
         __in BOOLEAN InvokeOnError = TRUE,
         __in BOOLEAN InvokeOnCancel = TRUE
         );
-    
-    MdCancelRoutine 
+
+    MdCancelRoutine
     SetCancelRoutine(
         __in_opt MdCancelRoutine  CancelRoutine
         );
 
     //
-    // SendIrpSynchronously achieves synchronous behavior by waiting on an 
+    // SendIrpSynchronously achieves synchronous behavior by waiting on an
     // event after submitting the IRP. The event creation can fail in UM, but
-    // not in KM. Hence, in UM the return code could either indicate event 
+    // not in KM. Hence, in UM the return code could either indicate event
     // creation failure or it could indicate the status set on the IRP by the
-    // lower driver. In KM, the return code only indicates the status set on 
+    // lower driver. In KM, the return code only indicates the status set on
     // the IRP by the lower lower, because event creation cannot fail.
     //
     CHECK_RETURN_IF_USER_MODE
@@ -162,7 +162,7 @@ Revision History:
         __in MdDeviceObject DeviceObject
         );
 
-    
+
     VOID
     CopyCurrentIrpStackLocationToNext(
         VOID
@@ -177,7 +177,7 @@ Revision History:
     SetNextIrpStackLocation(
         VOID
     );
-    
+
     UCHAR
     GetMajorFunction(
         VOID
@@ -238,58 +238,58 @@ Revision History:
     GetFlags(
         VOID
         );
-    
+
     PIO_STACK_LOCATION
     GetCurrentIrpStackLocation(
         VOID
         );
 
-    
+
     PIO_STACK_LOCATION
     GetNextIrpStackLocation(
         VOID
         );
 
     static
-    PIO_STACK_LOCATION    
+    PIO_STACK_LOCATION
     _GetAndClearNextStackLocation(
         __in MdIrp Irp
         );
 
-    
+
     VOID
     SkipCurrentIrpStackLocation(
         VOID
         );
 
-    
+
     VOID
     MarkIrpPending(
         );
 
-    
+
     BOOLEAN
     PendingReturned(
         );
 
-    
+
     VOID
     PropagatePendingReturned(
         VOID
         );
 
-    
+
     VOID
     SetStatus(
         __in NTSTATUS Status
         );
 
-    
+
     NTSTATUS
     GetStatus(
         );
 
-    
+
     BOOLEAN
     Cancel(
         VOID
@@ -300,28 +300,28 @@ Revision History:
         __in BOOLEAN Cancel
         );
 
-    
+
     BOOLEAN
     IsCanceled(
         );
 
-    
+
     KIRQL
     GetCancelIrql(
         );
 
-    
+
     VOID
     SetInformation(
         __in ULONG_PTR Information
         );
 
-    
+
     ULONG_PTR
     GetInformation(
         );
 
-    
+
     CCHAR
     GetCurrentIrpStackLocationIndex(
         );
@@ -329,12 +329,12 @@ Revision History:
     CCHAR
     GetStackCount(
         );
-    
+
     PLIST_ENTRY
     ListEntry(
         );
 
-    
+
     PVOID
     GetSystemBuffer(
         );
@@ -342,7 +342,7 @@ Revision History:
     PVOID
     GetOutputBuffer(
         );
-    
+
     PMDL
     GetMdl(
         );
@@ -350,11 +350,11 @@ Revision History:
     PMDL*
     GetMdlAddressPointer(
         );
-    
+
     PVOID
     GetUserBuffer(
         );
-    
+
     VOID
     Reuse(
         __in NTSTATUS Status = STATUS_SUCCESS
@@ -363,46 +363,46 @@ Revision History:
     //
     // Methods for IO_STACK_LOCATION members
     //
-    
+
     VOID
     SetMajorFunction(
         __in UCHAR MajorFunction
         );
 
-    
+
     VOID
     SetMinorFunction(
         __in UCHAR MinorFunction
         );
 
     //
-    // Get Methods for IO_STACK_LOCATION.Parameters.Power 
+    // Get Methods for IO_STACK_LOCATION.Parameters.Power
     //
-    
+
     SYSTEM_POWER_STATE_CONTEXT
     GetParameterPowerSystemPowerStateContext(
         );
 
-    
+
     POWER_STATE_TYPE
     GetParameterPowerType(
         );
-    
+
     POWER_STATE
     GetParameterPowerState(
         );
 
-    
+
     DEVICE_POWER_STATE
     GetParameterPowerStateDeviceState(
         );
 
-    
+
     SYSTEM_POWER_STATE
     GetParameterPowerStateSystemState(
         );
 
-    
+
     POWER_ACTION
     GetParameterPowerShutdownType(
         );
@@ -417,20 +417,20 @@ Revision History:
     //
     // Get/Set Method for IO_STACK_LOCATION.Parameters.QueryDeviceRelations
     //
-    
+
     DEVICE_RELATION_TYPE
     GetParameterQDRType(
         );
- 
-    VOID     
+
+    VOID
     SetParameterQDRType(
         __in DEVICE_RELATION_TYPE DeviceRelation
         );
 
     //
-    // Get/Set Methods for IO_STACK_LOCATION.Parameters.DeviceCapabilities 
+    // Get/Set Methods for IO_STACK_LOCATION.Parameters.DeviceCapabilities
     //
-    
+
     PDEVICE_CAPABILITIES
     GetParameterDeviceCapabilities(
         );
@@ -454,12 +454,12 @@ Revision History:
     //
     // Get/Set Methods for IO_STACK_LOCATION.Parameters.Write.ByteOffset.QuadPart
     //
-    
+
     LONGLONG
     GetParameterWriteByteOffsetQuadPart(
         );
 
-    
+
     VOID
     SetNextParameterWriteByteOffsetQuadPart(
         __in LONGLONG DeviceOffset
@@ -468,7 +468,7 @@ Revision History:
     //
     // Get/Set Methods for IO_STACK_LOCATION.Parameters.Write.Length
     //
-    
+
     ULONG
     GetCurrentParameterWriteLength(
         );
@@ -496,83 +496,83 @@ Revision History:
         );
 
     //
-    // Get/Set Methods for IO_STACK_LOCATION.Parameters.StartDevice 
+    // Get/Set Methods for IO_STACK_LOCATION.Parameters.StartDevice
     //
-    
+
     PCM_RESOURCE_LIST
     GetParameterAllocatedResources(
         );
 
-    
+
     VOID
     SetParameterAllocatedResources(
         __in PCM_RESOURCE_LIST AllocatedResources
         );
 
-    
+
     PCM_RESOURCE_LIST
     GetParameterAllocatedResourcesTranslated(
         );
 
-    
+
     VOID
     SetParameterAllocatedResourcesTranslated(
         __in PCM_RESOURCE_LIST AllocatedResourcesTranslated
         );
 
     //
-    // Get Method for IO_STACK_LOCATION.Parameters.QueryDeviceText 
+    // Get Method for IO_STACK_LOCATION.Parameters.QueryDeviceText
     //
-    
+
     LCID
     GetParameterQueryDeviceTextLocaleId(
         );
 
-    
+
     DEVICE_TEXT_TYPE
     GetParameterQueryDeviceTextType(
         );
 
     //
-    // Get Method for IO_STACK_LOCATION.Parameters.SetLock 
+    // Get Method for IO_STACK_LOCATION.Parameters.SetLock
     //
-    
+
     BOOLEAN
     GetParameterSetLockLock(
         );
 
     //
-    // Get Method for IO_STACK_LOCATION.Parameters.QueryId 
+    // Get Method for IO_STACK_LOCATION.Parameters.QueryId
     //
-    
+
     BUS_QUERY_ID_TYPE
     GetParameterQueryIdType(
         );
 
     //
-    // Get/Set Methods for IO_STACK_LOCATION.Parameters.QueryInterface 
+    // Get/Set Methods for IO_STACK_LOCATION.Parameters.QueryInterface
     //
-    
+
     PINTERFACE
     GetParameterQueryInterfaceInterface(
         );
 
-    
+
     const GUID*
     GetParameterQueryInterfaceType(
         );
 
-    
+
     USHORT
     GetParameterQueryInterfaceVersion(
         );
 
-    
+
     USHORT
     GetParameterQueryInterfaceSize(
         );
 
-    
+
     PVOID
     GetParameterQueryInterfaceInterfaceSpecificData(
         );
@@ -605,24 +605,24 @@ Revision History:
     //
     // Get Method for IO_STACK_LOCATION.Parameters.UsageNotification
     //
-    
+
     DEVICE_USAGE_NOTIFICATION_TYPE
     GetParameterUsageNotificationType(
         );
 
-    
+
     BOOLEAN
     GetParameterUsageNotificationInPath(
         );
 
-    
+
     VOID
     SetParameterUsageNotificationInPath(
         __in BOOLEAN InPath
         );
 
-    
-    BOOLEAN 
+
+    BOOLEAN
     GetNextStackParameterUsageNotificationInPath(
         );
 
@@ -630,12 +630,12 @@ Revision History:
     GetParameterIoctlCode(
         VOID
         );
-    
+
     ULONG
     GetParameterIoctlCodeBufferMethod(
         VOID
         );
-    
+
     ULONG
     GetParameterIoctlInputBufferLength(
         VOID
@@ -646,7 +646,7 @@ Revision History:
         VOID
         );
 
-    PVOID 
+    PVOID
     GetParameterIoctlType3InputBuffer(
         VOID
         );
@@ -654,7 +654,7 @@ Revision History:
     //
     // Set Methods for IO_STACK_LOCATION.Parameters.DeviceControl members
     //
-    
+
     VOID
     SetParameterIoctlCode(
         __in ULONG DeviceIoControlCode
@@ -703,7 +703,7 @@ Revision History:
     //
     // Methods for IO_STACK_LOCATION
     //
-    
+
     VOID
     ClearNextStack(
         VOID
@@ -718,12 +718,12 @@ Revision History:
     InitNextStackUsingStack(
         __in FxIrp* Irp
         );
-         
+
     ULONG
     GetCurrentFlags(
         VOID
         );
-     
+
     VOID
     FreeIrp(
         VOID
@@ -740,7 +740,7 @@ Revision History:
         );
 
 private:
-    
+
     static
     NTSTATUS
     _IrpSynchronousCompletion(
@@ -811,12 +811,17 @@ public:
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 
-    IWudfIoIrp* 
+    IWudfIoIrp*
     GetIoIrp(
         VOID
         );
 
-    IWudfPnpIrp* 
+    IWudfIoIrp2*
+    GetIoIrp2(
+        VOID
+        );
+
+    IWudfPnpIrp*
     GetPnpIrp(
         VOID
         );
@@ -837,7 +842,7 @@ struct FxAutoIrp : public FxIrp {
     {
     }
 
-    
+
     ~FxAutoIrp();
 };
 

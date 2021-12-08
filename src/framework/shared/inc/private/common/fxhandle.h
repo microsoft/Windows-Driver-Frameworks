@@ -155,6 +155,17 @@ FxObjectHandleAlloc(
     __in        FxObjectType ObjectType
     );
 
+PVOID
+FxObjectHandleAlloc2(
+    _In_        PFX_DRIVER_GLOBALS FxDriverGlobals,
+    _In_        POOL_FLAGS PoolFlags,
+    _In_        size_t Size,
+    _In_        ULONG Tag,
+    _In_opt_    PWDF_OBJECT_ATTRIBUTES Attributes,
+    _In_        USHORT ExtraSize,
+    _In_        FxObjectType ObjectType
+    );
+
 VOID
 FxContextHeaderInit(
     __in        FxContextHeader* Header,

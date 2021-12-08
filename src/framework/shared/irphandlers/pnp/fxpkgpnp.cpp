@@ -78,6 +78,12 @@ const GUID FxPkgPnp::GUID_POWER_THREAD_INTERFACE = {
 //
 #define WDF_S0_IDLE_DFX_CHILDREN_OPTIONAL_VALUE_NAME L"WdfDirectedPowerTransitionChildrenOptional"
 
+//
+// WDF may use its own idle timer for devices using SystemManagedIdleTimeout.
+// Set the following registry entry to 0 to opt-out of this new behavior.
+//
+#define WDF_USE_WDF_TIMER_FOR_POFX_VALUE_NAME L"WdfUseWdfTimerForPofx"
+
 FxPkgPnp::FxPkgPnp(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in CfxDevice* Device,
@@ -1075,8 +1081,8 @@ FxPkgPnp::HandleQueryBusInformation(
         PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
         pFxDriverGlobals = GetDriverGlobals();
-        pBusInformation = (PPNP_BUS_INFORMATION) MxMemory::MxAllocatePoolWithTag(
-                PagedPool, sizeof(PNP_BUS_INFORMATION), pFxDriverGlobals->Tag);
+        pBusInformation = (PPNP_BUS_INFORMATION) MxMemory::MxAllocatePool2(
+                POOL_FLAG_PAGED, sizeof(PNP_BUS_INFORMATION), pFxDriverGlobals->Tag);
 
         if (pBusInformation != NULL) {
             //
@@ -1204,8 +1210,8 @@ Return Value:
     //
     size = FxChildList::_ComputeRelationsSize(count);
 
-    pNewRelations = (PDEVICE_RELATIONS) MxMemory::MxAllocatePoolWithTag(
-        PagedPool, size, pFxDriverGlobals->Tag);
+    pNewRelations = (PDEVICE_RELATIONS) MxMemory::MxAllocatePool2(
+        POOL_FLAG_PAGED, size, pFxDriverGlobals->Tag);
 
     if (pNewRelations == NULL) {
         //
@@ -3000,25 +3006,17 @@ Return Value:
     DEVICE_POWER_STATE dxState;
     ULONG idleTimeout;
     NTSTATUS status;
-    BOOLEAN enabled, s0Capable, overridable, firstTime, directedTransitions;
+    BOOLEAN enabled, s0Capable, overridable, firstTime;
     WDF_TRI_STATE powerUpOnSystemWake;
     const LONGLONG negliblySmallIdleTimeout = -1; // 100 nanoseconds
+    IdleTimeoutManagement* timeoutMgmt;
 
     s0Capable = FALSE;
     dxState = PowerDeviceD3;
     overridable = FALSE;
     firstTime = TRUE;
-    directedTransitions = FxLibraryGlobals.WdfDirectedPowerTransitionEnabled;
 
-    if (
-#if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-        GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(1, 31)
-#else
-        GetDriverGlobals()->IsVersionGreaterThanOrEqualTo(2, 31)
-#endif
-        ) {
-        directedTransitions = TRUE;
-    }
+    timeoutMgmt = &m_PowerPolicyMachine.m_Owner->m_IdleSettings.m_TimeoutMgmt;
 
     if (Settings->Enabled == WdfTrue) {
         enabled = TRUE;
@@ -3241,12 +3239,33 @@ Return Value:
                 // the caller has asked for the idle timeout to be determined
                 // by the power manager.
                 //
-                status = m_PowerPolicyMachine.m_Owner->m_IdleSettings.
-                            m_TimeoutMgmt.UseSystemManagedIdleTimeout(
+                status = timeoutMgmt->UseSystemManagedIdleTimeout(
                                                             GetDriverGlobals()
                                                             );
                 if (!NT_SUCCESS(status)) {
                     return status;
+                }
+
+                BOOLEAN directedTransitions;
+                if (timeoutMgmt->DriverSpecifiedPowerFrameworkSettings()) {
+                    directedTransitions = timeoutMgmt->GetDirectedPowerTransitionSupport();
+                }
+                else {
+                    directedTransitions = FxLibraryGlobals.WdfDirectedPowerTransitionEnabled;
+                    if (GetDriverGlobals()->IsMinorVersionGreaterThanOrEqualTo(31)) {
+                        directedTransitions = TRUE;
+                    }
+                }
+
+                //
+                // Policy on UseWdfTimerForPofx:
+                //
+                //  - Enabled if the driver (that created the WDFDEVICE) targets v33+ WDF
+                //  - Can be disabled through per-device registry setting
+                //
+                BOOLEAN useWdfTimerForPofx = FxLibraryGlobals.UseWdfTimerForPofx;
+                if (GetDriverGlobals()->IsMinorVersionGreaterThanOrEqualTo(33)) {
+                    useWdfTimerForPofx = TRUE;
                 }
 
                 //
@@ -3255,6 +3274,10 @@ Return Value:
                 // only supported for system-managed idle timeout devices.
                 //
                 BOOLEAN dfxChildrenOptional = FALSE;
+                if (timeoutMgmt->DriverSpecifiedPowerFrameworkSettings()) {
+                    dfxChildrenOptional = timeoutMgmt->GetDirectedPowerTransitionChildrenOptional();
+                }
+
                 if (Mx::MxGetCurrentIrql() == PASSIVE_LEVEL) {
 
                     DECLARE_CONST_UNICODE_STRING(valueName, \
@@ -3264,12 +3287,17 @@ Return Value:
                     // Read registry. If registry value is not found, the value of
                     // "directedTransitions" remains unchanged.
                     //
-                    ReadRegistryPofxDirectredTransition(&valueName, &directedTransitions);
+                    ReadRegistryWdfSetting(&valueName, &directedTransitions);
 
                     DECLARE_CONST_UNICODE_STRING(childrenOptionalName, \
                         WDF_S0_IDLE_DFX_CHILDREN_OPTIONAL_VALUE_NAME);
 
-                    ReadRegistryPofxDirectredTransition(&childrenOptionalName, &dfxChildrenOptional);
+                    ReadRegistryWdfSetting(&childrenOptionalName, &dfxChildrenOptional);
+
+                    DECLARE_CONST_UNICODE_STRING(useWdfTimerForPofxName, \
+                        WDF_USE_WDF_TIMER_FOR_POFX_VALUE_NAME);
+
+                    ReadRegistryWdfSetting(&useWdfTimerForPofxName, &useWdfTimerForPofx);
                 }
                 else {
                     DoTraceLevelMessage(
@@ -3282,14 +3310,11 @@ Return Value:
                 //
                 // Set it to the registry specified value or the default value.
                 //
-                m_PowerPolicyMachine.m_Owner->m_IdleSettings.
-                    m_TimeoutMgmt.SetDirectedPowerTransitionSupport(
-                        directedTransitions);
+                timeoutMgmt->SetDirectedPowerTransitionSupport(directedTransitions);
 
-                m_PowerPolicyMachine.m_Owner->m_IdleSettings.
-                    m_TimeoutMgmt.SetDirectedPowerTransitionChildrenOptional(
-                        dfxChildrenOptional);
+                timeoutMgmt->SetDirectedPowerTransitionChildrenOptional(dfxChildrenOptional);
 
+                timeoutMgmt->SetUseWdfTimerForPofx(useWdfTimerForPofx);
             }
         } else {
             //
@@ -3301,8 +3326,8 @@ Return Value:
             BOOLEAN callerWantsSystemManagedIdleTimeout;
 
             currentlyUsingSystemManagedIdleTimeout =
-                m_PowerPolicyMachine.m_Owner->m_IdleSettings.m_TimeoutMgmt.
-                                                UsingSystemManagedIdleTimeout();
+                timeoutMgmt->UsingSystemManagedIdleTimeout();
+
             callerWantsSystemManagedIdleTimeout =
               ((SystemManagedIdleTimeout == Settings->IdleTimeoutType) ||
                (SystemManagedIdleTimeoutWithHint == Settings->IdleTimeoutType));
@@ -3414,8 +3439,7 @@ Return Value:
 
     m_PowerPolicyMachine.m_Owner->m_IdleSettings.DxState = dxState;
 
-    if (m_PowerPolicyMachine.m_Owner->
-            m_IdleSettings.m_TimeoutMgmt.UsingSystemManagedIdleTimeout()) {
+    if (timeoutMgmt->UsingSystemManagedIdleTimeoutAndPofxTimer()) {
         //
         // With system managed idle timeout, we don't want to apply an idle
         // timeout of our own on top of that. Effectively, our idle timeout is
@@ -3452,6 +3476,9 @@ Return Value:
         }
 
     } else {
+        //
+        // Driver-managed idle timeout, or System-managed idle timeout with WDF timer
+        //
         m_PowerPolicyMachine.m_Owner->m_PowerIdleMachine.m_PowerTimeout.QuadPart
             = WDF_REL_TIMEOUT_IN_MS(idleTimeout);
     }
@@ -6600,6 +6627,7 @@ FxPkgPnp::AssignPowerFrameworkSettings(
     PPOX_SETTINGS poxSettings = NULL;
     ULONG poxSettingsSize = 0;
     BYTE * buffer = NULL;
+    IdleTimeoutManagement *timeoutMgmt = NULL;
 
     if (FALSE==(IdleTimeoutManagement::_SystemManagedIdleTimeoutAvailable())) {
         //
@@ -6687,9 +6715,9 @@ FxPkgPnp::AssignPowerFrameworkSettings(
     //
     // Allocate memory to copy the settings
     //
-    buffer = (BYTE *) MxMemory::MxAllocatePoolWithTag(NonPagedPool,
-                                                      poxSettingsSize,
-                                                      GetDriverGlobals()->Tag);
+    buffer = (BYTE *) MxMemory::MxAllocatePool2(POOL_FLAG_NON_PAGED,
+                                                poxSettingsSize,
+                                                GetDriverGlobals()->Tag);
     if (NULL == buffer) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(
@@ -6762,14 +6790,18 @@ FxPkgPnp::AssignPowerFrameworkSettings(
     //
     // Commit these settings
     //
-    status = m_PowerPolicyMachine.m_Owner->
-                m_IdleSettings.m_TimeoutMgmt.CommitPowerFrameworkSettings(
-                                                            GetDriverGlobals(),
-                                                            poxSettings
-                                                            );
+    timeoutMgmt = &m_PowerPolicyMachine.m_Owner->m_IdleSettings.m_TimeoutMgmt;
+    status = timeoutMgmt->CommitPowerFrameworkSettings(GetDriverGlobals(),
+                                                       poxSettings);
     if (FALSE == NT_SUCCESS(status)) {
         goto exit;
     }
+
+    timeoutMgmt->SetDirectedPowerTransitionSupport(
+                    PowerFrameworkSettings->DirectedPoFxEnabled != WdfFalse);
+
+    timeoutMgmt->SetPoFxDeviceFlags(
+                    PowerFrameworkSettings->PoFxDeviceFlags);
 
     status = STATUS_SUCCESS;
 

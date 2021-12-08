@@ -179,8 +179,8 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemAsleepWakeArmedN
 
 const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceToD0OtherStates[] =
 {
-    { PwrPolPowerUpFailed, WdfDevStatePwrPolDevicePowerRequestFailed DEBUGGED_EVENT },
-    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolDeviceD0PowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpFailed, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed DEBUGGED_EVENT },
+    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed TRAP_ON_EVENT },
     { PwrPolNull,        WdfDevStatePwrPolNull },
 };
 
@@ -428,15 +428,15 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSleepingWakeWakeArrive
 
 const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeTriggeredS0OtherStates[] =
 {
-    { PwrPolPowerUpFailed, WdfDevStatePwrPolDevicePowerRequestFailed DEBUGGED_EVENT },
-    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolDeviceD0PowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpFailed, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed TRAP_ON_EVENT },
     { PwrPolNull,           WdfDevStatePwrPolNull },
 };
 
 const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeTriggeredS0NPOtherStates[] =
 {
-    { PwrPolPowerUpFailed, WdfDevStatePwrPolDevicePowerRequestFailed DEBUGGED_EVENT },
-    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolDeviceD0PowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpFailed, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed TRAP_ON_EVENT },
     { PwrPolNull, WdfDevStatePwrPolNull },
 };
 
@@ -485,8 +485,8 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeEn
 
 const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeEnabledWakeCanceledOtherStates[] =
 {
-    { PwrPolPowerUpFailed, WdfDevStatePwrPolDevicePowerRequestFailed DEBUGGED_EVENT },
-    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolDeviceD0PowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpFailed, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed DEBUGGED_EVENT },
+    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed TRAP_ON_EVENT },
     { PwrPolNull,           WdfDevStatePwrPolNull },
 };
 
@@ -498,8 +498,8 @@ const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeEn
 
 const POWER_POLICY_EVENT_TARGET_STATE FxPkgPnp::m_PowerPolSystemWakeDeviceWakeEnabledWakeCanceledNPOtherStates[] =
 {
-    { PwrPolPowerUpFailed, WdfDevStatePwrPolDevicePowerRequestFailed DEBUGGED_EVENT },
-    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolDeviceD0PowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpFailed, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed TRAP_ON_EVENT },
+    { PwrPolPowerUpNotSeen, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed TRAP_ON_EVENT },
     { PwrPolNull,          WdfDevStatePwrPolNull },
 };
 
@@ -924,8 +924,12 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
       { TRUE,
         PwrPolWakeFailed |        // Wake failed while in Sx
         PwrPolIoPresent |         // IO arrived when the machine was going to Sx
-        PwrPolPowerTimeoutExpired // we don't cancel the power timer when we goto
-                                  // sleep from an idleable state
+        PwrPolPowerTimeoutExpired | // we don't cancel the power timer when we goto
+                                    // sleep from an idleable state
+        PwrPolDevicePowerNotRequired // Upon receiving Sx, we simulated a device-power-
+                                     // not-required, so the device-power-requirement
+                                     // state machine sent us this event in response.
+                                     // We can drop it because we already powered down.
         },
     },
 
@@ -2428,6 +2432,22 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
     { FxPkgPnp::PowerPolSleepingWakeCancelWakeNP,
       { PwrPolWakeFailed, WdfDevStatePwrPolSleepingNoWakeCompletePowerDown DEBUGGED_EVENT },
       FxPkgPnp::m_PowerPolSleepingWakeCancelWakeNPOtherStates,
+      { FALSE,
+        0 },
+    },
+
+    // WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed
+    { FxPkgPnp::PowerPolSystemWakeDeviceD0PowerRequestFailed,
+      { PwrPolNull, WdfDevStatePwrPolNull},
+      NULL,
+      { FALSE,
+        0 },
+    },
+
+    // WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed
+    { FxPkgPnp::PowerPolSystemWakeDevicePowerRequestFailed,
+      { PwrPolNull, WdfDevStatePwrPolNull},
+      NULL,
       { FALSE,
         0 },
     },
@@ -4836,7 +4856,7 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeEnabledWakeCanceled(
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
-        return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+        return WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed;
     }
 
     return WdfDevStatePwrPolNull;
@@ -4878,7 +4898,7 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeTriggeredS0(
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
-        return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+        return WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed;
     }
 
     return WdfDevStatePwrPolNull;
@@ -5163,7 +5183,7 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeEnabledWakeCanceledNP(
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
-        return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+        return WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed;
     }
 
     return WdfDevStatePwrPolNull;
@@ -5203,7 +5223,7 @@ FxPkgPnp::PowerPolSystemWakeDeviceWakeTriggeredS0NP(
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
-        return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+        return WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed;
     }
 
     return WdfDevStatePwrPolNull;
@@ -5633,7 +5653,7 @@ FxPkgPnp::PowerPolSystemWakeDeviceToD0(
 
     if (!NT_SUCCESS(status)) {
         COVERAGE_TRAP();
-        return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+        return WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed;
     }
 
     return WdfDevStatePwrPolNull;
@@ -8768,6 +8788,90 @@ Return Value:
                 m_PoxInterface.DeviceIsPoweredOn();
 
     return WdfDevStatePwrPolNull;
+}
+
+WDF_DEVICE_POWER_POLICY_STATE
+FxPkgPnp::PowerPolSystemWakeDeviceD0PowerRequestFailed(
+    __inout FxPkgPnp* This
+    )
+/*++
+
+Routine Description:
+    Simulate device-power-required on failure when handling S0
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    WdfDevStatePwrPolDeviceD0PowerRequestFailed
+
+  --*/
+{
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDeviceD0PowerRequestFailed);
+
+    //
+    // Simulate a device-power-required notification from the power framework.
+    // An S0-IRP is essentially equivalent to a device-power-required
+    // notification.
+    //
+    This->m_PowerPolicyMachine.m_Owner->
+        m_PoxInterface.SimulateDevicePowerRequired();
+
+    //
+    // The reflector maintains state around pending PoFx callbacks/events
+    // and then notifies the host/fx asynchronously. It will reflect the
+    // corresponding calls from the Fx/Host to PoFx IFF there is a
+    // pending callback.So we must simulate a device power required event in both
+    // the Fx state machine and reflector.
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+    This->m_PowerPolicyMachine.m_Owner->
+        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
+#endif
+
+    return WdfDevStatePwrPolDeviceD0PowerRequestFailed;
+}
+
+WDF_DEVICE_POWER_POLICY_STATE
+FxPkgPnp::PowerPolSystemWakeDevicePowerRequestFailed(
+    __inout FxPkgPnp* This
+    )
+/*++
+
+Routine Description:
+    Simulate device-power-requireed on failure when handling S0
+
+Arguments:
+    This - instance of the state machine
+
+Return Value:
+    WdfDevStatePwrPolDevicePowerRequestFailed
+
+  --*/
+{
+    ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolSystemWakeDevicePowerRequestFailed);
+
+    //
+    // Simulate a device-power-required notification from the power framework.
+    // An S0-IRP is essentially equivalent to a device-power-required
+    // notification.
+    //
+    This->m_PowerPolicyMachine.m_Owner->
+        m_PoxInterface.SimulateDevicePowerRequired();
+
+    //
+    // The reflector maintains state around pending PoFx callbacks/events
+    // and then notifies the host/fx asynchronously. It will reflect the
+    // corresponding calls from the Fx/Host to PoFx IFF there is a
+    // pending callback.So we must simulate a device power required event in both
+    // the Fx state machine and reflector.
+    //
+#if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+    This->m_PowerPolicyMachine.m_Owner->
+        m_PoxInterface.SimulateDevicePowerRequiredInReflector();
+#endif
+
+    return WdfDevStatePwrPolDevicePowerRequestFailed;
 }
 
 WDF_DEVICE_POWER_POLICY_STATE

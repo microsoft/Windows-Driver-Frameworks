@@ -37,7 +37,7 @@ extern "C" {
 
 struct FxRegisterResourceInfo : FxStump {
     //
-    // start physical address of resource range assigned by pnp 
+    // start physical address of resource range assigned by pnp
     //
     PHYSICAL_ADDRESS m_StartPa;
 
@@ -57,12 +57,12 @@ struct FxRegisterResourceInfo : FxStump {
     PVOID m_StartUsermodeVa;
 
     //
-    // Length of resource range assigned by pnp 
+    // Length of resource range assigned by pnp
     //
     SIZE_T m_Length;
 
     //
-    // Length of mapped resource range 
+    // Length of mapped resource range
     //
     SIZE_T m_MappedLength;
 
@@ -71,7 +71,7 @@ struct FxRegisterResourceInfo : FxStump {
     _CreateAndInit(
         _In_ PFX_DRIVER_GLOBALS DriverGlobals,
         _In_ ULONG Count,
-        _Out_ FxRegisterResourceInfo** RegisterTable 
+        _Out_ FxRegisterResourceInfo** RegisterTable
         )
     {
         NTSTATUS status;
@@ -80,12 +80,12 @@ struct FxRegisterResourceInfo : FxStump {
         ASSERT(RegisterTable != NULL);
         *RegisterTable = NULL;
 
-        table = new (DriverGlobals) FxRegisterResourceInfo[Count];  
+        table = new (DriverGlobals) FxRegisterResourceInfo[Count];
         if (table == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
             DoTraceLevelMessage(
                 DriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
-                "Failed to allocate Resource table %!STATUS!", status);                
+                "Failed to allocate Resource table %!STATUS!", status);
             return status;
         }
 
@@ -94,7 +94,7 @@ struct FxRegisterResourceInfo : FxStump {
 
         return status;
     }
-        
+
     FxRegisterResourceInfo(
         VOID
         ):
@@ -155,9 +155,9 @@ struct FxPortResourceInfo : FxStump {
     // end physical address
     //
     PHYSICAL_ADDRESS m_EndPa;
-    
+
     //
-    // Length of resource 
+    // Length of resource
     //
     SIZE_T m_Length;
 
@@ -166,7 +166,7 @@ struct FxPortResourceInfo : FxStump {
     _CreateAndInit(
         _In_ PFX_DRIVER_GLOBALS DriverGlobals,
         _In_ ULONG Count,
-        _Out_ FxPortResourceInfo** PortTable 
+        _Out_ FxPortResourceInfo** PortTable
         )
     {
         NTSTATUS status;
@@ -175,12 +175,12 @@ struct FxPortResourceInfo : FxStump {
         ASSERT(PortTable != NULL);
         *PortTable = NULL;
 
-        table = new (DriverGlobals) FxPortResourceInfo[Count];  
+        table = new (DriverGlobals) FxPortResourceInfo[Count];
         if (table == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
             DoTraceLevelMessage(
                 DriverGlobals, TRACE_LEVEL_ERROR, TRACINGPNP,
-                "Failed to allocate Resource table %!STATUS!", status);                
+                "Failed to allocate Resource table %!STATUS!", status);
             return status;
         }
 
@@ -354,7 +354,7 @@ protected:
     //
     FxRegisterResourceInfo* m_RegisterResourceTable;
     ULONG m_RegisterResourceTableSizeCe;
-    
+
     //
     // Table of port resources
     //
@@ -370,9 +370,9 @@ protected:
     // Lock to serialize access to port/register resource table
     //
     MxLock m_ResourceTableLock;
-    
+
 #endif // FX_CORE_USER_MODE
-    
+
 protected:
     FxCmResList(
         __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -409,7 +409,7 @@ public:
         FxCmResList *resList = NULL;
 
         UNREFERENCED_PARAMETER(Device);
-        
+
         //
         // Initialize
         //
@@ -435,7 +435,7 @@ public:
 
         *ResourceList = resList;
         ntStatus = STATUS_SUCCESS;
-        
+
     exit:
         if (!NT_SUCCESS(ntStatus)) {
             if (NULL != resList) {
@@ -463,7 +463,7 @@ public:
     _Must_inspect_result_
     PCM_RESOURCE_LIST
     CreateWdmList(
-        __in __drv_strictTypeMatch(__drv_typeExpr) POOL_TYPE PoolType = PagedPool
+        __in __drv_strictTypeMatch(__drv_typeExpr) POOL_FLAGS PoolFlags = POOL_FLAG_PAGED
         );
 
     ULONG
@@ -485,7 +485,7 @@ public:
     void
 #pragma prefast(suppress:__WARNING_UNEXPECTED_IRQL_CHANGE, "UM has no IRQL")
     LockResourceTable(
-        ) 
+        )
     {
         KIRQL oldIrql;
 
@@ -493,15 +493,15 @@ public:
 
         UNREFERENCED_PARAMETER(oldIrql);
     }
-    
+
     __inline
     void
 #pragma prefast(suppress:__WARNING_UNEXPECTED_IRQL_CHANGE, "UM has no IRQL")
     UnlockResourceTable(
-        ) 
+        )
     {
         m_ResourceTableLock.Release(PASSIVE_LEVEL);
-    }    
+    }
 
     NTSTATUS
     BuildRegisterResourceTable(
@@ -568,7 +568,7 @@ public:
     MapIoSpaceWorker(
         __in PHYSICAL_ADDRESS PhysicalAddress,
         __in SIZE_T NumberOfBytes,
-        __in MEMORY_CACHING_TYPE  CacheType, 
+        __in MEMORY_CACHING_TYPE  CacheType,
         __deref_out VOID** PseudoBaseAddress
         );
 
@@ -677,7 +677,7 @@ public:
 
         *ResourceReqList = resReqList;
         ntStatus = STATUS_SUCCESS;
-        
+
         exit:
             if (!NT_SUCCESS(ntStatus)) {
                 if (NULL != resReqList) {

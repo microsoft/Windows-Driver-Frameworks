@@ -270,10 +270,12 @@ MxTimer::Stop(
     VOID
     )
 {
-    BOOLEAN bRetVal;
+    BOOLEAN bRetVal = TRUE;
 
     if (m_Timer.m_IsExtTimer) {
-        bRetVal = ExCancelTimer(m_Timer.m_KernelExTimer, NULL);
+        if (m_Timer.m_KernelExTimer) {
+            bRetVal = ExCancelTimer(m_Timer.m_KernelExTimer, NULL);
+        }
 
     } else {
         bRetVal = KeCancelTimer(&(m_Timer.KernelTimer));

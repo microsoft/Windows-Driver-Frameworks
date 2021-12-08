@@ -40,6 +40,7 @@ FxDriver::FxDriver(
     m_CallbackMutexLock(FxDriverGlobals)
 {
     RtlInitUnicodeString(&m_RegistryPath, NULL);
+    m_ServiceName = NULL;
 
 
 
@@ -97,6 +98,7 @@ FxDriver::~FxDriver()
     //
     if (m_RegistryPath.Buffer) {
         FxPoolFree(m_RegistryPath.Buffer);
+        m_ServiceName = NULL;
     }
 
     if (m_DisposeList != NULL) {
@@ -414,8 +416,8 @@ FxDriver::Initialize(
 
         m_RegistryPath.Length = ArgRegistryPath->Length;
         m_RegistryPath.MaximumLength = length;
-        m_RegistryPath.Buffer = (PWSTR) FxPoolAllocate(
-            GetDriverGlobals(), PagedPool, length);
+        m_RegistryPath.Buffer = (PWSTR) FxPoolAllocate2(
+            GetDriverGlobals(), POOL_FLAG_PAGED, length);
 
         if (m_RegistryPath.Buffer != NULL) {
             RtlCopyMemory(m_RegistryPath.Buffer,
@@ -427,6 +429,17 @@ FxDriver::Initialize(
             // a null terminated string.  make sure it is.
             //
             m_RegistryPath.Buffer[length/sizeof(WCHAR)- 1] = UNICODE_NULL;
+
+            //
+            // m_ServiceName points to the last element of m_RegistryPath
+            //
+            m_ServiceName = wcsrchr(m_RegistryPath.Buffer, L'\\');
+            if (m_ServiceName != NULL) {
+                m_ServiceName++;
+            }
+            else {
+                m_ServiceName = m_RegistryPath.Buffer;
+            }
         }
         else {
             //

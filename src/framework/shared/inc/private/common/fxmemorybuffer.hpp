@@ -61,7 +61,7 @@ public:
         )
     {
         //
-        // PoolType must be non paged pool but it can be NonPagedPool 
+        // PoolType must be non paged pool but it can be NonPagedPool
         // or NonPagedPoolNx or their variants
         //
         ASSERT(!FxIsPagedPoolType(PoolType));
@@ -69,6 +69,10 @@ public:
         //
         // Specialize operator new so that we can use the caller's tag when
         // making the object allocation vs using the default driver-wide tag.
+        //
+
+        //
+        // Used by WdfMemoryCreate. Keep POOL_TYPE for compat
         //
         return FxObjectHandleAlloc(FxDriverGlobals,
                                    PoolType,

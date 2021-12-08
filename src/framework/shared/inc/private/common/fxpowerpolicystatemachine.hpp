@@ -385,6 +385,11 @@ private:
     BOOLEAN m_DirectedTransitionsSupported;
 
     //
+    // Zero or more Flags that can be OR-ed together. For more details refer to
+    // PO_FX_DEVICE_V3.Flags
+    //
+    // - PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL
+    //
     // When DFx is enabled on a device, normally all child devices need enable
     // DFx as well. However, if the child devices don't do any power management
     // e.g. software devices, they shouldn't be required to implement DFx too.
@@ -395,9 +400,27 @@ private:
     //
     // In summary: if a WDF driver enables DFx, is not a bus driver, and knows
     // that it might have some virtual child devices through side-band approach,
-    // then it can set the flag below.
+    // then it can set PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL.
     //
-    BOOLEAN m_DirectedTransitionsChildrenOptional;
+    // - PO_FX_DEVICE_FLAG_DISABLE_FAST_RESUME
+    //
+    // Consider device A has PowerRelations on device B and thus depends on B to
+    // be in working D0 state first before A can enter D0 state. The device B
+    // must opt-out of fast resume to allow the dependence works reliably during
+    // system resume.
+    //
+    ULONGLONG m_PoFxDeviceFlags;
+
+    //
+    // With system managed idle timeout, normally WDF idle timer state machine
+    // uses 0 as its effective idle timeout, and passes the real idle timeout
+    // to PoFxSetDeviceIdleTimeout. This is the default.
+    //
+    // For some scenario, however, it is best to move the real idle timeout back
+    // to WDF idle timer state machine, and uses 0 for PoFxSetDeviceIdleTimeout
+    // instead. Set m_UseWdfTimerForPofx to TRUE for such scenarios.
+    //
+    BOOLEAN m_UseWdfTimerForPofx;
 
 private:
     IdleTimeoutStatusUpdateResult
@@ -415,8 +438,9 @@ public:
         VOID
         ) : m_IdleTimeoutStatus(0),
             m_PoxSettings(NULL),
+            m_UseWdfTimerForPofx(FALSE),
             m_DirectedTransitionsSupported(FALSE),
-            m_DirectedTransitionsChildrenOptional(FALSE)
+            m_PoFxDeviceFlags(0)
     {
     }
 
@@ -528,7 +552,12 @@ public:
         BOOLEAN IsOptional
         )
     {
-        m_DirectedTransitionsChildrenOptional = IsOptional;
+        if (IsOptional) {
+            m_PoFxDeviceFlags |= PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL;
+        }
+        else {
+            m_PoFxDeviceFlags &= ~PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL;
+        }
         return;
     }
 
@@ -537,8 +566,51 @@ public:
         VOID
         )
     {
-        return m_DirectedTransitionsChildrenOptional;
+        return (m_PoFxDeviceFlags & PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL)
+                    == PO_FX_DEVICE_FLAG_DFX_CHILDREN_OPTIONAL;
     }
+
+    VOID
+    SetPoFxDeviceFlags(
+        ULONGLONG Flags
+        )
+    {
+        m_PoFxDeviceFlags = Flags;
+    }
+
+    ULONGLONG
+    GetPoFxDeviceFlags(
+        VOID
+        )
+    {
+        return m_PoFxDeviceFlags;
+    }
+
+    VOID
+    SetUseWdfTimerForPofx(
+        BOOLEAN Value
+        )
+    {
+        m_UseWdfTimerForPofx = Value;
+    }
+
+    BOOLEAN
+    GetUseWdfTimerForPofx(
+        VOID
+        )
+    {
+        return m_UseWdfTimerForPofx;
+    }
+
+    BOOLEAN
+    UsingSystemManagedIdleTimeoutAndPofxTimer(
+        VOID
+        )
+    {
+        return UsingSystemManagedIdleTimeout() &&
+               (! GetUseWdfTimerForPofx());
+    }
+
 };
 
 struct IdlePolicySettings : PolicySettings {

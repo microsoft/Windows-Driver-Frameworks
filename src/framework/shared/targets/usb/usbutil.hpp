@@ -76,8 +76,8 @@ FxFormatUsbRequest(
     __in FxRequestBase* Request,
     __in PURB Urb,
     __in FX_URB_TYPE FxUrbType,
-    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)     
-    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt) 
+    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)
+    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt)
          USBD_HANDLE UsbdHandle
     );
 
@@ -88,8 +88,8 @@ FxFormatUrbRequest(
     __in FxRequestBase* Request,
     __in FxRequestBuffer* Buffer,
     __in FX_URB_TYPE FxUrbType,
-    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)     
-    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt) 
+    __drv_when(FxUrbType == FxUrbTypeUsbdAllocated, __in)
+    __drv_when(FxUrbType != FxUrbTypeUsbdAllocated, __in_opt)
          USBD_HANDLE UsbdHandle
     );
 
@@ -98,14 +98,6 @@ FxUsbParseConfigurationDescriptor(
     __in PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
     __in UCHAR InterfaceNumber = -1,
     __in UCHAR AlternateSetting = 1
-    );
-
-PURB
-FxUsbCreateConfigRequest(
-    __in PFX_DRIVER_GLOBALS FxDriverGlobals,
-    __in PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
-    __in PUSBD_INTERFACE_LIST_ENTRY InterfaceList,
-    __in ULONG DefaultMaxPacketSize
     );
 
 NTSTATUS
@@ -148,7 +140,7 @@ FxUsbUmFormatRequest(
     __in IWudfFile* HostFile,
     __in BOOLEAN Reuse = FALSE
     );
-    
+
 VOID
 FxUsbUmInitDescriptorUrb(
     __inout PUMURB UmUrb,

@@ -12,7 +12,7 @@ FxFreeAllocatedMdlsDebugInfo(
     )
 {
     UNREFERENCED_PARAMETER(DebugExtension);
-    
+
     //DO_NOTHING()
 }
 
@@ -31,27 +31,8 @@ FX_DRIVER_GLOBALS::RegisterClientVersion(
     )
 {
     UNREFERENCED_PARAMETER(ServiceKeyName);
-    
+
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
-}
-
-_Must_inspect_result_
-BOOLEAN
-FX_DRIVER_GLOBALS::IsVersionGreaterThanOrEqualTo(        
-    __in ULONG  Major,
-    __in ULONG  Minor
-    )
-{
-    if ((WdfBindInfo->Version.Major > Major) ||
-                (WdfBindInfo->Version.Major == Major &&
-                  WdfBindInfo->Version.Minor >= Minor)) {
-        return TRUE;
-    }
-    else {
-        return FALSE;
-    }
-}
-
 }
 
 _Must_inspect_result_
@@ -65,3 +46,5 @@ FX_DRIVER_GLOBALS::IsDebuggerAttached(
     //
     return (IsDebuggerPresent() != FALSE);
 }
+
+} // extern "C"

@@ -123,9 +123,9 @@ enum FxWmiInstanceAction;
 enum FxDriverObjectUmFlags : USHORT;
 
 PVOID
-FxObjectHandleAlloc(
+FxObjectHandleAlloc2(
     __in        PFX_DRIVER_GLOBALS FxDriverGlobals,
-    __in        POOL_TYPE PoolType,
+    __in        POOL_FLAGS PoolFlags,
     __in        size_t Size,
     __in        ULONG Tag,
     __in_opt    PWDF_OBJECT_ATTRIBUTES Attributes,

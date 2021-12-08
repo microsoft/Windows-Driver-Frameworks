@@ -37,7 +37,7 @@ extern WDFVERSION WdfVersion;
 #include "verifier.tmh"
 #endif
 
-#ifdef  ALLOC_PRAGMA 
+#ifdef  ALLOC_PRAGMA
 #pragma alloc_text(FX_ENHANCED_VERIFIER_SECTION_NAME,  \
     AddEventHooksWdfDeviceCreate,                      \
     AddEventHooksWdfIoQueueCreate,                     \
@@ -61,8 +61,8 @@ AddEventHooksWdfDeviceCreate(
 Routine Description:
 
     This routine is called by main hook for WdfDeviceCreate.
-    The routine swaps the event callbacks provided by client. 
-    
+    The routine swaps the event callbacks provided by client.
+
 Arguments:
 
 Return value:
@@ -86,13 +86,13 @@ Return value:
     FxPointerNotNull(pFxDriverGlobals, Device);
 
     //
-    // Check if there are any callbacks set by the client driver. If not, we 
+    // Check if there are any callbacks set by the client driver. If not, we
     // don't need any callback hooking.
     //
-    if (deviceInit->PnpPower.PnpPowerEventCallbacks.Size != 
+    if (deviceInit->PnpPower.PnpPowerEventCallbacks.Size !=
         sizeof(WDF_PNPPOWER_EVENT_CALLBACKS)) {
         //
-        // no hooking required. 
+        // no hooking required.
         //
         status = STATUS_SUCCESS;
         HookProcessInfo->DonotCallKmdfLib = FALSE;
@@ -117,7 +117,7 @@ Return value:
         HookProcessInfo->DonotCallKmdfLib = FALSE;
         return status;
     }
-    
+
     //
     // store original driver callbacks to local variable
     //
@@ -128,16 +128,16 @@ Return value:
 
     //
     // Set callback hooks
-    // 
-    // Normally override the hooks on local copy of stucture (not the original 
-    // structure itself) and then pass the local struture to DDI call and 
+    //
+    // Normally override the hooks on local copy of stucture (not the original
+    // structure itself) and then pass the local struture to DDI call and
     // copy back the original poniter when returning back to caller. In this case
     // device_init is null'ed out by fx when returning to caller so we can
     // directly override the original
     //
     pnpPowerEvts = &deviceInit->PnpPower.PnpPowerEventCallbacks;
 
-    SET_HOOK_IF_CALLBACK_PRESENT(pnpPowerEvts, pnpPowerEvts, EvtDeviceD0Entry); 
+    SET_HOOK_IF_CALLBACK_PRESENT(pnpPowerEvts, pnpPowerEvts, EvtDeviceD0Entry);
     SET_HOOK_IF_CALLBACK_PRESENT(pnpPowerEvts, pnpPowerEvts, EvtDeviceD0EntryPostInterruptsEnabled);
     SET_HOOK_IF_CALLBACK_PRESENT(pnpPowerEvts, pnpPowerEvts, EvtDeviceD0Exit);
     SET_HOOK_IF_CALLBACK_PRESENT(pnpPowerEvts, pnpPowerEvts, EvtDeviceD0ExitPreInterruptsDisabled);
@@ -156,45 +156,45 @@ Return value:
     SET_HOOK_IF_CALLBACK_PRESENT(pnpPowerEvts, pnpPowerEvts, EvtDeviceRelationsQuery);
 
     //
-    // Call the DDI on behalf of driver. 
+    // Call the DDI on behalf of driver.
     //
     status = ((PFN_WDFDEVICECREATE)WdfVersion.Functions.pfnWdfDeviceCreate)(
-                DriverGlobals, 
-                DeviceInit, 
-                DeviceAttributes, 
+                DriverGlobals,
+                DeviceInit,
+                DeviceAttributes,
                 Device
                 );
     //
-    // Tell main hook routine not to call the DDI in kmdf lib since we 
+    // Tell main hook routine not to call the DDI in kmdf lib since we
     // already called it
     //
     HookProcessInfo->DonotCallKmdfLib = TRUE;
     HookProcessInfo->DdiCallStatus = status;
-    
+
     //
     // if DDI Succeeds, add context
-    // 
+    //
     if (NT_SUCCESS(status)) {
         PVF_WDFDEVICECREATE_CONTEXT context = NULL;
-        
-        // 
-        // add the already allocated context to the object. 
+
         //
-        status = VfAddContextToHandle(contextHeader, 
-                                      &attributes, 
-                                      *Device, 
+        // add the already allocated context to the object.
+        //
+        status = VfAddContextToHandle(contextHeader,
+                                      &attributes,
+                                      *Device,
                                       (PVOID *)&context);
 
         if (NT_SUCCESS(status)) {
             //
-            // store the DriverGlobals pointer used to associate the driver 
+            // store the DriverGlobals pointer used to associate the driver
             // with its client driver callback later in the callback hooks
             //
             context->CommonHeader.DriverGlobals = DriverGlobals;
 
             //
             // store original client driver callbacks in context
-            // 
+            //
             RtlCopyMemory(
                 &context->PnpPowerEventCallbacksOriginal,
                 &pnpPowerEvtsOriginal,
@@ -203,14 +203,14 @@ Return value:
         }
         else {
             //
-            // For some reason adding context to handle failed. This should be 
+            // For some reason adding context to handle failed. This should be
             // rare failure, because context allocation was already successful,
             // only adding to handle failed.
-            // 
+            //
             // Hooking failed if adding context is unsuccessful. This means
-            // kmdf has callbacks hooks but verifier cannot assiociate client 
-            // driver callbacks with callback hooks. This would be a fatal error.  
-            // 
+            // kmdf has callbacks hooks but verifier cannot assiociate client
+            // driver callbacks with callback hooks. This would be a fatal error.
+            //
             ASSERTMSG("KMDF Enhanced Verifier failed to add context to object "
                 "handle\n", FALSE);
 
@@ -218,12 +218,12 @@ Return value:
                 FxPoolFree(contextHeader);
             }
         }
-    } 
+    }
     else {
         //
         // KMDF DDI call failed. In case of failure, DeviceInit is not NULL'ed
         // so the driver could potentially call WdfDeviceCreate again with this
-        // DeviceInit that contains callback hooks, and result in infinite 
+        // DeviceInit that contains callback hooks, and result in infinite
         // callback loop. So put original callbacks back
         //
         if ((*DeviceInit) != NULL) {
@@ -236,12 +236,12 @@ Return value:
                 sizeof(WDF_PNPPOWER_EVENT_CALLBACKS)
                 );
         }
-        
+
         if (contextHeader != NULL) {
             FxPoolFree(contextHeader);
         }
     }
-    
+
     return status;
 }
 
@@ -265,8 +265,8 @@ Return value:
 
 --*/
 {
-    NTSTATUS status; 
-    WDF_IO_QUEUE_CONFIG  configNew; 
+    NTSTATUS status;
+    WDF_IO_QUEUE_CONFIG  configNew;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     WDFQUEUE *pQueue;
     WDFQUEUE queue;
@@ -276,16 +276,16 @@ Return value:
     PAGED_CODE_LOCKED();
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
-        
+
     FxPointerNotNull(pFxDriverGlobals, Config);
 
     //
-    // Check if there are any callbacks set by the client driver. If not, we 
+    // Check if there are any callbacks set by the client driver. If not, we
     // don't need any callback hooking.
     //
     if (Config->Size != sizeof(WDF_IO_QUEUE_CONFIG)) {
         //
-        // no hooking required. 
+        // no hooking required.
         //
         status = STATUS_SUCCESS;
         HookProcessInfo->DonotCallKmdfLib = FALSE;
@@ -308,7 +308,7 @@ Return value:
         HookProcessInfo->DonotCallKmdfLib = FALSE;
         return status;
     }
-        
+
     //
     // create a local copy of config
     //
@@ -318,16 +318,16 @@ Return value:
         );
 
     //
-    // Override local copy with event callback hooks. 
+    // Override local copy with event callback hooks.
     //
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoDefault); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoRead); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoWrite); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoDeviceControl); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoInternalDeviceControl); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoStop); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoResume); 
-    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoCanceledOnQueue); 
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoDefault);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoRead);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoWrite);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoDeviceControl);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoInternalDeviceControl);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoStop);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoResume);
+    SET_HOOK_IF_CALLBACK_PRESENT(Config, &configNew, EvtIoCanceledOnQueue);
 
     //
     // Queue handle is an optional parameter
@@ -338,49 +338,49 @@ Return value:
     else {
         pQueue = Queue;
     }
-    
+
     //
     // call the DDI
     //
     status = WdfVersion.Functions.pfnWdfIoQueueCreate(
-                DriverGlobals, 
-                Device, 
-                &configNew, 
+                DriverGlobals,
+                Device,
+                &configNew,
                 QueueAttributes,
                 pQueue
                 );
 
     //
-    // Tell main hook routine not to call the DDI in kmdf lib since we 
+    // Tell main hook routine not to call the DDI in kmdf lib since we
     // already called it
     //
     HookProcessInfo->DonotCallKmdfLib = TRUE;
     HookProcessInfo->DdiCallStatus = status;
-    
+
     //
     // if DDI Succeeds, add context
-    // 
+    //
     if (NT_SUCCESS(status)) {
         PVF_WDFIOQUEUECREATE_CONTEXT  context = NULL;
 
-        // 
-        // add the already allocated context to the object. 
         //
-        status = VfAddContextToHandle(contextHeader, 
-                                      &attributes, 
-                                      *pQueue, 
+        // add the already allocated context to the object.
+        //
+        status = VfAddContextToHandle(contextHeader,
+                                      &attributes,
+                                      *pQueue,
                                       (PVOID *)&context);
 
         if (NT_SUCCESS(status)) {
             //
-            // store the DriverGlobals pointer used to associate the driver 
+            // store the DriverGlobals pointer used to associate the driver
             // with its client driver callback later in the callback hooks
             //
             context->CommonHeader.DriverGlobals = DriverGlobals;
 
             //
             // add stored original callbacks to context
-            // 
+            //
             RtlCopyMemory(
                 &context->IoQueueConfigOriginal,
                 Config,
@@ -389,14 +389,14 @@ Return value:
         }
         else {
             //
-            // For some reason adding context to handle failed. This should be 
+            // For some reason adding context to handle failed. This should be
             // rare failure, because context allocation was already successful,
             // only adding to handle failed.
-            // 
+            //
             // Hooking failed if adding context is unsuccessful. This means
-            // kmdf has callbacks hooks but verifier cannot assiociate client 
-            // driver callbacks with callback hooks. This would be a fatal error.  
-            // 
+            // kmdf has callbacks hooks but verifier cannot assiociate client
+            // driver callbacks with callback hooks. This would be a fatal error.
+            //
             ASSERTMSG("KMDF Enhanced Verifier failed to add context to object "
                 "handle\n", FALSE);
 
@@ -407,7 +407,7 @@ Return value:
     }
     else {
         //
-        // DDI call to KMDF failed. Nothing to do by verifier. Just return 
+        // DDI call to KMDF failed. Nothing to do by verifier. Just return
         // kmdf's status after freeing context header memory.
         //
         if (contextHeader != NULL) {
@@ -529,7 +529,7 @@ Return Value:
     PAGED_CODE_LOCKED();
 
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
-    
+
     status = FxValidateObjectAttributes(
         pFxDriverGlobals, Attributes, FX_VALIDATE_OPTION_ATTRIBUTES_REQUIRED);
     if (!NT_SUCCESS(status)) {
@@ -558,7 +558,7 @@ Return Value:
     }
 
     pHeader = (FxContextHeader*)
-         FxPoolAllocate(pFxDriverGlobals, NonPagedPool, size);
+         FxPoolAllocate2(pFxDriverGlobals, POOL_FLAG_NON_PAGED, size);
 
     if (pHeader != NULL) {
         *ContextHeader = pHeader;
@@ -593,7 +593,7 @@ VfAddContextToHandle(
     if (pHeader == NULL) {
         return STATUS_INVALID_PARAMETER;
     }
-    
+
     //
     // No need to call FxObjectHandleGetPtr( , , FX_TYPE_OBJECT) because
     // we assume that the object handle will point back to an FxObject.  (The
@@ -647,4 +647,4 @@ cleanup:
     return status;
 }
 
-} // extern "C" 
+} // extern "C"

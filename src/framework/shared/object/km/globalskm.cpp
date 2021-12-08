@@ -12,10 +12,10 @@ extern "C" {
 #include <wdfcxbase.h>
 #include <fxldr.h>
 
-    
+
 }
 extern "C" {
-       
+
 VOID
 FxFreeAllocatedMdlsDebugInfo(
     __in FxDriverGlobalsDebugExtension* DebugExtension
@@ -86,23 +86,6 @@ Return Value:
     ((FxCREvent*)DeferredContext)->Set();
 }
 
-_Must_inspect_result_
-BOOLEAN
-FX_DRIVER_GLOBALS::IsVersionGreaterThanOrEqualTo(        
-    __in ULONG  Major,
-    __in ULONG  Minor
-    )
-{
-    if ((WdfBindInfo->Version.Major > Major) ||
-                (WdfBindInfo->Version.Major == Major &&
-                  WdfBindInfo->Version.Minor >= Minor)) {
-        return TRUE;
-    }
-    else {
-        return FALSE;
-    }
-}
-
 #define WDF_MAJOR_VERSION_VALUE L"WdfMajorVersion"
 #define WDF_MINOR_VERSION_VALUE L"WdfMinorVersion"
 
@@ -113,24 +96,21 @@ FX_DRIVER_GLOBALS::IsCorrectVersionRegistered(
     )
 {
     FxAutoRegKey hDriver, hWdf;
-    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
+    DECLARE_CONST_UNICODE_STRING(parametersPath, L"Wdf");
     DECLARE_CONST_UNICODE_STRING(wdfMajorValue, WDF_MAJOR_VERSION_VALUE);
     DECLARE_CONST_UNICODE_STRING(wdfMinorValue, WDF_MINOR_VERSION_VALUE);
     ULONG registeredMajor = 0, registeredMinor = 0;
     NTSTATUS status;
-    
-    status = FxRegKey::_OpenKey(NULL, 
-                                ServiceKeyName, 
-                                &hDriver.m_Key, 
-                                KEY_READ
-                                );
+    UNREFERENCED_PARAMETER(ServiceKeyName);
+
+    status = OpenDriverParamsKeyForRead(this, &hDriver.m_Key);
     if (!NT_SUCCESS(status)) {
         return FALSE;
     }
 
-    status = FxRegKey::_OpenKey(hDriver.m_Key, 
-                                &parametersPath, 
-                                &hWdf.m_Key, 
+    status = FxRegKey::_OpenKey(hDriver.m_Key,
+                                &parametersPath,
+                                &hWdf.m_Key,
                                 KEY_READ
                                 );
     if (!NT_SUCCESS(status)) {
@@ -140,7 +120,7 @@ FX_DRIVER_GLOBALS::IsCorrectVersionRegistered(
     status = FxRegKey::_QueryULong(hWdf.m_Key,
                                    &wdfMajorValue,
                                    &registeredMajor);
-    
+
     if (!NT_SUCCESS(status) || registeredMajor != WdfBindInfo->Version.Major) {
         return FALSE;
     }
@@ -148,7 +128,7 @@ FX_DRIVER_GLOBALS::IsCorrectVersionRegistered(
     status = FxRegKey::_QueryULong(hWdf.m_Key,
                                    &wdfMinorValue,
                                    &registeredMinor);
-    
+
     if  (!NT_SUCCESS(status) || registeredMinor != WdfBindInfo->Version.Minor){
         return FALSE;
     }
@@ -171,17 +151,17 @@ FX_DRIVER_GLOBALS::RegisterClientVersion(
     UNICODE_STRING wdfMajorValue;
     UNICODE_STRING wdfMinorValue;
     NTSTATUS status;
-    
+
     RtlInitUnicodeString(&wdfMajorValue, WDF_MAJOR_VERSION_VALUE);
     RtlInitUnicodeString(&wdfMinorValue, WDF_MINOR_VERSION_VALUE);
 
-    status = FxRegKey::_OpenKey(NULL, 
-                                ServiceKeyName, 
-                                &hDriver.m_Key, 
+    status = FxRegKey::_OpenKey(NULL,
+                                ServiceKeyName,
+                                &hDriver.m_Key,
                                 KEY_WRITE | KEY_READ
                                 );
     if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER, 
+        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
             "Unable to open driver's service key, status %!STATUS!", status);
         return;
     }
@@ -189,24 +169,24 @@ FX_DRIVER_GLOBALS::RegisterClientVersion(
     //  Key creation, unlike user mode, must happen one level at a time, since
     //  create will also open take both steps instead of trying open first
     //
-    status = FxRegKey::_Create(hDriver.m_Key, 
-                               &parametersPart, 
-                               &hParameters.m_Key, 
+    status = FxRegKey::_Create(hDriver.m_Key,
+                               &parametersPart,
+                               &hParameters.m_Key,
                                KEY_WRITE | KEY_READ
                                );
     if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER, 
+        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
             "Unable to write Parameters key, status %!STATUS!", status);
         return;
     }
 
-    status = FxRegKey::_Create(hParameters.m_Key, 
-                               &wdfPart, 
-                               &hWdf.m_Key, 
+    status = FxRegKey::_Create(hParameters.m_Key,
+                               &wdfPart,
+                               &hWdf.m_Key,
                                KEY_WRITE | KEY_READ
                                );
     if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER, 
+        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
             "Unable to write Parameters key, status %!STATUS!", status);
         return;
     }
@@ -215,34 +195,32 @@ FX_DRIVER_GLOBALS::RegisterClientVersion(
     //  Using ZwSetValueKey here to avoid having to change the implementation
     //  in FxRegKey of SetValue to a static / thiscall pair
     //
-    status = ZwSetValueKey(hWdf.m_Key, 
-                           &wdfMajorValue, 
-                           0, 
-                           REG_DWORD, 
-                           &WdfBindInfo->Version.Major, 
+    status = ZwSetValueKey(hWdf.m_Key,
+                           &wdfMajorValue,
+                           0,
+                           REG_DWORD,
+                           &WdfBindInfo->Version.Major,
                            sizeof(WdfBindInfo->Version.Major)
                            );
 
     if  (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER, 
+        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
             "Failed to record driver major version value, status %!STATUS!", status);
     }
 
-    status = ZwSetValueKey(hWdf.m_Key, 
-                           &wdfMinorValue, 
-                           0, 
-                           REG_DWORD, 
-                           &WdfBindInfo->Version.Minor, 
+    status = ZwSetValueKey(hWdf.m_Key,
+                           &wdfMinorValue,
+                           0,
+                           REG_DWORD,
+                           &WdfBindInfo->Version.Minor,
                            sizeof(WdfBindInfo->Version.Minor)
                            );
 
     if  (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER, 
+        DoTraceLevelMessage(this, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
             "Failed to record driver version value, status %!STATUS!", status);
     }
 }
-
-} // extern "C"
 
 _Must_inspect_result_
 BOOLEAN
@@ -252,3 +230,5 @@ FX_DRIVER_GLOBALS::IsDebuggerAttached(
 {
     return (FALSE == KdRefreshDebuggerNotPresent());
 }
+
+} // extern "C"

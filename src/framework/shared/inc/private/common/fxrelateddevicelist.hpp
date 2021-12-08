@@ -73,7 +73,7 @@ public:
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         )
     {
-        return FxPoolAllocate(FxDriverGlobals, NonPagedPool, Size);
+        return FxPoolAllocate2(FxDriverGlobals, POOL_FLAG_NON_PAGED, Size);
     }
 
     VOID

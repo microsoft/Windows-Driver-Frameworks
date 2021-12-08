@@ -73,10 +73,10 @@ FxUsbDevice::SendSyncUmUrb(
     if (NULL == Options) {
         Options = &options;
     }
-    
+
     WDF_REQUEST_SEND_OPTIONS_INIT(Options, 0);
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(Options, WDF_REL_TIMEOUT_IN_SEC(Time));
-    
+
     status = request.m_TrueRequest->ValidateTarget(this);
     if (NT_SUCCESS(status)) {
         FxUsbUmFormatRequest(request.m_TrueRequest, &Urb->UmUrbHeader, m_pHostTargetFile);
@@ -99,7 +99,7 @@ FxUsbDevice::InitDevice(
 {
     HRESULT hr = S_OK;
     NTSTATUS status = STATUS_SUCCESS;
-    
+
     IWudfDevice* device = NULL;
     IWudfDeviceStack2* devstack2 = NULL;
 
@@ -116,7 +116,7 @@ FxUsbDevice::InitDevice(
 
     FxSyncRequest request(GetDriverGlobals(), NULL);
     FxSyncRequest request2(GetDriverGlobals(), &context);
-    
+
 
 
 
@@ -223,9 +223,9 @@ FxUsbDevice::InitDevice(
 
     wTotalLength = config.wTotalLength;
     m_ConfigDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)
-                             FxPoolAllocate(GetDriverGlobals(),
-                                            NonPagedPool,
-                                            wTotalLength);
+                             FxPoolAllocate2(GetDriverGlobals(),
+                                             POOL_FLAG_NON_PAGED,
+                                             wTotalLength);
     if (NULL == m_ConfigDescriptor) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(
@@ -280,14 +280,14 @@ FxUsbDevice::InitDevice(
                                                  0); // Device status
 
     buf.SetBuffer(&deviceStatus, sizeof(USHORT));
-    
+
     status = FormatControlRequest(request2.m_TrueRequest,
                                   &setupPacket,
                                   &buf);
     if (!NT_SUCCESS(status)) {
         goto Done;
     }
-    
+
     status = SendSyncRequest(&request2, 5);
     if (!NT_SUCCESS(status)) {
         goto Done;
@@ -353,9 +353,9 @@ FxUsbDevice::GetString(
     if (String != NULL) {
         length = sizeof(USB_STRING_DESCRIPTOR) + (*NumCharacters - 1) * sizeof(WCHAR);
 
-        buffer = FxPoolAllocate(GetDriverGlobals(),
-                                NonPagedPool,
-                                length);
+        buffer = FxPoolAllocate2(GetDriverGlobals(),
+                                 POOL_FLAG_NON_PAGED,
+                                 length);
 
         if (buffer == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
@@ -379,7 +379,7 @@ FxUsbDevice::GetString(
                              pDescriptor);
     urb.UmUrbDescriptorRequest.Index = StringIndex;
     urb.UmUrbDescriptorRequest.LanguageID = LangID;
-    
+
     status = SendSyncUmUrb(&urb, 2, Request, Options);
     if (NT_SUCCESS(status)) {
         USHORT numChars;
@@ -422,7 +422,7 @@ FxUsbDevice::GetString(
     }
 
 Done:
-    
+
     return status;
 }
 
@@ -455,7 +455,7 @@ Return Value:
 {
     NTSTATUS status;
     FxUsbDeviceStringContext* pContext;
-    
+
     status = Request->ValidateTarget(this);
     if (NT_SUCCESS(status)) {
         DoTraceLevelMessage(GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -487,11 +487,11 @@ Return Value:
                                           RequestBuffer->GetBufferLength());
     if (!NT_SUCCESS(status)) {
         return status;
-    } 
+    }
 
     pContext->StoreAndReferenceMemory(RequestBuffer);
     pContext->SetUrbInfo(StringIndex, LangID);
-    
+
     FxUsbUmFormatRequest(Request, &pContext->m_UmUrb.UmUrbHeader, m_pHostTargetFile);
 
     return STATUS_SUCCESS;
@@ -550,7 +550,7 @@ FxUsbDevice::FormatControlRequest(
                                   NULL);
 
     pContext->StoreAndReferenceMemory(this, RequestBuffer, SetupPacket);
-    
+
     FxUsbUmFormatRequest(Request, &pContext->m_UmUrb.UmUrbHeader, m_pHostTargetFile);
 
     return STATUS_SUCCESS;
@@ -597,9 +597,9 @@ FxUsbDevice::QueryUsbCapability(
     __drv_when(CapabilityBufferLength != 0 && ResultLength == NULL, __out_bcount(CapabilityBufferLength))
     __drv_when(CapabilityBufferLength != 0 && ResultLength != NULL, __out_bcount_part_opt(CapabilityBufferLength, *ResultLength))
     PVOID CapabilityBuffer,
-    __out_opt 
+    __out_opt
     __drv_when(ResultLength != NULL,__deref_out_range(<=,CapabilityBufferLength))
-    PULONG ResultLength    
+    PULONG ResultLength
    )
 {
     NTSTATUS status;
@@ -610,13 +610,13 @@ FxUsbDevice::QueryUsbCapability(
 
     //
     // We cannot send an actual query to the USB stack through winusb.
-    // However, we have the information to handle this query. It is not 
-    // ideal to implement this API in this manner because we are making 
-    // assumptions about the behavior of USB stack that can change in future. 
+    // However, we have the information to handle this query. It is not
+    // ideal to implement this API in this manner because we are making
+    // assumptions about the behavior of USB stack that can change in future.
     // However, it is too late in the OS cycle to implement a correct solution.
     // The ideal way is for winusb to expose this information. We should
     // revisit this API in blue+1
-    // 
+    //
     if (RtlCompareMemory(CapabilityType,
                          &GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE,
                          sizeof(GUID)) == sizeof(GUID)) {
@@ -624,8 +624,8 @@ FxUsbDevice::QueryUsbCapability(
             status = STATUS_SUCCESS;
         } else {
             status = STATUS_NOT_SUPPORTED;
-        } 
-    } 
+        }
+    }
     else if (RtlCompareMemory(CapabilityType,
                                 &GUID_USB_CAPABILITY_DEVICE_CONNECTION_SUPER_SPEED_COMPATIBLE,
                                 sizeof(GUID)) == sizeof(GUID)) {
@@ -634,7 +634,7 @@ FxUsbDevice::QueryUsbCapability(
         } else {
             status = STATUS_NOT_SUPPORTED;
         }
-    } 
+    }
     else if (RtlCompareMemory(CapabilityType,
                                 &GUID_USB_CAPABILITY_SELECTIVE_SUSPEND,
                                 sizeof(GUID)) == sizeof(GUID)) {
@@ -644,14 +644,14 @@ FxUsbDevice::QueryUsbCapability(
         // third party controller drivers to worry about. This can
         // of course change in future
         //
-        status = STATUS_SUCCESS; 
-    } 
+        status = STATUS_SUCCESS;
+    }
     else if (RtlCompareMemory(CapabilityType,
                                 &GUID_USB_CAPABILITY_FUNCTION_SUSPEND,
                                 sizeof(GUID)) == sizeof(GUID)) {
         //
         // Note that a SuperSpeed device will report a bcdUSB of 2.1
-        // when working on a 2.0 port. Therefore a bcdUSB of 3.0 also 
+        // when working on a 2.0 port. Therefore a bcdUSB of 3.0 also
         // indicates that the device is actually working on 3.0, in
         // which case we always support function suspend
         //
@@ -660,15 +660,15 @@ FxUsbDevice::QueryUsbCapability(
         } else {
             status = STATUS_NOT_SUPPORTED;
         }
-    } 
+    }
     else {
         //
         // We do not support chained MDLs or streams for a UMDF driver
-        // GUID_USB_CAPABILITY_CHAINED_MDLS 
+        // GUID_USB_CAPABILITY_CHAINED_MDLS
         // GUID_USB_CAPABILITY_STATIC_STREAMS
         //
         status = STATUS_NOT_SUPPORTED;
-    }                                 
+    }
 
     return status;
 }
@@ -682,11 +682,11 @@ FxUsbDevice::SelectConfigSingle(
 /*++
 
 Routine Description:
-    Since the device is already configured, all this routine 
+    Since the device is already configured, all this routine
     does is to make sure the alternate setting 0 is selected,
     in case the client driver selected some other alternate
     setting after the initial configuration
-    
+
 Arguments:
 
 
@@ -724,15 +724,15 @@ Return Value:
 
         return STATUS_INVALID_PARAMETER;
     }
-    
+
     status = m_Interfaces[0]->CheckAndSelectSettingByIndex(0);
-    
+
     if (!NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
             "WDFUSBDEVICE %p set AlternateSetting 0 for interface 0"
             "failed, %!STATUS!", GetHandle(), status);
-        
+
         return status;
     }
 
@@ -743,7 +743,7 @@ Return Value:
     Params->Types.SingleInterface.ConfiguredUsbInterface =
         m_Interfaces[0]->GetHandle();
 
-    Params->Types.SingleInterface.NumberConfiguredPipes = 
+    Params->Types.SingleInterface.NumberConfiguredPipes =
         m_Interfaces[0]->GetNumConfiguredPipes();
 
     return status;
@@ -758,9 +758,9 @@ FxUsbDevice::SelectConfigMulti(
 /*++
 
 Routine Description:
-    Since the device is already configured, all this routine 
+    Since the device is already configured, all this routine
     does is to make sure the alternate setting 0 is selected
-    for all interfaces, in case the client driver selected some 
+    for all interfaces, in case the client driver selected some
     other alternate setting after the initial configuration
 
 
@@ -780,12 +780,12 @@ Return Value:
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     pFxDriverGlobals = GetDriverGlobals();
-    
+
     Params->Types.MultiInterface.NumberOfConfiguredInterfaces = 0;
 
     if (Params->Type == WdfUsbTargetDeviceSelectConfigTypeMultiInterface) {
         for (i = 0; i < m_NumInterfaces; i++) {
-            
+
             if (m_Interfaces[i]->GetSettingDescriptor(0) == NULL) {
                 DoTraceLevelMessage(
                     GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -797,12 +797,12 @@ Return Value:
                 goto Done;
             }
 
-            status = m_Interfaces[i]->CheckAndSelectSettingByIndex(0);   
+            status = m_Interfaces[i]->CheckAndSelectSettingByIndex(0);
             if (!NT_SUCCESS(status)) {
                 DoTraceLevelMessage(
                     GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
                     "WDFUSBDEVICE %p set AlternateSetting 0 for bInterfaceNumber %d"
-                    "failed, %!STATUS!", 
+                    "failed, %!STATUS!",
                     GetHandle(), m_Interfaces[i]->m_InterfaceNumber, status);
                 goto Done;
             }
@@ -847,18 +847,18 @@ Return Value:
             // do the following only if the bit is not already set
             //
             if (FxBitArraySet(&bitArray[0], interfaceNumber) == FALSE) {
-                
+
                 if (pUsbInterface->GetSettingDescriptor(altSettingIndex) == NULL) {
                     status = STATUS_INVALID_PARAMETER;
                     DoTraceLevelMessage(
-                        GetDriverGlobals(), TRACE_LEVEL_ERROR, 
+                        GetDriverGlobals(), TRACE_LEVEL_ERROR,
                         TRACINGIOTARGET,
                         "WDFUSBDEVICE %p could not retrieve "
                         "AlternateSetting %d for "
-                        "bInterfaceNumber %d, returning %!STATUS!", 
+                        "bInterfaceNumber %d, returning %!STATUS!",
                         GetHandle(),
                         altSettingIndex, interfaceNumber, status);
-                    goto Done;                        
+                    goto Done;
                 }
 
                 interfacePairsNum++;
@@ -866,15 +866,15 @@ Return Value:
                 //
                 // Ensure alternate setting 0 is selected
                 //
-                status = pUsbInterface->CheckAndSelectSettingByIndex( 
-                                settingPair->SettingIndex); 
+                status = pUsbInterface->CheckAndSelectSettingByIndex(
+                                settingPair->SettingIndex);
 
                 if (!NT_SUCCESS(status)) {
                     DoTraceLevelMessage(
                         GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
                         "WDFUSBDEVICE %p set AlternateSetting %d for bInterfaceNumber %d"
-                        "failed, %!STATUS!", 
-                        GetHandle(), altSettingIndex, m_Interfaces[i]->m_InterfaceNumber, 
+                        "failed, %!STATUS!",
+                        GetHandle(), altSettingIndex, m_Interfaces[i]->m_InterfaceNumber,
                         status);
                     goto Done;
                 }
@@ -912,7 +912,7 @@ FxUsbDevice::Reset(
     )
 {
     UMURB urb;
-    NTSTATUS status;   
+    NTSTATUS status;
 
     RtlZeroMemory(&urb, sizeof(UMURB));
 

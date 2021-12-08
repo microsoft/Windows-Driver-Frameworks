@@ -120,7 +120,7 @@ FxVerifierLockInitialize(
     )
 {
     if( FxDriverGlobals->FxVerifierLock ) {
-    
+
         FxDriverGlobals->ThreadTableLock.Initialize();
 
         FxVerifierLock::AllocateThreadTable(FxDriverGlobals);
@@ -137,13 +137,13 @@ void
 FxVerifierLockDestroy(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals
     )
-{    
+{
     if( FxDriverGlobals->FxVerifierLock ) {
         FxVerifierLock::FreeThreadTable(FxDriverGlobals);
-        
+
         FxDriverGlobals->ThreadTableLock.Uninitialize();
     }
-    
+
     return;
 }
 
@@ -952,9 +952,9 @@ FxVerifierLock::AllocateThreadTable(
     // Table must be kept as a power of 2 for hash algorithm
     newEntries = VERIFIER_THREAD_HASHTABLE_SIZE;
 
-    newTable = (PLIST_ENTRY) FxPoolAllocateWithTag(
+    newTable = (PLIST_ENTRY) FxPoolAllocateWithTag2(
         FxDriverGlobals,
-        NonPagedPool,
+        POOL_FLAG_NON_PAGED,
         sizeof(LIST_ENTRY) * newEntries,
         FxDriverGlobals->Tag);
 

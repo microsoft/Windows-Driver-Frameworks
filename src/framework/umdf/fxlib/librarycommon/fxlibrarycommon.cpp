@@ -24,6 +24,7 @@ typedef enum _WDFFUNCENUM_NUMENTRIES {
     WdfFunctionTableNumEntries_V2_25 = 268,
     WdfFunctionTableNumEntries_V2_27 = 269,
     WdfFunctionTableNumEntries_V2_29 = 269,
+    WdfFunctionTableNumEntries_V2_31 = 273,
 
 
 
@@ -383,13 +384,14 @@ FxLibraryCommonRegisterClient(
         goto Done;
     }
 
-    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_29) {
+    if (Info->FuncCount <= WdfFunctionTableNumEntries_V2_31) {
 
         ASSERT(WdfFunctionTableNumEntries_V2_29 == WdfFunctionTableNumEntries_V2_27);
         ASSERT(WdfFunctionTableNumEntries_V2_21 == WdfFunctionTableNumEntries_V2_19);
 
         switch (Info->FuncCount) {
 
+        case WdfFunctionTableNumEntries_V2_31: // 273 - win10 2004 Vibranium
      // case WdfFunctionTableNumEntries_V2_29: // 269 - win10 1903 19H1
         case WdfFunctionTableNumEntries_V2_27: // 269 - win10 1809 RS5
         case WdfFunctionTableNumEntries_V2_25: // 268 - win10 1803 RS4

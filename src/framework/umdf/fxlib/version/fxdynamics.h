@@ -295,6 +295,7 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFCXDEVICEINITGETTYPEDCONTEXTWORKER                  pfnWdfCxDeviceInitGetTypedContextWorker;
     PFN_WDFCXDEVICEINITSETPOWERPOLICYEVENTCALLBACKS           pfnWdfCxDeviceInitSetPowerPolicyEventCallbacks;
     PFN_WDFDEVICESETDEVICEINTERFACESTATEEX                    pfnWdfDeviceSetDeviceInterfaceStateEx;
+    PFN_WDFDEVICEWDMASSIGNPOWERFRAMEWORKSETTINGS              pfnWdfDeviceWdmAssignPowerFrameworkSettings;
 
 } WDFFUNCTIONS, *PWDFFUNCTIONS;
 
@@ -1222,6 +1223,20 @@ WDFEXPORT(WdfDeviceGetSystemPowerAction)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device
+    );
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+WDFAPI
+NTSTATUS
+NTAPI
+WDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings)(
+    _In_
+    PWDF_DRIVER_GLOBALS DriverGlobals,
+    _In_
+    WDFDEVICE Device,
+    _In_
+    PWDF_POWER_FRAMEWORK_SETTINGS PowerFrameworkSettings
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -4752,6 +4767,7 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfCxDeviceInitGetTypedContextWorker),
         WDFEXPORT(WdfCxDeviceInitSetPowerPolicyEventCallbacks),
         WDFEXPORT(WdfDeviceSetDeviceInterfaceStateEx),
+        WDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings),
     },
     sizeof(WDFSTRUCTURES)/sizeof(size_t),
     {

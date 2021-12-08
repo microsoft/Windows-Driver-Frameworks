@@ -34,7 +34,7 @@ FxDmaTransactionBase::FxDmaTransactionBase(
     __in FxDmaEnabler *DmaEnabler
     ) :
     FxNonPagedObject(
-        FX_TYPE_DMA_TRANSACTION, 
+        FX_TYPE_DMA_TRANSACTION,
         ExtraSize == 0 ? ObjectSize : COMPUTE_OBJECT_SIZE(ObjectSize, ExtraSize),
         FxDriverGlobals)
 {
@@ -53,7 +53,7 @@ FxDmaTransactionBase::FxDmaTransactionBase(
     } else {
         m_TransferContext = WDF_PTR_ADD_OFFSET_TYPE(
                                 this,
-                                COMPUTE_RAW_OBJECT_SIZE(ObjectSize), 
+                                COMPUTE_RAW_OBJECT_SIZE(ObjectSize),
                                 PVOID
                                 );
     }
@@ -110,14 +110,14 @@ FxDmaTransactionBase::Dispose(
                                (ULONG_PTR) m_State);           // parm 3
         }
     }
-    
+
     m_State = FxDmaTransactionStateDeleted;
 
     //
     // Release resources for this Dma Transaction.
     //
     ReleaseResources(TRUE);
-    
+
     if (m_EncodedRequest != NULL) {
         ClearRequest();
     }
@@ -182,7 +182,7 @@ FxDmaTransactionBase::Initialize(
     //
 
     if (m_DmaEnabler->UsesDmaV3()) {
-        m_DmaEnabler->InitializeTransferContext(GetTransferContext(), 
+        m_DmaEnabler->InitializeTransferContext(GetTransferContext(),
                                                 m_DmaDirection);
     }
 
@@ -211,7 +211,7 @@ FxDmaTransactionBase::Initialize(
     if (NT_SUCCESS(status)) {
         status = InitializeResources();
     }
-    
+
     if (NT_SUCCESS(status)) {
         m_State = FxDmaTransactionStateInitialized;
     } else {
@@ -358,9 +358,9 @@ Return Value:
         //
         // Attempt to allocate a sufficiently large list buffer
         //
-        PVOID buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                             requiredSgListSize,
-                                             pFxDriverGlobals->Tag);
+        PVOID buffer = ExAllocatePool2(POOL_FLAG_NON_PAGED,
+                                       requiredSgListSize,
+                                       pFxDriverGlobals->Tag);
         if (buffer == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
             DoTraceLevelMessage(
@@ -413,7 +413,7 @@ FxDmaTransactionBase::Execute(
     }
 
     //
-    // If this was initialized with a request, then reference the 
+    // If this was initialized with a request, then reference the
     // request now.
     //
     if (m_EncodedRequest != NULL) {
@@ -439,7 +439,7 @@ FxDmaTransactionBase::Execute(
     if (!NT_SUCCESS(status)) {
         m_State = FxDmaTransactionStateTransferFailed;
         m_DmaAcquiredContext = NULL;
-        
+
         if (m_EncodedRequest != NULL) {
             ReleaseButRetainRequest();
         }
@@ -447,7 +447,7 @@ FxDmaTransactionBase::Execute(
 
     //
     // StartTransfer results in a call to the EvtProgramDma routine
-    // where driver could complete and delete the object.  So 
+    // where driver could complete and delete the object.  So
     // don't touch the object beyond this point.
     //
 
@@ -469,12 +469,12 @@ FxDmaTransactionBase::DmaCompleted(
     //
     // In the case of partial completion, we will start a new transfer
     // from with in this function by calling StageTransfer. After that
-    // call, we lose ownership of the object.  Since we need the handle 
-    // for tracing purposes, we will save the value in a local variable and 
+    // call, we lose ownership of the object.  Since we need the handle
+    // for tracing purposes, we will save the value in a local variable and
     // use that.
     //
     dmaTransaction = GetHandle();
-    
+
     if (pFxDriverGlobals->FxVerifierOn) {
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGDMA,
                         "Enter WDFDMATRANSACTION %p, length %d",
@@ -574,14 +574,14 @@ FxDmaTransactionBase::DmaCompleted(
     if (NT_SUCCESS(status)) {
         //
         // StageTransfer results in a call to the EvtProgramDma routine
-        // where driver could complete and delete the object.  So 
+        // where driver could complete and delete the object.  So
         // don't touch the object beyond this point.
         //
         status = STATUS_MORE_PROCESSING_REQUIRED;
     }
     else {
-        // 
-        // The error will be returned to the caller of 
+        //
+        // The error will be returned to the caller of
         // WdfDmaTransactionDmaComplete*()
         //
     }
@@ -602,7 +602,7 @@ End:
         if (pFxDriverGlobals->FxVerifierOn) {
             DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGDMA,
                                 "WDFDMATRANSACTION %p completed with status %!STATUS! - "
-                                "releasing DMA resources", 
+                                "releasing DMA resources",
                                 GetHandle(),
                                 status);
         }
@@ -654,7 +654,7 @@ FxDmaTransactionBase::ReleaseForReuse(
 
             return;  // already released.
         }
-        
+
         //
         // Must not be in transfer state.
         //
@@ -677,11 +677,11 @@ FxDmaTransactionBase::ReleaseForReuse(
     ReleaseResources(ForceRelease);
 
     //
-    // Except DMA enabler field and adapter info everything else should be 
+    // Except DMA enabler field and adapter info everything else should be
     // cleared.  Adapter info is cleared by ReleaseResources above.
     //
     Reset();
-    
+
     if (m_EncodedRequest != NULL) {
         ClearRequest();
     }
@@ -693,13 +693,13 @@ FxDmaTransactionBase::SetImmediateExecution(
     )
 {
     if (m_State != FxDmaTransactionStateCreated &&
-        m_State != FxDmaTransactionStateInitialized && 
+        m_State != FxDmaTransactionStateInitialized &&
         m_State != FxDmaTransactionStateReleased) {
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGDMA,
             "Must set immediate execution flag for WDFDMATRANSACTION "
             "%p before calling AllocateResources or Execute (current "
-            "state is %!FxDmaTransactionState!)", 
+            "state is %!FxDmaTransactionState!)",
             GetHandle(),
             m_State
             );
@@ -719,8 +719,8 @@ FxDmaTransactionBase::CancelResourceAllocation(
     VOID
     )
 {
-    if ((m_State == FxDmaTransactionStateCreated) || 
-        (m_State == FxDmaTransactionStateReleased) || 
+    if ((m_State == FxDmaTransactionStateCreated) ||
+        (m_State == FxDmaTransactionStateReleased) ||
         (m_State == FxDmaTransactionStateDeleted)) {
 
         DoTraceLevelMessage(
@@ -740,11 +740,11 @@ FxDmaTransactionBase::CancelResourceAllocation(
         // unreachable code
     }
 
-    PDMA_OPERATIONS dmaOperations = 
+    PDMA_OPERATIONS dmaOperations =
         m_AdapterInfo->AdapterObject->DmaOperations;
 
     BOOLEAN result;
-   
+
     result = dmaOperations->CancelAdapterChannel(
                             m_AdapterInfo->AdapterObject,
                             m_DmaEnabler->m_FDO,
@@ -996,12 +996,12 @@ FxDmaTransactionBase::GetTransferInfo(
         size_t length = m_TransactionLength;
 
         //
-        // Walk through the MDL chain and make a worst-case computation of 
+        // Walk through the MDL chain and make a worst-case computation of
         // the number of scatter gather entries and map registers the
         // transaction would require.
         //
-        for(PMDL mdl = m_StartMdl; 
-            mdl != NULL && length != 0; 
+        for(PMDL mdl = m_StartMdl;
+            mdl != NULL && length != 0;
             mdl = mdl->Next) {
 
             size_t byteCount = MmGetMdlByteCount(mdl);
@@ -1015,7 +1015,7 @@ FxDmaTransactionBase::GetTransferInfo(
 
                 info.V1.MapRegisterCount +=
                     (ULONG) ADDRESS_AND_SIZE_TO_SPAN_PAGES(
-                        startVa, 
+                        startVa,
                         min(byteCount, length)
                         );
 

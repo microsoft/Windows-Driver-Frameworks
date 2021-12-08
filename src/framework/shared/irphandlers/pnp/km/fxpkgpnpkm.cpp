@@ -402,7 +402,7 @@ FxPkgPnp::ReadRegistryS0Idle(
 }
 
 VOID
-FxPkgPnp::ReadRegistryPofxDirectredTransition(
+FxPkgPnp::ReadRegistryWdfSetting(
     _In_    PCUNICODE_STRING ValueName,
     _Inout_ BOOLEAN *Enabled
     )
@@ -699,6 +699,8 @@ Return Value:
 
 
 
+
+
     if ((IsPowerPolicyOwner() == FALSE) ||
         FxLibraryGlobals.SleepStudyDisabled == TRUE) {
         //
@@ -741,8 +743,10 @@ Return Value:
 
 
 
-    sleepStudy = (PSLEEP_STUDY_INTERFACE) MxMemory::MxAllocatePoolWithTag(
-                                                NonPagedPool,
+
+
+    sleepStudy = (PSLEEP_STUDY_INTERFACE) MxMemory::MxAllocatePool2(
+                                                POOL_FLAG_NON_PAGED,
                                                 sizeof(SLEEP_STUDY_INTERFACE),
                                                 SLEEPSTUDY_POOL_TAG);
     if (sleepStudy == NULL) {
@@ -871,6 +875,8 @@ Return Value:
 
     isDripsConstraint = FALSE;
     pdo = m_Device->GetPhysicalDevice();
+
+
 
 
 
@@ -1043,8 +1049,8 @@ Return Value:
                                  pdoFriendlyName.Length +
                                  sizeof(WCHAR) * WDF_DRIVER_GLOBALS_NAME_LEN;
 
-    friendlyName.Buffer = (WCHAR*) MxMemory::MxAllocatePoolWithTag(
-                NonPagedPool,
+    friendlyName.Buffer = (WCHAR*) MxMemory::MxAllocatePool2(
+                POOL_FLAG_NON_PAGED,
                 friendlyName.MaximumLength,
                 SLEEPSTUDY_POOL_TAG);
     if (friendlyName.Buffer == NULL) {
@@ -1094,6 +1100,8 @@ Return Value:
     SleepstudyHelper_AcquireComponentLock(m_SleepStudy->ComponentPowerRef, &irql);
 
     if (m_SleepStudyPowerRefIoCount != 0) {
+
+
 
 
 

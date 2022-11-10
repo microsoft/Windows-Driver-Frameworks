@@ -147,10 +147,12 @@ FxVerifierLockDestroy(
     return;
 }
 
+_Use_decl_annotations_
 VOID
+#pragma prefast(suppress:__WARNING_IRQL_NOT_SET, "No IRQL was saved into '*PreviousIrql'")
 FxVerifierLock::Lock(
-    __out PKIRQL PreviousIrql,
-    __in BOOLEAN AtDpc
+    PKIRQL PreviousIrql,
+    BOOLEAN AtDpc
     )
 {
     MxThread curThread;
@@ -298,10 +300,12 @@ FxVerifierLock::Lock(
     return;
 }
 
+_Use_decl_annotations_
 void
+#pragma prefast(suppress:__WARNING_IRQL_NOT_USED, "The IRQL in 'PreviousIrql' was never restored")
 FxVerifierLock::Unlock(
-    __in KIRQL PreviousIrql,
-    __in BOOLEAN AtDpc
+    KIRQL PreviousIrql,
+    BOOLEAN AtDpc
     )
 {
     MxThread curThread;
@@ -631,7 +635,8 @@ FxVerifierLock::InitializeLockOrder()
         p++;
     }
 
-    DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,
+
+    DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_INFORMATION, TRACINGDEVICE,
                         "Object Type 0x%x does not have a lock order "
                         "defined in fx\\inc\\FxVerifierLock.hpp",
                         ObjectType);

@@ -2414,7 +2414,7 @@ WDFEXPORT(WdfRequestGetParameters)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
     WDFREQUEST Request,
-    __out
+    _Inout_
     PWDF_REQUEST_PARAMETERS Parameters
     )
 {
@@ -2463,7 +2463,7 @@ WDFEXPORT(WdfRequestGetCompletionParams)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
     WDFREQUEST Request,
-    __out
+    _Inout_
     PWDF_REQUEST_COMPLETION_PARAMS Params
     )
 {

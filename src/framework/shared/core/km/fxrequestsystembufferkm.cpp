@@ -63,7 +63,7 @@ Return Value:
     case IRP_MJ_READ:
     case IRP_MJ_WRITE:
         pDevice = FxDevice::GetFxDevice(irp->GetDeviceObject());
-        ioType = pDevice->GetIoType(); 
+        ioType = pDevice->GetIoType();
 
         switch (ioType) {
         case WdfDeviceIoBuffered:
@@ -75,7 +75,7 @@ Return Value:
             // and returned success, so we know that we can safely call
             // MmGetSystemAddressForMdlSafe again to get a valid VA pointer.
             //
-            return Mx::MxGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority);
+            return Mx::MxGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority | MdlMappingNoExecute);
 
         case WdfDeviceIoNeither:
             return m_Buffer;

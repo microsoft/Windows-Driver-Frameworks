@@ -299,7 +299,7 @@ VFWDFEXPORT(WdfDeviceGetDeviceState)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device,
-    _Out_
+    _Inout_
     PWDF_DEVICE_STATE DeviceState
     );
 
@@ -1596,7 +1596,7 @@ VFWDFEXPORT(WdfInterruptGetInfo)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt,
-    _Out_
+    _Inout_
     PWDF_INTERRUPT_INFO Info
     );
 
@@ -2905,7 +2905,7 @@ VFWDFEXPORT(WdfRequestGetCompletionParams)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request,
-    _Out_
+    _Inout_
     PWDF_REQUEST_COMPLETION_PARAMS Params
     );
 
@@ -2958,7 +2958,7 @@ VFWDFEXPORT(WdfRequestGetParameters)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request,
-    _Out_
+    _Inout_
     PWDF_REQUEST_PARAMETERS Parameters
     );
 
@@ -3479,7 +3479,7 @@ VFWDFEXPORT(WdfUsbTargetDeviceRetrieveInformation)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBDEVICE UsbDevice,
-    _Out_
+    _Inout_
     PWDF_USB_DEVICE_INFORMATION Information
     );
 
@@ -3970,7 +3970,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetEndpointInformation)(
     UCHAR SettingIndex,
     _In_
     UCHAR EndpointIndex,
-    _Out_
+    _Inout_
     PWDF_USB_PIPE_INFORMATION EndpointInfo
     );
 
@@ -4020,7 +4020,7 @@ VFWDFEXPORT(WdfUsbInterfaceGetConfiguredPipe)(
     WDFUSBINTERFACE UsbInterface,
     _In_
     UCHAR PipeIndex,
-    _Out_opt_
+    _Inout_opt_
     PWDF_USB_PIPE_INFORMATION PipeInfo
     );
 

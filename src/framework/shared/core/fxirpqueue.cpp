@@ -802,6 +802,10 @@ Routine Description:
     MdCancelRoutine cancelRoutine;
     FxIrp    fxIrp(NULL);
 
+    if (pCsqContext != NULL) {
+        *pCsqContext = NULL;
+    }
+
     fxIrp.SetIrp(PeekNextIrpFromQueue(NULL, PeekContext));
 
     for (;;) {

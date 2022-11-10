@@ -143,7 +143,7 @@ FxIoTargetRemote::RegisterForPnpNotification(
     )
 {
     NTSTATUS status;
-    
+
     //
     // Register for PNP notifications on the handle we just opened.
     // This will notify us of pnp state changes on the handle.
@@ -166,42 +166,14 @@ FxIoTargetRemote::UnregisterForPnpNotification(
     )
 {
     if (Handle != NULL) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if (FxLibraryGlobals.IoUnregisterPlugPlayNotificationEx != NULL) {
-            FxLibraryGlobals.IoUnregisterPlugPlayNotificationEx(Handle);
-        }
-        else {
-            IoUnregisterPlugPlayNotification(Handle);
-        }
+        IoUnregisterPlugPlayNotificationEx(Handle);
     }
 }
 
 NTSTATUS
 FxIoTargetRemote::OpenTargetHandle(
     _In_ PWDF_IO_TARGET_OPEN_PARAMS OpenParams,
-    _Inout_ FxIoTargetRemoveOpenParams* pParams
+    _Inout_ FxIoTargetRemoteOpenParams* pParams
     )
 {
     OBJECT_ATTRIBUTES oa;
@@ -213,7 +185,7 @@ FxIoTargetRemote::OpenTargetHandle(
                                OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
-    
+
     status = ZwCreateFile(&m_TargetHandle,
                           pParams->DesiredAccess,
                           &oa,
@@ -225,15 +197,15 @@ FxIoTargetRemote::OpenTargetHandle(
                           pParams->CreateOptions,
                           pParams->EaBuffer,
                           pParams->EaBufferLength);
-    
+
     OpenParams->FileInformation = (ULONG)ioStatus.Information;
-    
+
     if (NT_SUCCESS(status)) {
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGIOTARGET,
             "ZwCreateFile for WDFIOTARGET %p returned status %!STATUS!, info 0x%x",
             GetObjectHandle(), status, (ULONG) ioStatus.Information);
-    
+
         //
         // The open operation was successful. Dereference the file handle and
         // obtain a pointer to the device object for the handle.
@@ -245,16 +217,16 @@ FxIoTargetRemote::OpenTargetHandle(
             KernelMode,
             (PVOID*) &m_TargetFileObject,
             NULL);
-    
+
         if (NT_SUCCESS(status)) {
             m_TargetDevice = IoGetRelatedDeviceObject(m_TargetFileObject);
-    
+
             if (m_TargetDevice == NULL) {
                 DoTraceLevelMessage(
                     GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
                     "WDFIOTARGET %p, could not convert filobj %p to devobj",
                     GetObjectHandle(), m_TargetFileObject);
-    
+
                 status = STATUS_NO_SUCH_DEVICE;
             }
         }
@@ -285,42 +257,42 @@ FxIoTargetRemote::GetTargetDeviceRelations(
     FxAutoIrp irp(NULL);
     PIRP pIrp;
     NTSTATUS status;
-    
+
     pTopOfStack = IoGetAttachedDeviceReference(m_TargetDevice);
-    
+
     pIrp = IoAllocateIrp(pTopOfStack->StackSize, FALSE);
-    
+
     if (pIrp != NULL) {
         PIO_STACK_LOCATION stack;
-    
+
         irp.SetIrp(pIrp);
-    
+
         stack = irp.GetNextIrpStackLocation();
         stack->MajorFunction = IRP_MJ_PNP;
         stack->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
         stack->Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
-    
+
         //
         // Initialize the status to error in case the bus driver decides not
         // to set it correctly.
         //
         irp.SetStatus(STATUS_NOT_SUPPORTED);
-    
+
         status = irp.SendIrpSynchronously(pTopOfStack);
-    
+
         if (NT_SUCCESS(status)) {
             PDEVICE_RELATIONS pRelations;
-    
+
             pRelations = (PDEVICE_RELATIONS) irp.GetInformation();
-    
+
             ASSERT(pRelations != NULL);
-    
+
             //
             // m_TargetPdo was referenced by the bus driver, it will be
             // dereferenced when the target is closed.
             //
             m_TargetPdo = pRelations->Objects[0];
-    
+
             //
             // We, as the caller, are responsible for freeing the relations
             // that the bus driver allocated.
@@ -341,10 +313,10 @@ FxIoTargetRemote::GetTargetDeviceRelations(
         status = STATUS_INSUFFICIENT_RESOURCES;
         DoTraceLevelMessage(
         GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
-        "Unable to allocate memory for IRP WDFIOTARGET %p, %!STATUS!", 
+        "Unable to allocate memory for IRP WDFIOTARGET %p, %!STATUS!",
         GetObjectHandle(), status);
     }
-    
+
     //
     // Only fail the open if we cannot allocate an irp or if the lower
     // driver could not allocate a relations.
@@ -355,7 +327,7 @@ FxIoTargetRemote::GetTargetDeviceRelations(
     else {
         status = STATUS_SUCCESS;
     }
-    
+
     //
     // Remove the reference taken by IoGetAttachedDeviceReference
     //

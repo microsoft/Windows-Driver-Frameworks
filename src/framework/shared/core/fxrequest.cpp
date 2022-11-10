@@ -1234,7 +1234,7 @@ FxRequest::GetStatus(
 _Must_inspect_result_
 NTSTATUS
 FxRequest::GetParameters(
-    __out PWDF_REQUEST_PARAMETERS Parameters
+    _Inout_ PWDF_REQUEST_PARAMETERS Parameters
     )
 {
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
@@ -1486,7 +1486,7 @@ FxRequest::GetMemoryObject(
             // to do the initial mapping so that FxRequestSystemBuffer::GetBuffer()
             // will not return a NULL pointer.
             //
-            pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority);
+            pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority | MdlMappingNoExecute);
 
             if (pVA == NULL) {
                 status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1523,7 +1523,7 @@ Done:
 
         if (mapMdl) {
             *Buffer = Mx::MxGetSystemAddressForMdlSafe(m_SystemBuffer.m_Mdl,
-                                                   NormalPagePriority);
+                                                   NormalPagePriority | MdlMappingNoExecute);
         }
         else {
             *Buffer = m_SystemBuffer.m_Buffer;
@@ -1734,7 +1734,7 @@ Returns:
             // to do the initial mapping so that FxRequestOutputBuffer::GetBuffer()
             // will not return a NULL pointer.
             //
-            pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority);
+            pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority | MdlMappingNoExecute);
 
             if (pVA == NULL) {
                 status =  STATUS_INSUFFICIENT_RESOURCES;
@@ -1761,7 +1761,7 @@ Done:
         *MemoryObject = &m_OutputBuffer;
         if (mapMdl) {
             *Buffer = Mx::MxGetSystemAddressForMdlSafe(m_OutputBuffer.m_Mdl,
-                                                   NormalPagePriority);
+                                                   NormalPagePriority | MdlMappingNoExecute);
         }
         else {
             *Buffer = m_OutputBuffer.m_Buffer;
@@ -2115,7 +2115,7 @@ FxRequest::PeekRequest(
     __in FxIrpQueue*          IrpQueue,
     __in_opt FxRequest*           TagRequest,
     __in_opt MdFileObject         FileObject,
-    __out_opt PWDF_REQUEST_PARAMETERS Parameters,
+    _Inout_opt_ PWDF_REQUEST_PARAMETERS Parameters,
     __deref_out FxRequest**         ppOutRequest
     )
 {

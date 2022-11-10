@@ -498,19 +498,15 @@ WDFEXPORT(WdfRegistryQueryValue)(
                                    ValueLengthQueried,
                                    ValueType);
     if (!NT_SUCCESS(status)) {
-        UCHAR traceLevel = TRACE_LEVEL_ERROR;
-
         //
-        // Label message as Verbose if this is the known pattern of
+        // Only log the error if it's not the known pattern of
         // passing a 0-length NULL buffer to query the required buffer size.
         //
-        if (status == STATUS_BUFFER_OVERFLOW && Value == NULL && ValueLength == 0) {
-            traceLevel = TRACE_LEVEL_VERBOSE;
+        if (!(status == STATUS_BUFFER_OVERFLOW && Value == NULL && ValueLength == 0)) {
+            DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+                                "WDFKEY %p QueryValue failed, %!STATUS!",
+                                Key, status);
         }
-
-        DoTraceLevelMessage(pFxDriverGlobals, traceLevel, TRACINGERROR,
-                            "WDFKEY %p QueryValue failed, %!STATUS!",
-                            Key, status);
     }
 
     return status;

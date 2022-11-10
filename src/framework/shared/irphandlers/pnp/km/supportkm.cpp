@@ -208,7 +208,7 @@ IdleTimeoutManagement::_SystemManagedIdleTimeoutAvailable(
     VOID
     )
 {    
-    return (NULL != FxLibraryGlobals.PoxRegisterDevice);
+    return TRUE;
 }
 
 _Must_inspect_result_

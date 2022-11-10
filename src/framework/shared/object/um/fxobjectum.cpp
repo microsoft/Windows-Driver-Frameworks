@@ -170,6 +170,11 @@ Returns:
         //
         // Check the struct version (require an exact match for a private DDI)
         //
+        // NOTE: doc on WdfObjectQuery says the QueryBuffer is _Out_ only, but
+        // it is used as _Inout_ here. For now, let's keep the existing public
+        // contract as is, unless we have strong reason to change it.
+        //
+        #pragma prefast(suppress:__WARNING_USING_UNINIT_VAR, "Using uninitialized memory '*QueryBuffer'")
         if (FileObjectInterface->Size != RequiredBufferLength) {
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,

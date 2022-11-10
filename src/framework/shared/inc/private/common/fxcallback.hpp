@@ -110,8 +110,10 @@ public:
     }
 
 protected:
+
     __inline
     void
+    #pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*PreviousIrql'")
     CallbackStart(
         __out PKIRQL PreviousIrql
         )

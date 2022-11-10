@@ -37,9 +37,9 @@ FxIoTargetRemote::InitRemoteModeSpecific(
     IWudfDeviceStack* devStack;
 
     devStack = Device->GetDeviceObject()->GetDeviceStackInterface();
-    
+
     //
-    // Event initialization can fail in UM so initialize it now instead of in 
+    // Event initialization can fail in UM so initialize it now instead of in
     // constructor.
     //
     status = m_OpenedEvent.Initialize();
@@ -68,15 +68,14 @@ FxIoTargetRemote::InitRemoteModeSpecific(
             "Failed to Create RemoteDispatcher, %!STATUS!", status);
         return status;
     }
-    
-    return status;    
+
+    return status;
 }
 
 VOID
 FxIoTargetRemote::RemoveModeSpecific(
     VOID
     )
-
 {
     //
     // Delete callback object
@@ -89,7 +88,7 @@ FxIoTargetRemote::RemoveModeSpecific(
 NTSTATUS
 FxIoTargetRemote::OpenTargetHandle(
     _In_ PWDF_IO_TARGET_OPEN_PARAMS OpenParams,
-    _Inout_ FxIoTargetRemoveOpenParams* pParams
+    _Inout_ FxIoTargetRemoteOpenParams* pParams
     )
 {
     NTSTATUS status;
@@ -106,11 +105,11 @@ FxIoTargetRemote::OpenTargetHandle(
     //  DWORD dwDesiredAccess
     //  typedef struct _UMDF_IO_TARGET_OPEN_PARAMS
     //  {
-    //      DWORD dwShareMode;   // 
+    //      DWORD dwShareMode;   //
     //      DWORD dwCreationDisposition;
     //      DWORD dwFlagsAndAttributes;
     //  } UMDF_IO_TARGET_OPEN_PARAMS;
-    // 
+    //
     //
     // We always use overlapped I/O
     //
@@ -139,7 +138,7 @@ FxIoTargetRemote::OpenTargetHandle(
         m_TargetHandle = hTarget;
         status = STATUS_SUCCESS;
     }
-    
+
     return status;
 }
 
@@ -161,11 +160,11 @@ FxIoTargetRemote::GetTargetHandle(
         }
         else {
             ASSERT(m_TargetHandle == NULL);
-            
+
             hrQi = m_TargetFileObject->QueryInterface(IID_IWudfFile2, (PVOID*)&pFile);
             FX_VERIFY(INTERNAL, CHECK_QI(hrQi, pFile));
             pFile->Release();
-            
+
             handle = pFile->GetWeakRefHandle();
         }
     }
@@ -216,7 +215,7 @@ FxIoTargetRemote::UnbindHandle(
         // Close the handle we gave to the RemoteDispatcher
         //
         // NOTE: IWudfRemoteDispatcher::CloseHandle can be safely called even if
-        // we've not previously given it a handle. In this case, it does 
+        // we've not previously given it a handle. In this case, it does
         // nothing.
         //
         DoTraceLevelMessage(
@@ -258,13 +257,11 @@ FxIoTargetRemote::RegisterForPnpNotification(
     HRESULT hr;
     FxIoTargetRemoteNotificationCallback* callback;
 
-    UNREFERENCED_PARAMETER(hr);
-
     //
     // Allocate callback object
     //
     if (m_NotificationCallback == NULL) {
-        callback = new (GetDriverGlobals()) 
+        callback = new (GetDriverGlobals())
             FxIoTargetRemoteNotificationCallback(GetDriverGlobals(), this);
 
         if (callback == NULL) {
@@ -279,7 +276,7 @@ FxIoTargetRemote::RegisterForPnpNotification(
 
         m_NotificationCallback = callback;
     }
-    
+
     //
     // Register for Target Device Change notifications
     // These notifications will arrive asynchronously.
@@ -293,7 +290,7 @@ FxIoTargetRemote::RegisterForPnpNotification(
 
     if (FAILED(hr)) {
         SAFE_RELEASE(m_NotificationCallback);
-        
+
         status = m_Device->NtStatusFromHr(hr);
         DoTraceLevelMessage(
             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGIOTARGET,
@@ -322,13 +319,13 @@ FxIoTargetRemote::UnregisterForPnpNotification(
     if (NotifyHandle == WUDF_TARGET_CONTEXT_INVALID) {
         return;
     }
-    
+
     //
     // Unregister.
     //
     IWudfDeviceStack * pDevStack = m_Device->GetDeviceStack();
     pDevStack->UnregisterTargetDeviceNotification(NotifyHandle);
-   
+
 }
 
 NTSTATUS
@@ -345,16 +342,16 @@ FxIoTargetRemote::OpenLocalTargetByFile(
     ASSERT(OpenParams->Type == WdfIoTargetOpenLocalTargetByFile);
     m_OpenParams.OpenType = OpenParams->Type;
 
-    // 
+    //
     // Create a file object. This is UM-specific feature, where host opens
     // the reflector control device (optionally supplying the reference string
-    // provided by caller). If there are lower device drivers in the um stack, 
+    // provided by caller). If there are lower device drivers in the um stack,
     // host sends them IRP_MJ_CREATE as well. The lower drivers in kernel see
     // IRP_MJ_CREATE as well as a result of opening the reflector control
-    // object.     
+    // object.
     // Note that m_TargetDevice is already set to next lower device during init.
     //
-    status = CreateWdfFileObject(&OpenParams->FileName, 
+    status = CreateWdfFileObject(&OpenParams->FileName,
                                  &m_TargetFileObject);
 
     if (!NT_SUCCESS(status)) {
@@ -423,7 +420,7 @@ FxIoTargetRemote::CloseWdfFileObject(
    SAFE_RELEASE(FileObject);
 }
 
-BOOL 
+BOOL
 __stdcall
 FxIoTargetRemoteNotificationCallback::OnQueryRemove(
     _In_ WUDF_TARGET_CONTEXT RegistrationID
@@ -448,13 +445,13 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
 
     status = STATUS_SUCCESS;
     bStatus = TRUE;
-    
+
     if (GetRegistrationId() != RegistrationID) {
         //
         // By design, we can get notification callbacks even after we have
-        // unregistered for notifications. This can happen if there were 
-        // callbacks already in flight before we unregistered. In this case, we 
-        // simply succeed on query-remove. Since we have already unregistered, 
+        // unregistered for notifications. This can happen if there were
+        // callbacks already in flight before we unregistered. In this case, we
+        // simply succeed on query-remove. Since we have already unregistered,
         // there is no reason for us to fail query-remove.
         //
         DoTraceLevelMessage(
@@ -467,9 +464,9 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
 
     DoTraceLevelMessage(
         pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
-        "WDFIOTARGET %p: query remove notification", 
+        "WDFIOTARGET %p: query remove notification",
         m_RemoteTarget->GetObjectHandle());
-    
+
     //
     // Device is gracefully being removed.  PnP is asking us to close down
     // the target.  If there is a driver callback, there is *no* default
@@ -486,7 +483,7 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
             pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
             "WDFIOTARGET %p: query remove, default action (close for QR)",
             pRemoteTarget->GetObjectHandle());
-    
+
         //
         // No callback, close it down conditionally.
         //
@@ -498,13 +495,13 @@ FxIoTargetRemoteNotificationCallback::OnQueryRemove(
     }
 
 exit:
-    
+
     pRemoteTarget->RELEASE(this);
 
     return bStatus;
 }
 
-VOID 
+VOID
 __stdcall
 FxIoTargetRemoteNotificationCallback::OnRemoveComplete(
     _In_ WUDF_TARGET_CONTEXT RegistrationID
@@ -536,7 +533,7 @@ FxIoTargetRemoteNotificationCallback::OnRemoveComplete(
     DoTraceLevelMessage(
         pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
         "WDFIOTARGET %p: remove complete notification", pRemoteTarget->GetObjectHandle());
-    
+
     //
     // The device was surprise removed, close it for good if the driver has
     // no override.
@@ -549,7 +546,7 @@ FxIoTargetRemoteNotificationCallback::OnRemoveComplete(
             pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
             "WDFIOTARGET %p: remove complete, default action (close)",
             pRemoteTarget->GetObjectHandle());
-    
+
         //
         // The device is now gone for good.  Close down the target for good.
         //
@@ -557,11 +554,11 @@ FxIoTargetRemoteNotificationCallback::OnRemoveComplete(
     }
 
 exit:
-    
+
     pRemoteTarget->RELEASE(this);
 }
 
-VOID 
+VOID
 __stdcall
 FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
     _In_ WUDF_TARGET_CONTEXT RegistrationID
@@ -595,20 +592,20 @@ FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
     DoTraceLevelMessage(
         pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
         "WDFIOTARGET %p: remove canceled notification", pRemoteTarget->GetObjectHandle());
-    
+
     if (pRemoteTarget->m_EvtRemoveCanceled.m_Method != NULL) {
         pRemoteTarget->m_EvtRemoveCanceled.Invoke(pRemoteTarget->GetHandle());
     }
     else {
         WDF_IO_TARGET_OPEN_PARAMS params;
-    
+
         DoTraceLevelMessage(
             pFxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGIOTARGET,
             "WDFIOTARGET %p: remove canceled, default action (reopen)",
             pRemoteTarget->GetObjectHandle());
-    
+
         WDF_IO_TARGET_OPEN_PARAMS_INIT_REOPEN(&params);
-    
+
         //
         // Attempt to reopen the target with stored settings
         //
@@ -624,11 +621,11 @@ FxIoTargetRemoteNotificationCallback::OnRemoveCanceled(
     }
 
 exit:
-    
+
     pRemoteTarget->RELEASE(this);
 }
 
-VOID 
+VOID
 __stdcall
 FxIoTargetRemoteNotificationCallback::OnCustomEvent(
     _In_ WUDF_TARGET_CONTEXT  RegistrationID,

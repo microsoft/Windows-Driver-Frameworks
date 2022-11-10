@@ -107,7 +107,7 @@ public:
     AddPowerPolicyProviderAndInstance(
         __in    PWDF_WMI_PROVIDER_CONFIG ProviderConfig,
         __in    FxWmiInstanceInternalCallbacks* Callbacks,
-        __inout FxWmiInstanceInternal** Instance
+        _Outptr_ FxWmiInstanceInternal** Instance
         );
 
 protected:

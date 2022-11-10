@@ -120,11 +120,11 @@ enum FxIoTargetRemoteOpenState {
     FxIoTargetRemoteOpenStateOpen,
 };
 
-struct FxIoTargetRemoveOpenParams {
+struct FxIoTargetRemoteOpenParams {
 
-    FxIoTargetRemoveOpenParams()
+    FxIoTargetRemoteOpenParams()
     {
-        RtlZeroMemory(this, sizeof(FxIoTargetRemoveOpenParams));
+        RtlZeroMemory(this, sizeof(FxIoTargetRemoteOpenParams));
     }
 
     VOID
@@ -209,10 +209,10 @@ public:
 
     NTSTATUS
     GetTargetDeviceRelations(
-        _Out_ BOOLEAN* Close
+        _Inout_ BOOLEAN* Close
         );
 
-    BOOLEAN 
+    BOOLEAN
     CanRegisterForPnpNotification(
         VOID
         )
@@ -246,7 +246,7 @@ public:
     NTSTATUS
     OpenTargetHandle(
         _In_ PWDF_IO_TARGET_OPEN_PARAMS OpenParams,
-        _Inout_ FxIoTargetRemoveOpenParams* pParams
+        _Inout_ FxIoTargetRemoteOpenParams* pParams
         );
 
     VOID
@@ -278,7 +278,7 @@ public:
         return (WDFIOTARGET) GetObjectHandle();
     }
 
-    virtual    
+    virtual
     VOID
     Remove(
         VOID
@@ -331,7 +331,7 @@ protected:
     // I/O dispatcher to be used for IRPs forwarded to this remote target. It is
     // created when the CWdfRemoteTarget is created. The win32 handle is
     // associated with it via a call to m_pRemoteDispatcher->BindToHandle()
-    // right after we call CreateFile(...). We must call 
+    // right after we call CreateFile(...). We must call
     // m_pRemoteDispatcher->CloseHandle() to close the handle.
     //
     // Because of the plug-in pattern of the IoDispatcher, we need two
@@ -373,7 +373,7 @@ protected:
     }
 
 private:
-    
+
     NTSTATUS
     BindToHandle(
         VOID
@@ -396,7 +396,7 @@ private:
         );
 
 #endif // FX_CORE_USER-MODE)
-        
+
 public:
     //
     // File handle for m_TargetHandle
@@ -404,10 +404,10 @@ public:
     HANDLE m_TargetHandle;
 
     //
-    // Notification handle returned by IoRegisterPlugPlayNotification for KMDF, 
-    // or host's notification registartion interface for UMDf. Note that host 
-    // uses the term RegistrationId for the same (with WUDF_CONTEXT_TYPE which 
-    // is UINT64). 
+    // Notification handle returned by IoRegisterPlugPlayNotification for KMDF,
+    // or host's notification registartion interface for UMDf. Note that host
+    // uses the term RegistrationId for the same (with WUDF_CONTEXT_TYPE which
+    // is UINT64).
     //
     MdTargetNotifyHandle m_TargetNotifyHandle;
 
@@ -428,7 +428,7 @@ public:
     UCHAR m_OpenState;
 
 protected:
-    FxIoTargetRemoveOpenParams m_OpenParams;
+    FxIoTargetRemoteOpenParams m_OpenParams;
 };
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)

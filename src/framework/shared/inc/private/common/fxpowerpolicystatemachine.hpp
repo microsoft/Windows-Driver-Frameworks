@@ -707,26 +707,42 @@ enum RequestDIrpReason {
     RequestDxForSx,         // Device in D0. System sleeps
 
     RequestD0ForSx,         // Device in Dx. Sx comes, Device wakes to D0 first
-    RequestD0ForOther,      // Device in Dx. Wake by I/O present, StopIdle, USB
-                            // selective suspend completed, PoFx power required
-                            // callback, S0IdlePolicyChange
+    RequestD0ForOther,      // deprecated
+
     RequestD0ForDeviceWake, // Device in Dx. Wake by external signal
     RequestD0ForArmWakeFail,// Device in D0. Dx comes and it fails to arm wake.
                             // Now in Dx. Return to D0 next
     RequestDxForIdleOut,    // Device in D0. Sleep because of Idle out
     RequestDxForPnpStop,    // Device in D0. Pnp remove, Device implicitly Dx
     RequestD0ForPnpStop,    // Device in Dx. Pnp remove, Device wakes to D0 first
+
+    RequestD0ForIoPresent,  // Device in Dx. I/O is delivered to a power-managed queue
+    RequestD0ForStopIdle,   // Device in Dx. Driver calls WdfDeviceStopIdle
+    RequestD0ForDfxPowerUp, // Device in Dx. PoFx DirectedPowerUpCallback is invoked
+    RequestD0ForUsbSs,      // Device in Dx. USB selective suspend IRP is completed
+    RequestD0ForWakeFailed, // Device in Dx. Wait-wake IRP is completed with failure
+    RequestD0ForSpecialFile,// Device in Dx. Special file usage is changing
+    RequestD0ForChildDevice,// Device in Dx. Child device is powering up
+    RequestD0ForS0IdlePolicy,//Device in Dx. S0 idle policy is changed by either
+                            // driver calling WdfDeviceAssignS0IdleSettings or
+                            // user changing it in device manager property page
+    RequestD0ForPowerReqCb, // Device in Dx. PoFx DevicePowerRequiredCallback is
+                            // invoked. Could be D0ForSx, D0ForPnpStop, or another
+                            // device on the same power rail entering D0, etc.
+
 };
 
 class FxDevicePowerIrpTracker {
 
 public:
     FxDevicePowerIrpTracker(
-        VOID
+        _In_ FxPkgPnp* PkgPnp
         )
     {
         InitHistory();
         m_DIrpRequestedForSIrp = RequestDIrpReasonInvalid;
+        m_D0IrpReasonHint.Reason = RequestD0ForOther;
+        m_PkgPnp = PkgPnp;
     }
 
     VOID
@@ -734,18 +750,11 @@ public:
         _In_ FxIrp *Irp
         );
 
-
-    //
-    // Record the reason of requesting D-IRP into an FIFO history which can be
-    // reviewed using `!wdfkd.wdfdevice _device_ ff` debugger command later.
-    //
     VOID
     LogRequestDIrpReason(
-        _In_ RequestDIrpReason Reason
-        )
-    {
-        AddToHistory(Reason);
-    }
+        _In_ RequestDIrpReason Reason,
+        _In_ BOOLEAN           PowerUp
+        );
 
     VOID
     StartTrackingDevicePowerIrp(
@@ -762,7 +771,26 @@ public:
         VOID
         );
 
+    //
+    // Only save the first hint. The rest are ignored.
+    //
+    // This is especially important for DevicePowerRequiredCallback, which should
+    // be saved if it comes alone because of QuerySx, but should be ignored if it
+    // comes after IoPresent.
+    //
+    VOID
+    SaveRequestD0IrpReasonHint(
+        _In_ RequestDIrpReason Reason
+        )
+    {
+        InterlockedCompareExchange(&m_D0IrpReasonHint.AsLong,
+                                   Reason,
+                                   RequestD0ForOther);
+    }
+
 private:
+
+    FxPkgPnp* m_PkgPnp;
 
     //
     // Special handling only for RequestD0ForS0 and RequestDxForSx.
@@ -775,6 +803,20 @@ private:
     //   - Failure happens.
     //
     RequestDIrpReason m_DIrpRequestedForSIrp;
+
+    //
+    // Most of time the caller of PowerPolicySendDevicePowerRequest knows the
+    // exact reason of requesting D-IRP. But for RequestD0ForOther, only some
+    // prior code knows the real reason. Let's save it here.
+    //
+    // Note: this is a best-effort work, hence the name of "hint". For example,
+    // in prepare for Sx or pnp remove, power-required-callback will be invoked.
+    // The real reason behind is not known to WDF.
+    //
+    union {
+        RequestDIrpReason Reason;
+        LONG              AsLong;
+    } m_D0IrpReasonHint;
 
     POWER_ACTION m_S0PowerAction;
     POWER_ACTION m_SxPowerAction;
@@ -1050,6 +1092,11 @@ struct FxPowerPolicyMachine : public FxThreadedEventQueue {
         VOID
         );
 
+    ULONGLONG
+    CompactStates(
+        VOID
+        );
+
 public:
     FxPowerPolicyEvent m_Queue[FxPowerPolicyEventQueueDepth];
 
@@ -1087,6 +1134,7 @@ public:
             ULONG PwrPolPowerUpFailedKnown : 1;
         } m_SingularEventsPresentByName;
     };
+
 };
 
 #endif // _FXPOWERPOLICYSTATEMACHINE_H_

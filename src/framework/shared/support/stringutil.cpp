@@ -180,7 +180,7 @@ NTSTATUS
 FxDuplicateUnicodeString(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in const UNICODE_STRING* Source,
-    __out PUNICODE_STRING Destination
+    _Inout_ PUNICODE_STRING Destination
     )
 /*++
 

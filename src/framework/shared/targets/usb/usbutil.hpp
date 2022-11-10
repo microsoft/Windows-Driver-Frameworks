@@ -143,11 +143,11 @@ FxUsbUmFormatRequest(
 
 VOID
 FxUsbUmInitDescriptorUrb(
-    __inout PUMURB UmUrb,
+    _Out_ PUMURB UmUrb,
     __in WINUSB_INTERFACE_HANDLE WinUsbHandle,
     __in UCHAR DescriptorType,
     __in ULONG BufferLength,
-    __in PVOID Buffer
+    _Out_ PVOID Buffer
     );
 
 VOID

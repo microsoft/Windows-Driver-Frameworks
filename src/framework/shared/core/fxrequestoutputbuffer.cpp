@@ -50,7 +50,7 @@ Return Value:
   --*/
 {
     FxIrp* irp = GetRequest()->GetFxIrp();
-    
+
     ASSERT(irp->GetMajorFunction() == IRP_MJ_DEVICE_CONTROL ||
            irp->GetMajorFunction() == IRP_MJ_INTERNAL_DEVICE_CONTROL);
 
@@ -69,7 +69,7 @@ Return Value:
         // we can safely call MmGetSystemAddressForMdlSafe again to get a
         // valid VA pointer.
         //
-        return Mx::MxGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority);
+        return Mx::MxGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority | MdlMappingNoExecute);
 
     case METHOD_NEITHER:
         return m_Buffer;
@@ -124,7 +124,7 @@ Return Value:
   --*/
 {
     FxIrp* irp = GetRequest()->GetFxIrp();
-    
+
     ASSERT(irp->GetMajorFunction() == IRP_MJ_DEVICE_CONTROL ||
            irp->GetMajorFunction() == IRP_MJ_INTERNAL_DEVICE_CONTROL);
 

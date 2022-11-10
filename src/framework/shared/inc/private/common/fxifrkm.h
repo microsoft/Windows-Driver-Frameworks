@@ -25,8 +25,6 @@ enum FxIFRValues {
     FxIFRAvgLogSize     = FxIFRAvgLogPages * PAGE_SIZE,
 
     FxIFRMaxMessageSize = 256,
-
-    FxIFRRecordSignature = WDF_IFR_RECORD_SIGNATURE,
 };
 
 //

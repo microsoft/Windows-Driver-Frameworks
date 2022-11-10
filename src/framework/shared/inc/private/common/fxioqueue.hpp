@@ -894,7 +894,7 @@ public:
     PeekRequest(
         __in_opt  FxRequest*          TagRequest,
         __in_opt  MdFileObject        FileObject,
-        __out_opt PWDF_REQUEST_PARAMETERS Parameters,
+        _Inout_opt_ PWDF_REQUEST_PARAMETERS Parameters,
         __deref_out FxRequest**         pOutRequest
         );
 
@@ -934,7 +934,7 @@ public:
     VOID
     ProcessAcknowledgedRequests(
         __in FxRequest* Request,
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
     
     // Do not specify argument names
@@ -1391,37 +1391,37 @@ private:
     __drv_requiresIRQL(DISPATCH_LEVEL)
     VOID
     ProcessIdleComplete(
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
 
     __drv_requiresIRQL(DISPATCH_LEVEL)
     VOID
     ProcessPurgeComplete(
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
 
     __drv_requiresIRQL(DISPATCH_LEVEL)
     VOID
     ProcessReadyNotify(
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
 
     __drv_requiresIRQL(DISPATCH_LEVEL)
     BOOLEAN
     ProcessCancelledRequests(
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
 
     __drv_requiresIRQL(DISPATCH_LEVEL)
     BOOLEAN
     ProcessCancelledRequestsOnQueue(
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
 
     __drv_requiresIRQL(DISPATCH_LEVEL)
     BOOLEAN
     ProcessPowerEvents(
-        __out PKIRQL PreviousIrql
+        _In_ PKIRQL PreviousIrql
         );
 
     __inline
@@ -1566,6 +1566,8 @@ private:
         if(m_IsDevicePowerPolicyOwner &&
            m_PowerManaged &&
            m_PowerReferenced == FALSE) {
+
+            m_Device->m_PkgPnp->SaveRequestD0IrpReasonHint(RequestD0ForIoPresent);
 
             if (NT_SUCCESS(m_Device->m_PkgPnp->PowerReference(FALSE))) {
                 m_PowerReferenced = TRUE;

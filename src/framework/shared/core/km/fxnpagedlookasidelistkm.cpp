@@ -80,7 +80,7 @@ FxNPagedLookasideList::Initialize(
         ExInitializeNPagedLookasideList(&m_ObjectLookaside,
                                         NULL,
                                         NULL,
-                                        0,
+                                        POOL_NX_ALLOCATION,
                                         m_MemoryObjectSize,
                                         m_PoolTag,
                                         0);
@@ -182,7 +182,7 @@ FxNPagedLookasideListFromPool::Initialize(
     ExInitializeNPagedLookasideList(&m_ObjectLookaside,
                                     NULL,
                                     NULL,
-                                    0,
+                                    POOL_NX_ALLOCATION,
                                     m_MemoryObjectSize,
                                     m_PoolTag,
                                     0);
@@ -199,7 +199,7 @@ FxNPagedLookasideListFromPool::Initialize(
     ExInitializeNPagedLookasideList(&m_PoolLookaside,
                                     NULL,
                                     NULL,
-                                    0,
+                                    POOL_NX_ALLOCATION,
                                     m_BufferSize,
                                     m_PoolTag,
                                     0);

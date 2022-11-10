@@ -605,7 +605,6 @@ Return Value:
 
   --*/
 {
-    MdDeviceObject pDevice;
     NTSTATUS status;
     WDF_IO_QUEUE_CONFIG queueConfig;
     WDF_OBJECT_ATTRIBUTES attributes;
@@ -618,6 +617,7 @@ Return Value:
 
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+    MdDeviceObject pDevice;
     if (Init->Control.Flags != 0) {
         pDevice = m_Device->GetDeviceObject();
 
@@ -648,7 +648,6 @@ Return Value:
     }
 #else
     UNREFERENCED_PARAMETER(Init);
-    UNREFERENCED_PARAMETER(pDevice);
 #endif
 
     if (NT_SUCCESS(status) && (m_Flags & FX_PKG_GENERAL_FLAG_CREATE)) {

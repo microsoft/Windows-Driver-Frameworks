@@ -591,7 +591,7 @@ VOID
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt,
-    _Out_
+    _Inout_
     PWDF_INTERRUPT_INFO Info
     );
 
@@ -601,7 +601,7 @@ VOID
 WdfInterruptGetInfo(
     _In_
     WDFINTERRUPT Interrupt,
-    _Out_
+    _Inout_
     PWDF_INTERRUPT_INFO Info
     )
 {

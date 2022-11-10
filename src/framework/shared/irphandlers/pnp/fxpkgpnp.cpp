@@ -2945,7 +2945,7 @@ NTSTATUS
 FxPkgPnp::RegisterPowerPolicyWmiInstance(
     __in  const GUID* Guid,
     __in  FxWmiInstanceInternalCallbacks* Callbacks,
-    __out FxWmiInstanceInternal** Instance
+    _Outptr_ FxWmiInstanceInternal** Instance
     )
 {
     WDF_WMI_PROVIDER_CONFIG config;
@@ -3257,11 +3257,13 @@ Return Value:
 
                 //
                 // Policy on UseWdfTimerForPofx:
-                //
                 //  - Enabled if the driver (that created the WDFDEVICE) targets v33+ WDF
-                //  - Can be disabled through per-device registry setting
+                //  - Can be modified through per-device registry setting
                 //
-                BOOLEAN useWdfTimerForPofx = FxLibraryGlobals.UseWdfTimerForPofx;
+                // If enabled, for device using SystemManagedIdleTimeout, WDF uses its
+                // internal idle timer instead of letting PoFx to manage the idle timeout.
+                //
+                BOOLEAN useWdfTimerForPofx = FALSE;
                 if (GetDriverGlobals()->IsMinorVersionGreaterThanOrEqualTo(33)) {
                     useWdfTimerForPofx = TRUE;
                 }
@@ -3991,6 +3993,7 @@ FxPkgPnp::PowerPolicySetS0IdleState(
     __in BOOLEAN State
     )
 {
+    SaveRequestD0IrpReasonHint(RequestD0ForS0IdlePolicy);
     m_PowerPolicyMachine.m_Owner->m_IdleSettings.Enabled = State ? TRUE : FALSE;
     m_PowerPolicyMachine.m_Owner->m_IdleSettings.Dirty = TRUE;
     PowerPolicyProcessEvent(PwrPolS0IdlePolicyChanged);
@@ -4068,9 +4071,9 @@ Return Value:
 
   --*/
 {
+#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     MdDeviceObject pdo;
 
-#if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     //
     // In between creating a PDO WDFDEVICE and it starting, if this DDI is called,
     // we will not have a valid PDO.  Make sure it is valid before we proceed.
@@ -4090,7 +4093,6 @@ Return Value:
 #else // USER_MODE
     m_Device->GetMxDeviceObject()->InvalidateDeviceState(
         m_Device->GetDeviceObject());
-    UNREFERENCED_PARAMETER(pdo);
 #endif
 }
 
@@ -4568,6 +4570,9 @@ FxPkgPnp::PnpDeviceUsageNotification(
         // when the make the transition from power pageable to non or vice versa.
         //
         if (IsPowerPolicyOwner()) {
+
+            SaveRequestD0IrpReasonHint(RequestD0ForSpecialFile);
+
             status = PowerReference(TRUE);
 
             if (NT_SUCCESS(status)) {
@@ -5761,6 +5766,8 @@ Return Value:
   --*/
 {
     if (IsPowerPolicyOwner()) {
+        SaveRequestD0IrpReasonHint(RequestD0ForPnpStop);
+
         //
         // We want to synchronously wait to move into D0
         //
@@ -5989,7 +5996,7 @@ VOID
 FxPkgPnp::_SetPowerCapState(
     __in  ULONG Index,
     __in  DEVICE_POWER_STATE State,
-    __out PULONG Result
+    _Inout_ PULONG Result
     )
 /*++
 
@@ -6900,4 +6907,61 @@ FxPkgPnp::GetSystemPowerAction(
 
     return m_PowerPolicyMachine.m_Owner->
                 m_DevicePowerIrpTracker.GetSystemPowerAction();
+}
+
+static
+BYTE
+CompactStateToByte(
+    _In_ USHORT State,
+    _In_ USHORT FirstState
+    )
+/*--
+    WdfDevStatePwrPolInvalid       = 0     ==> 0xFF
+    WdfDevStatePwrPolObjectCreated = 0x500 ==> 0x00
+    WdfDevStatePwrPolStarting      = 0x501 ==> 0x01
+    ...
+    WdfDevStatePwrPolSleepingWakeCancelWakeNP =  0x5BD | WdfDevStateNP ==> 0xBD
+    WdfDevStatePwrPolNull          = 0x5BE ==> 0xBE
+--*/
+{
+    // ignore WdfDevStateNP
+    USHORT n = (USHORT)(State & (~WdfDevStateNP));
+
+    // special case WdfDevStatePwrPolInvalid = 0
+    if (n == 0) {
+        n = 0xFF;
+    } else {
+        n -= FirstState;
+    }
+    return (BYTE) (n & 0xFF);
+}
+
+ULONGLONG
+FxPkgPnp::CompactStatesToBytes(
+    _In_reads_(8) USHORT* History,
+    _In_ UCHAR   Depth,
+    _In_ UCHAR   Index,
+    _In_ USHORT  FirstState
+    )
+/*--
+
+    Read at most 8 entries from history array. If the history size < 8, hopefully
+    the compiler will catch the issue and report the error.
+
+    Each entry is compressed to a single byte. In total it returns 64-bit data.
+
+--*/
+{
+    union {
+        BYTE      Bytes[8];
+        ULONGLONG UI64;
+    } states = { 0 };
+
+    UCHAR cur = Index;
+    for (UCHAR i = 0; i < 8; i++) {
+        states.Bytes[i] = CompactStateToByte(History[cur], FirstState);
+        cur = (cur + 1) % Depth;
+    }
+
+    return states.UI64;
 }

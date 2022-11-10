@@ -437,6 +437,7 @@ Return Value:
         return status;
     }
 
+    #pragma prefast(suppress:__WARNING_USING_UNINIT_VAR, "Using uninitialized memory '**Urb'")
     status = pUsbDevice->CreateUrb(Attributes, UrbMemory, Urb);
     
     return status;

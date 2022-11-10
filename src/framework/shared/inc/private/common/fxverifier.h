@@ -56,6 +56,7 @@ enum FxEnhancedVerifierBitFlags {
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 #define FxVerifierBugCheck(FxDriverGlobals, Error, ...)              \
+    FxVerifierBugCheckWorker(FxDriverGlobals, Error, __VA_ARGS__);   \
     FX_VERIFY_WITH_NAME(DRIVER(BadAction, Error),                    \
                         TRAPMSG("WDF Violation: Please check"        \
                         "tracelog for a description of this error"), \
@@ -146,7 +147,9 @@ IsFxVerifierFunctionTableHooking(
 }
 
 VOID
+#if FX_CORE_MODE == FX_CORE_KERNEL_MODE
 __declspec(noreturn)
+#endif
 FxVerifierBugCheckWorker(
     __in     PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in     WDF_BUGCHECK_CODES WdfBugCheckCode,

@@ -241,7 +241,7 @@ public:
     __inline
     NTSTATUS
     GetCurrentFrameNumber(
-        __in PULONG Current
+        _Out_ PULONG Current
         )
     {
         if (m_QueryBusTime != NULL) {

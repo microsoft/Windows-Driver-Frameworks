@@ -732,7 +732,7 @@ WDFEXPORT(WdfDeviceGetDeviceState)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
     WDFDEVICE Device,
-    __out
+    _Inout_
     PWDF_DEVICE_STATE DeviceState
     )
 {
@@ -1348,6 +1348,8 @@ StopIdleWorker(
             "policy owner for the stack, %!STATUS!", Device, status);
         return status;
     }
+
+    pDevice->m_PkgPnp->SaveRequestD0IrpReasonHint(RequestD0ForStopIdle);
 
     status = pDevice->m_PkgPnp->PowerReference(WaitForD0, Tag, Line, File);
 

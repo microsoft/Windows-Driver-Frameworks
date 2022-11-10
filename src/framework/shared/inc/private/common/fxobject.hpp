@@ -286,6 +286,8 @@ private:
             USHORT HasDebug : 1;
             USHORT EarlyDisposedExt : 1;
             USHORT TraceState : 1;
+            USHORT HasCleanup : 1;
+            USHORT DisposeOverride : 1;
         } m_ObjectFlagsByName;
     };
 
@@ -1398,7 +1400,7 @@ private:
 
     BOOLEAN
     ShouldDeferDisposeLocked(
-        __out_opt PKIRQL PreviousIrql = NULL
+        _In_opt_ PKIRQL PreviousIrql = NULL
         )
     {
         if (IsForceDisposeThreadLocked()) {

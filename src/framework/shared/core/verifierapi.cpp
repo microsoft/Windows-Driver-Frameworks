@@ -212,21 +212,20 @@ Return Value:
 {
     DDI_ENTRY_IMPERSONATION_OK();
 
-    FxObject* pObject;
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
 
     if (NULL == Object) {
         pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
     }
     else {
+        FxObject* pObject;
         FxObjectHandleGetPtrAndGlobals(GetFxDriverGlobals(DriverGlobals),
                                        Object,
                                        FX_TYPE_OBJECT,
                                        (PVOID*)&pObject,
                                        &pFxDriverGlobals);
+        UNREFERENCED_PARAMETER(pObject);
     }
-
-    UNREFERENCED_PARAMETER(pObject);
 
     FxVerifierDriverReportedBugcheck(pFxDriverGlobals,
                             BugCheckCode,

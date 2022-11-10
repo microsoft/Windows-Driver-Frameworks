@@ -877,7 +877,7 @@ public:
     _Must_inspect_result_
     NTSTATUS
     GetParameters(
-        __out PWDF_REQUEST_PARAMETERS Parameters
+        _Inout_ PWDF_REQUEST_PARAMETERS Parameters
         );
 
     _Must_inspect_result_
@@ -1153,7 +1153,7 @@ public:
         __in FxIrpQueue*         IrpQueue,
         __in_opt FxRequest*      TagRequest,
         __in_opt MdFileObject    FileObject,
-        __out_opt PWDF_REQUEST_PARAMETERS Parameters,
+        _Inout_opt_ PWDF_REQUEST_PARAMETERS Parameters,
         __deref_out FxRequest**  ppOutRequest
         );
 

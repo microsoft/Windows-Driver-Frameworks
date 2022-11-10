@@ -35,12 +35,6 @@ extern RTL_OSVERSIONINFOW  gOsVersion;
 #define WIDEN2(str)                                L##str
 #define WDF_UNKNOWN_SERVICE_NAME                   "Unknown"
 
-typedef
-NTSTATUS
-(*PFN_RTL_GET_VERSION)(
-    OUT PRTL_OSVERSIONINFOW VersionInformation
-    );
-
 NTSTATUS
 FxLibraryCommonCommission(
     VOID

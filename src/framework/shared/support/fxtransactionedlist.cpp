@@ -529,6 +529,7 @@ FxSpinLockTransactionedList::ReleaseLock(
 
 _Acquires_lock_(_Global_critical_region_)
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*Irql'")
 FxWaitLockTransactionedList::AcquireLock(
     __in  PFX_DRIVER_GLOBALS FxDriverGlobals,
     __out PKIRQL Irql

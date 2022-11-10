@@ -344,7 +344,6 @@ FxDevice::CreateDevice(
     MdDeviceObject  pNewDeviceObject = NULL;
     ULONG           characteristics;
     NTSTATUS        status;
-    DEVICE_TYPE     devType;
     HRESULT hr;
     IWudfDevice2* pNewDeviceObject2;
     IWudfDeviceStack2* pDevStack2;
@@ -363,7 +362,7 @@ FxDevice::CreateDevice(
 
 
 
-    UNREFERENCED_PARAMETER(devType);
+
 
     characteristics = DeviceInit->Characteristics;
 
@@ -722,6 +721,8 @@ FxDevice::ProcessWmiPowerQueryOrSetData (
 
 --*/
 {
+    *QueryResult = FALSE;
+
     if (Action == ActionInvalid) {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1790,6 +1791,8 @@ FxDevice::RetrieveDeviceInfoRegistrySettings(
 
     ASSERT(GroupId != NULL);
     ASSERT(DeviceRegInfo != NULL);
+
+    *GroupId = NULL;
 
     ZeroMemory(DeviceRegInfo, sizeof(UMDF_DRIVER_REGSITRY_INFO));
     type = REG_NONE;

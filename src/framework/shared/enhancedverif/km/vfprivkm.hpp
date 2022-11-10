@@ -62,6 +62,7 @@ VerifyIrqlExit(
 
 __inline 
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*CritRegion'")
 VerifyCriticalRegionEntry(
     __out BOOLEAN *CritRegion
     )

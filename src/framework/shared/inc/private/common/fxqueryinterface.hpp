@@ -38,6 +38,7 @@ public:
 
     _Must_inspect_result_
     NTSTATUS
+    #pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*ExposedInterface'")
     Invoke(
         __in WDFDEVICE Device,
         __in LPGUID InterfacType,

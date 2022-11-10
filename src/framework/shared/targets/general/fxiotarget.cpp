@@ -1656,11 +1656,11 @@ NTSTATUS
 FxIoTarget::SubmitSync(
     __in FxRequestBase* Request,
     __in_opt PWDF_REQUEST_SEND_OPTIONS Options,
-    __out_opt PULONG Action
+    _Inout_opt_ PULONG Action
     )
 {
     FxTargetSubmitSyncParams params = {0};
-    LONGLONG timeout;
+    LONGLONG timeout = 0;
     ULONG action;
     NTSTATUS status;
     KIRQL irql;

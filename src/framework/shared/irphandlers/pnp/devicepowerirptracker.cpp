@@ -219,3 +219,77 @@ FxDevicePowerIrpTracker::GetSystemPowerAction(
             return PowerActionNone;
     }
 }
+
+VOID
+FxDevicePowerIrpTracker::LogRequestDIrpReason(
+    _In_ RequestDIrpReason Reason,
+    _In_ BOOLEAN           PowerUp
+    )
+/*++
+
+Routine Description:
+    Record the reason of requesting D-IRP into an FIFO history which can be
+    reviewed using `!wdfkd.wdfdevice _device_ ff` debugger command later.
+
+Arguments:
+    Reason - The reason why D-IRP is requested, e.g. idle out, system wakes up
+    PowerUp - TRUE the device is powering up, FALSE power down
+
+Return Value:
+    None
+
+  --*/
+{
+    if (Reason == RequestD0ForOther) {
+        ASSERT(PowerUp);
+        Reason = (RequestDIrpReason) InterlockedOr(&m_D0IrpReasonHint.AsLong, 0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    //
+    // Clear the saved D0 reason hint but only when we're requesting D0 IRP.
+    //
+    // For example, right after idle times out but before requesting Dx IRP, driver
+    // calls WdfDeviceStopIdle which SaveRequestD0IrpReasonHint(RequestD0ForStopIdle).
+    // The device will still enter Dx and then exit immediately. If D0 reason hint
+    // is cleared when requesting Dx, later when requesting D0, WDF will assert that
+    // D0 reason hint is invalid. Thus, D0 reason hint should not be cleared on Dx.
+    //
+    if (PowerUp) {
+        InterlockedExchange(&m_D0IrpReasonHint.AsLong, RequestD0ForOther);
+    }
+
+    AddToHistory(Reason);
+}

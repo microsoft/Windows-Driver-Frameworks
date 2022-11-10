@@ -26,13 +26,6 @@ Notes:
 
 #pragma once
 
-//
-// The TraceLogging infrastructure calls EtwSetInformation API that is not available on Win7.
-// Setting TLG_HAVE_EVENT_SET_INFORMATION, modifies the behavior of TraceLoggingProvider.h.
-// The value 2 indicates that the trace logging infra would find "EtwSetInformation" via
-// MmGetSystemRoutineAddress. This allows our code to be backwards compatible to Win7
-//
-#define TLG_HAVE_EVENT_SET_INFORMATION 2
 #include <traceloggingprovider.h>
 #include <telemetry\MicrosoftTelemetry.h>
 
@@ -51,8 +44,20 @@ Notes:
 // WdfLdr.sys
 #define KMDF_LDR_TRACE_LOGGING_PROVIDER_NAME   "Microsoft.Wdf.KMDF.Ldr"
 
-// WudfSvc.dll
+// UMDF driver manager, now running inside services.exe
 #define UMDF_DM_TRACE_LOGGING_PROVIDER_NAME    "Microsoft.Wdf.UMDF.Dm"
 
-// Common telemetry related keyword used across all telemetry events
-#define WDF_TELEMETRY_EVT_KEYWORDS TraceLoggingKeyword(MICROSOFT_KEYWORD_TELEMETRY)
+// WUDFPlatform.dll
+#define UMDF_PLATFORM_TRACE_LOGGING_PROVIDER_NAME   "Microsoft.Wdf.UMDF.Platform"
+
+
+
+
+
+
+
+
+
+
+
+

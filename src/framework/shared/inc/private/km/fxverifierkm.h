@@ -23,6 +23,22 @@ Revision History:
 #ifndef _FXVERIFIERKM_H_
 #define _FXVERIFIERKM_H_
 
+extern "C" {
+
+BOOLEAN
+VfIsRuleClassEnabled (
+    _In_ ULONG RuleClassID
+    );
+
+VOID
+VfCheckNxPoolType (
+    _In_ POOL_TYPE PoolType,
+    _In_ PVOID CallingAddress,
+    _In_ ULONG PoolTag
+    );
+
+} // extern "C"
+
 FORCEINLINE
 VOID
 FxVerifierCheckNxPoolType(
@@ -57,15 +73,14 @@ Return Value:
 --*/
 
 {
-    if (FxDriverGlobals->FxVerifierOn &&
-        FxLibraryGlobals.VfCheckNxPoolType != NULL) {
+    if (FxDriverGlobals->FxVerifierOn) {
 
         //
         // Forward the call to Driver Verifier. This will provide a consistent
         // behavior across all verified drivers.
         //
 
-        FxLibraryGlobals.VfCheckNxPoolType(PoolType, _ReturnAddress(), PoolTag);
+        VfCheckNxPoolType(PoolType, _ReturnAddress(), PoolTag);
     }
 }
 

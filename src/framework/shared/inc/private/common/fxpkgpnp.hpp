@@ -842,7 +842,7 @@ protected:
     _SetPowerCapState(
         __in  ULONG Index,
         __in  DEVICE_POWER_STATE State,
-        __out PULONG Result
+        _Inout_ PULONG Result
         );
 
     static
@@ -3675,7 +3675,7 @@ public:
     RegisterPowerPolicyWmiInstance(
         __in  const GUID* Guid,
         __in  FxWmiInstanceInternalCallbacks* Callbacks,
-        __out FxWmiInstanceInternal** Instance
+        _Outptr_ FxWmiInstanceInternal** Instance
         );
 
     NTSTATUS
@@ -3695,6 +3695,25 @@ public:
         __in BOOLEAN IndicateChildWakeOnParentWake
         );
 
+    VOID
+    SaveRequestD0IrpReasonHint(
+        _In_ RequestDIrpReason Reason
+        )
+    {
+        if (IsPowerPolicyOwner()) {
+            m_PowerPolicyMachine.m_Owner->m_DevicePowerIrpTracker.SaveRequestD0IrpReasonHint(Reason);
+        }
+    }
+
+    static
+    ULONGLONG
+    CompactStatesToBytes(
+        _In_reads_(8) USHORT* History,
+        _In_ UCHAR   Depth,
+        _In_ UCHAR   Index,
+        _In_ USHORT  FirstState
+        );
+
 private:
 
     VOID
@@ -3710,7 +3729,7 @@ private:
     VOID
     ReadRegistryS0Idle(
         __in PCUNICODE_STRING ValueName,
-        __out BOOLEAN *Enabled
+        _Inout_ BOOLEAN *Enabled
         );
 
     VOID
@@ -3727,7 +3746,7 @@ private:
     VOID
     ReadRegistrySxWake(
         __in PCUNICODE_STRING ValueName,
-        __out BOOLEAN *Enabled
+        _Inout_ BOOLEAN *Enabled
         );
 
     VOID
@@ -3753,7 +3772,7 @@ private:
     VOID
     ReadRegistrySleepstudyEnabled(
         __in PCUNICODE_STRING ValueName,
-        __out BOOLEAN *Enabled
+        _Inout_ BOOLEAN *Enabled
         );
 #endif
 
@@ -4076,6 +4095,8 @@ public:
 
         if (IsPowerPolicyOwner()) {
             NTSTATUS status;
+
+            SaveRequestD0IrpReasonHint(RequestD0ForChildDevice);
 
             //
             // By referencing the parent (this device) we make sure that if the

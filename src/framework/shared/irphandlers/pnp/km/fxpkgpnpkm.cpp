@@ -375,7 +375,7 @@ FxPkgPnp::UpdateWmiInstanceForS0Idle(
 VOID
 FxPkgPnp::ReadRegistryS0Idle(
     __in  PCUNICODE_STRING ValueName,
-    __out BOOLEAN *Enabled
+    _Inout_ BOOLEAN *Enabled
     )
 {
     NTSTATUS status;
@@ -497,7 +497,7 @@ FxPkgPnp::UpdateWmiInstanceForSxWake(
 VOID
 FxPkgPnp::ReadRegistrySxWake(
     __in  PCUNICODE_STRING ValueName,
-    __out BOOLEAN *Enabled
+    _Inout_ BOOLEAN *Enabled
     )
 {
     FxAutoRegKey hKey;
@@ -1147,7 +1147,7 @@ Done:
 VOID
 FxPkgPnp::ReadRegistrySleepstudyEnabled(
     __in  PCUNICODE_STRING ValueName,
-    __out BOOLEAN *Enabled
+    _Inout_ BOOLEAN *Enabled
     )
 {
     NTSTATUS status;

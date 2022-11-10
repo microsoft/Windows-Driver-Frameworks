@@ -753,7 +753,7 @@ FxDmaEnabler::ConfigureBusMasterAdapters(
             ExInitializeNPagedLookasideList( &m_SGList.ScatterGatherProfile.Lookaside,
                                              NULL, // Allocate  OPTIONAL
                                              NULL, //  Free  OPTIONAL
-                                             0, // Flag - Reserved. Must be zero.
+                                             POOL_NX_ALLOCATION,
                                              m_SGListSize,
                                              GetDriverGlobals()->Tag,
                                              0 ); // Depth - Reserved. Must be zero.

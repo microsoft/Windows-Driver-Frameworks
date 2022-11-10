@@ -120,7 +120,7 @@ FxPagedLookasideListFromPool::Initialize(
     Mx::MxInitializeNPagedLookasideList(&m_ObjectLookaside,
                                    NULL,
                                    NULL,
-                                   0,
+                                   POOL_NX_ALLOCATION,
                                    m_MemoryObjectSize,
                                    m_PoolTag,
                                    0);
@@ -137,7 +137,7 @@ FxPagedLookasideListFromPool::Initialize(
     Mx::MxInitializePagedLookasideList(&m_PoolLookaside,
                                    NULL,
                                    NULL,
-                                   0,
+                                   POOL_NX_ALLOCATION,
                                    m_RawBufferSize,
                                    m_PoolTag,
                                    0);

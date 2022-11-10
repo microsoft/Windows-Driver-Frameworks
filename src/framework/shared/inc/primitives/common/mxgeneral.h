@@ -187,25 +187,6 @@ public:
         __in PLARGE_INTEGER  Interval
         );
 
-    //
-    // Mode agnostic function to get address of a system function
-    // Should be used only for Rtl* functions applicable both to
-    // kernel mode and user mode
-    //
-    // User mode version is assumed to reside in ntdll.dll
-    //
-    // The argument type is MxFuncName so that it can be defined
-    // as LPCWSTR in kernel mode and LPCSTR in user mode
-    // which is what MmGetSystemRoutineAddress and GetProcAddress
-    // expect respectively
-    //
-    __inline
-    static
-    PVOID
-    MxGetSystemRoutineAddress(
-        __in MxFuncName FuncName
-        );
-
     __inline
     static
     VOID
@@ -512,6 +493,13 @@ public:
     static    
     VOID 
     MxQuerySystemTime(
+        _Out_ PLARGE_INTEGER CurrentTime
+        );
+
+    __inline
+    static
+    VOID
+    MxQuerySystemTimePrecise(
         _Out_ PLARGE_INTEGER CurrentTime
         );
 

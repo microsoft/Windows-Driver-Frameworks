@@ -30,7 +30,7 @@ VOID
 PerformanceAnalysisIOProcess(
     __in PFX_DRIVER_GLOBALS pFxDriverGlobals,
     __in WDFREQUEST Handle,
-    __inout FxRequest** ppReq,
+    _Out_ FxRequest** ppReq,
     __inout GUID* pActivityId
     )
 {
@@ -286,6 +286,7 @@ PerfEvtIoStopStop(
 
 __inline 
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*Irql'")
 VerifyIrqlEntry(
     __out KIRQL *Irql
     )
@@ -305,6 +306,7 @@ VerifyIrqlExit(
 
 __inline 
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*CritRegion'")
 VerifyCriticalRegionEntry(
     __out BOOLEAN *CritRegion
     )

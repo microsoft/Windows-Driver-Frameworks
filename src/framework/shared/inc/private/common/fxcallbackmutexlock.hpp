@@ -87,6 +87,7 @@ public:
 
     virtual
     void
+    #pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*PreviousIrql'")
     Lock(
         __out PKIRQL PreviousIrql
         )

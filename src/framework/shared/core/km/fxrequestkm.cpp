@@ -52,8 +52,8 @@ Return Value:
 
   --*/
 {
-    PWDF_REQUEST_PARAMETERS pWdfRequestParameters;
-    PIO_STACK_LOCATION pIoStackLocation;
+    PWDF_REQUEST_PARAMETERS pWdfRequestParameters = NULL;
+    PIO_STACK_LOCATION pIoStackLocation = NULL;
 
     UNREFERENCED_PARAMETER(pWdfRequestParameters);
     UNREFERENCED_PARAMETER(pIoStackLocation);
@@ -693,7 +693,7 @@ Returns:
     //
     // Get a system address for the MDL
     //
-    pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority);
+    pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority | MdlMappingNoExecute);
     if (pVA == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Done;
@@ -853,7 +853,7 @@ Returns:
     //
     // Get a system address for the MDL
     //
-    pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority);
+    pVA = Mx::MxGetSystemAddressForMdlSafe(pMdl, NormalPagePriority | MdlMappingNoExecute);
     if (pVA == NULL) {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Done;

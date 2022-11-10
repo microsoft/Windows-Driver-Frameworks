@@ -376,7 +376,6 @@ FxDevice::_Create(
     WDFOBJECT           object;
     PLIST_ENTRY         pNext;
     PWDFCXDEVICE_INIT   pCxInit;
-    FxWdmDeviceExtension* wdmDeviceExtension;
 
     *Device = NULL;
     pInit = *DeviceInit;
@@ -489,6 +488,8 @@ FxDevice::_Create(
     }
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
+    FxWdmDeviceExtension* wdmDeviceExtension;
+
     wdmDeviceExtension = _GetFxWdmExtension(pDevice->GetDeviceObject());
     if (wdmDeviceExtension->RemoveLockOptionFlags &
             WDF_REMOVE_LOCK_OPTION_ACQUIRE_FOR_IO) {
@@ -505,9 +506,6 @@ FxDevice::_Create(
     if (pDevice->m_SelfIoTargetNeeded) {
         pDevice->SetStackSize(pDevice->GetStackSize()+1);
     }
-
-#else
-    UNREFERENCED_PARAMETER(wdmDeviceExtension);
 #endif
 
     //
@@ -851,7 +849,7 @@ Return Value:
     Mx::MxInitializeNPagedLookasideList(&m_RequestLookasideList,
                                     NULL,
                                     NULL,
-                                    0,
+                                    POOL_NX_ALLOCATION,
                                     m_RequestLookasideListElementSize,
                                     pGlobals->Tag,
                                     0);

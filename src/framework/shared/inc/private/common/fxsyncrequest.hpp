@@ -81,9 +81,8 @@ public:
         VOID
         )
     {
-        NTSTATUS status;
-
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
+        NTSTATUS status;
         //
         // FxCrEvent initialization can fail in UMDF so check for status.
         //
@@ -92,7 +91,6 @@ public:
             return status;
         }
 #else
-        UNREFERENCED_PARAMETER(status);
         DO_NOTHING();
 #endif
         return STATUS_SUCCESS;

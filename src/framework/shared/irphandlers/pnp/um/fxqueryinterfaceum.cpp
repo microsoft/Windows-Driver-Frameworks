@@ -44,6 +44,7 @@ FxQueryInterface::~FxQueryInterface()
 }
 
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*Interface'")
 FxQueryInterface::_FormatIrp(
     __in PIRP Irp,
     __in const GUID* InterfaceGuid,

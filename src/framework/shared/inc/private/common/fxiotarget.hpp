@@ -362,7 +362,7 @@ public:
     SubmitSync(
         __in FxRequestBase* Request,
         __in_opt PWDF_REQUEST_SEND_OPTIONS Options = NULL,
-        __out_opt PULONG Action = NULL
+        _Inout_opt_ PULONG Action = NULL
         );
 
     VOID

@@ -124,7 +124,7 @@ protected:
     VOID
     _StoreAndReferenceMemoryWorker(
         __in PVOID Tag,
-        __deref_out_opt IFxMemory** PPMemory,
+        __deref_inout IFxMemory** PPMemory,
         __in FxRequestBuffer* Buffer
         );
 

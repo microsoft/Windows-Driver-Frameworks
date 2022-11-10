@@ -121,7 +121,7 @@ Mx::MxQueryTickCount(
 }
 
 __inline
-ULONG 
+ULONG
 Mx::MxQueryTimeIncrement(
     )
 {
@@ -207,24 +207,12 @@ Mx::MxDelayExecutionThread(
     )
 {
     ASSERTMSG("Interval must be relative\n", Interval->QuadPart <= 0);
-    
+
     KeDelayExecutionThread(
         WaitMode,
         Alertable,
         Interval
         );
-}
-
-__inline
-PVOID
-Mx::MxGetSystemRoutineAddress(
-    __in MxFuncName FuncName
-    )
-{
-    UNICODE_STRING funcName;
-
-    RtlInitUnicodeString(&funcName, FuncName);
-    return MmGetSystemRoutineAddress(&funcName);
 }
 
 __inline
@@ -261,7 +249,7 @@ __inline
 NTSTATUS
 Mx::MxAcquireRemoveLock(
     __in MdRemoveLock  RemoveLock,
-    __in_opt PVOID  Tag 
+    __in_opt PVOID  Tag
     )
 {
     return IoAcquireRemoveLock(RemoveLock, Tag);
@@ -271,7 +259,7 @@ __inline
 VOID
 Mx::MxReleaseRemoveLock(
     __in MdRemoveLock  RemoveLock,
-    __in PVOID  Tag 
+    __in PVOID  Tag
     )
 {
     IoReleaseRemoveLock(RemoveLock, Tag);
@@ -281,7 +269,7 @@ __inline
 VOID
 Mx::MxReleaseRemoveLockAndWait(
     __in MdRemoveLock  RemoveLock,
-    __in PVOID  Tag 
+    __in PVOID  Tag
     )
 {
     IoReleaseRemoveLockAndWait(RemoveLock, Tag);
@@ -317,9 +305,9 @@ Mx::CreateCallback(
     )
 {
     return ExCreateCallback(
-        CallbackObject, 
-        ObjectAttributes, 
-        Create, 
+        CallbackObject,
+        ObjectAttributes,
+        Create,
         AllowMultipleCallbacks);
 }
 
@@ -333,7 +321,7 @@ Mx::RegisterCallback(
 {
     return ExRegisterCallback(
         CallbackObject,
-        CallbackFunction, 
+        CallbackFunction,
         CallbackContext);
 }
 
@@ -362,7 +350,7 @@ Mx::MxGetSystemAddressForMdlSafe(
     __in    ULONG Priority
     )
 {
-    return MmGetSystemAddressForMdlSafe(Mdl, Priority);
+    return MmGetSystemAddressForMdlSafe(Mdl, Priority | MdlMappingNoExecute);
 }
 
 __inline
@@ -381,7 +369,7 @@ Mx::MxGetDriverObjectExtension(
     __in PVOID ClientIdentificationAddress
     )
 {
-    return IoGetDriverObjectExtension(DriverObject, 
+    return IoGetDriverObjectExtension(DriverObject,
                                         ClientIdentificationAddress);
 }
 
@@ -510,7 +498,7 @@ Mx::MxAttachDeviceToDeviceStack(
     return IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
 }
 
-__inline 
+__inline
 NTSTATUS
 Mx::MxCreateDeviceSecure(
       _In_      PDRIVER_OBJECT DriverObject,
@@ -536,7 +524,7 @@ Mx::MxCreateDeviceSecure(
 }
 
 __inline
-NTSTATUS 
+NTSTATUS
 Mx::MxCreateDevice(
     _In_      PDRIVER_OBJECT DriverObject,
     _In_      ULONG DeviceExtensionSize,
@@ -595,14 +583,14 @@ Mx::MxRegisterDeviceInterface(
     _Out_     PUNICODE_STRING SymbolicLinkName
     )
 {
-    return IoRegisterDeviceInterface(PhysicalDeviceObject, 
-                                     InterfaceClassGuid, 
-                                     ReferenceString, 
+    return IoRegisterDeviceInterface(PhysicalDeviceObject,
+                                     InterfaceClassGuid,
+                                     ReferenceString,
                                      SymbolicLinkName);
 }
 
 __inline
-VOID 
+VOID
 Mx::MxInitializeMdl(
     _In_  PMDL MemoryDescriptorList,
     _In_  PVOID BaseVa,
@@ -622,7 +610,7 @@ Mx::MxGetMdlVirtualAddress(
 }
 
 __inline
-VOID 
+VOID
 Mx::MxBuildPartialMdl(
     _In_     PMDL SourceMdl,
     _Inout_  PMDL TargetMdl,
@@ -638,12 +626,21 @@ Mx::MxBuildPartialMdl(
 }
 
 __inline
-VOID 
+VOID
 Mx::MxQuerySystemTime(
     _Out_ PLARGE_INTEGER CurrentTime
     )
 {
     KeQuerySystemTime(CurrentTime);
+}
+
+__inline
+VOID
+Mx::MxQuerySystemTimePrecise(
+    _Out_ PLARGE_INTEGER CurrentTime
+    )
+{
+    KeQuerySystemTimePrecise(CurrentTime);
 }
 
 __inline
@@ -705,7 +702,7 @@ Mx::MxReleaseInterruptSpinLock(
 }
 
 __inline
-BOOLEAN 
+BOOLEAN
 Mx::MxInsertQueueDpc(
   __inout   PRKDPC Dpc,
   __in_opt  PVOID SystemArgument1,

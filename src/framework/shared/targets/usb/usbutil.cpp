@@ -552,12 +552,13 @@ Return Value:
 }
 
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*Buffer'")
 FxUsbUmInitDescriptorUrb(
-    __inout PUMURB UmUrb,
+    _Out_ PUMURB UmUrb,
     __in WINUSB_INTERFACE_HANDLE WinUsbHandle,
     __in UCHAR DescriptorType,
     __in ULONG BufferLength,
-    __in PVOID Buffer
+    _Out_ PVOID Buffer
     )
 {
     RtlZeroMemory(UmUrb, sizeof(UMURB));

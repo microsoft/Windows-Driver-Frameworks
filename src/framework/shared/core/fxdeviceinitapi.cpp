@@ -758,7 +758,7 @@ WDFEXPORT(WdfDeviceInitRegisterPnpStateChangeCallback)(
         return status;
     }
 
-    if (normalizedState < WdfDevStatePnpObjectCreated || normalizedState > WdfDevStatePnpNull) {
+    if (normalizedState < WdfDevStatePnpObjectCreated || normalizedState >= WdfDevStatePnpNull) {
         status = STATUS_INVALID_PARAMETER;
 
         DoTraceLevelMessage(pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGDEVICE,

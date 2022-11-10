@@ -56,44 +56,6 @@ struct FxAllocatedMdls {
 #define DDI_ENTRY()
 
 typedef
-BOOLEAN
-(*PFN_KD_REFRESH)(
-    );
-
-typedef
-VOID
-(*PFN_KE_FLUSH_QUEUED_DPCS)(
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PFN_IO_SET_COMPLETION_ROUTINE_EX)(
-    __in PDEVICE_OBJECT DeviceObject,
-    __in PIRP Irp,
-    __in PIO_COMPLETION_ROUTINE CompletionRoutine,
-    __in PVOID Context,
-    __in BOOLEAN InvokeOnSuccess,
-    __in BOOLEAN InvokeOnError,
-    __in BOOLEAN InvokeOnCancel
-    );
-
-typedef
-BOOLEAN
-(*PFN_KE_REGISTER_BUGCHECK_REASON_CALLBACK) (
-    __in PKBUGCHECK_REASON_CALLBACK_RECORD  CallbackRecord,
-    __in PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
-    __in KBUGCHECK_CALLBACK_REASON Reason,
-    __in PUCHAR Component
-    );
-
-typedef
-BOOLEAN
-(*PFN_KE_DEREGISTER_BUGCHECK_REASON_CALLBACK) (
-    __in PKBUGCHECK_REASON_CALLBACK_RECORD  CallbackRecords
-    );
-
-typedef
 NTSTATUS
 (*PFN_IO_CONNECT_INTERRUPT_EX)(
     __inout PIO_CONNECT_INTERRUPT_PARAMETERS Parameters
@@ -106,197 +68,6 @@ NTSTATUS
     );
 
 typedef
-NTSTATUS
-(*PFN_IO_CONNECT_INTERRUPT)(
-    __out PKINTERRUPT *InterruptObject,
-    __in  PKSERVICE_ROUTINE ServiceRoutine,
-    __in_opt PVOID ServiceContext,
-    __in_opt PKSPIN_LOCK SpinLock,
-    __in  ULONG Vector,
-    __in  KIRQL Irql,
-    __in  KIRQL SynchronizeIrql,
-    __in  KINTERRUPT_MODE InterruptMode,
-    __in  BOOLEAN ShareVector,
-    __in  KAFFINITY ProcessorEnableMask,
-    __in  BOOLEAN FloatingSave
-    );
-
-typedef
-VOID
-(*PFN_IO_DISCONNECT_INTERRUPT)(
-    __in PKINTERRUPT InterruptObject
-    );
-
-typedef
-KIRQL
-(FASTCALL *PFN_KF_RAISE_IRQL) (
-    __in KIRQL NewIrql
-    );
-
-typedef
-VOID
-(FASTCALL *PFN_KF_LOWER_IRQL) (
-    __in KIRQL NewIrql
-    );
-
-typedef
-PSLIST_ENTRY
-(FASTCALL *PFN_INTERLOCKED_POP_ENTRY_SLIST)(
-    __inout PSLIST_HEADER ListHead
-    );
-
-typedef
-PSLIST_ENTRY
-(FASTCALL *PFN_INTERLOCKED_PUSH_ENTRY_SLIST)(
-    __inout PSLIST_HEADER ListHead,
-    __inout PSLIST_ENTRY ListEntry
-    );
-
-typedef
-BOOLEAN
-(*PFN_PO_GET_SYSTEM_WAKE)(
-    __in PIRP Irp
-    );
-
-typedef
-VOID
-(*PFN_PO_SET_SYSTEM_WAKE)(
-    __inout PIRP Irp
-    );
-
-typedef
-KAFFINITY
-(*PFN_KE_QUERY_ACTIVE_PROCESSORS)(
-    VOID
-    );
-
-typedef
-VOID
-(*PFN_KE_SET_TARGET_PROCESSOR_DPC)(
-    __in PRKDPC  Dpc,
-    __in CCHAR  Number
-    );
-
-typedef
-BOOLEAN
-(*PFN_KE_SET_COALESCABLE_TIMER)(
-    __inout PKTIMER Timer,
-    __in LARGE_INTEGER DueTime,
-    __in ULONG Period,
-    __in ULONG TolerableDelay,
-    __in_opt PKDPC Dpc
-    );
-
-typedef
-ULONG
-(*PFN_KE_GET_CURRENT_PROCESSOR_NUMBER)(
-    VOID
-    );
-
-typedef
-ULONG
-(*PFN_KE_GET_CURRENT_PROCESSOR_NUMBER_EX)(
-    __out_opt PPROCESSOR_NUMBER ProcNumber
-    );
-
-typedef
-ULONG
-(*PFN_KE_QUERY_MAXIMUM_PROCESSOR_COUNT_EX)(
-    __in USHORT GroupNumber
-    );
-
-typedef
-ULONG
-(*PFN_KE_QUERY_MAXIMUM_PROCESSOR_COUNT)(
-    VOID
-    );
-
-typedef
-BOOLEAN
-(*PFN_KE_ARE_APCS_DISABLED)(
-    VOID
-    );
-
-typedef
-ULONG
-(*PFN_KE_GET_RECOMMENDED_SHARED_DATA_ALIGNMENT)(
-    VOID
-    );
-
-typedef
-NTSTATUS
-(*PFN_IO_UNREGISTER_PLUGPLAY_NOTIFICATION_EX)(
-    __in PVOID NotificationEntry
-    );
-
-typedef
-NTSTATUS
-(*PFN_POX_REGISTER_DEVICE) (
-    __in MdDeviceObject Pdo,
-    __in PPO_FX_DEVICE PoxDevice,
-    __out POHANDLE * Handle
-    );
-
-typedef
-VOID
-(*PFN_POX_START_DEVICE_POWER_MANAGEMENT) (
-    __in POHANDLE Handle
-    );
-
-typedef
-VOID
-(*PFN_POX_UNREGISTER_DEVICE) (
-    __in POHANDLE Handle
-    );
-
-typedef
-(*PFN_POX_ACTIVATE_COMPONENT) (
-    __in POHANDLE Handle,
-    __in ULONG Component,
-    __in ULONG Flags
-    );
-
-typedef
-(*PFN_POX_IDLE_COMPONENT) (
-    __in POHANDLE Handle,
-    __in ULONG Component,
-    __in ULONG Flags
-    );
-
-typedef
-VOID
-(*PFN_POX_REPORT_DEVICE_POWERED_ON) (
-    __in POHANDLE Handle
-    );
-
-typedef
-VOID
-(*PFN_POX_COMPLETE_IDLE_STATE) (
-    __in POHANDLE Handle,
-    __in ULONG Component
-    );
-
-typedef
-VOID
-(*PFN_POX_COMPLETE_IDLE_CONDITION) (
-    __in POHANDLE Handle,
-    __in ULONG Component
-    );
-
-typedef
-VOID
-(*PFN_POX_COMPLETE_DEVICE_POWER_NOT_REQUIRED) (
-    __in POHANDLE Handle
-    );
-
-typedef
-VOID
-(*PFN_POX_SET_DEVICE_IDLE_TIMEOUT) (
-    __in POHANDLE Handle,
-    __in ULONGLONG IdleTimeout
-    );
-
-typedef
 VOID
 (*PFN_IO_REPORT_INTERRUPT_ACTIVE) (
     _In_ PIO_REPORT_INTERRUPT_ACTIVE_STATE_PARAMETERS Parameters
@@ -306,20 +77,6 @@ typedef
 VOID
 (*PFN_IO_REPORT_INTERRUPT_INACTIVE) (
     _In_ PIO_REPORT_INTERRUPT_ACTIVE_STATE_PARAMETERS Parameters
-    );
-
-typedef
-VOID
-(*PFN_VF_CHECK_NX_POOL_TYPE) (
-    _In_ POOL_TYPE PoolType,
-    _In_ PVOID CallingAddress,
-    _In_ ULONG PoolTag
-    );
-
-typedef
-BOOLEAN
-(*PFN_VF_IS_RULE_CLASS_ENABLED) (
-    _In_ ULONG RuleClassId
     );
 
 VOID
@@ -742,7 +499,7 @@ FxIsProcessorGroupSupported(
     //
     // Groups are supported in Win 7 and forward.
     //
-    return FxLibraryGlobals.ProcessorGroupSupport;
+    return TRUE;
 }
 
 #ifdef __cplusplus

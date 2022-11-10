@@ -686,7 +686,15 @@ FxObject::AddContext(
                     m_ObjectFlags |= FXOBJECT_FLAGS_HAS_CLEANUP;
                 }
             }
-
+            else {
+                //
+                // When called from MoveContexts, Attributes is NULL and Header's
+                // callbacks are already initialized.
+                //
+                if (Header->EvtCleanupCallback != NULL) {
+                    m_ObjectFlags |= FXOBJECT_FLAGS_HAS_CLEANUP;
+                }
+            }
         }
     }
     else {
@@ -762,10 +770,9 @@ Return Value:
     //
     // All contexts for a object is linked together through a head. When moving
     // all contexts from one object to another object, it might be tempting to
-    // take a shortcut by modifying head only. That is wrong, e.g. the target
-    // object may need to set FXOBJECT_FLAGS_HAS_CLEANUP if any of the incoming
-    // contexts has the cleanup callback. Therefore we have to traverse the link
-    // one by one.
+    // take a shortcut by modifying head only. That is wrong as we need to verify
+    // there is no context type name conflict between two objects. Therefore we
+    // have to traverse the link and call AddContext one by one.
     //
     while ((cur = header->NextHeader) != NULL) {
 

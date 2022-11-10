@@ -221,6 +221,13 @@ FxDeviceBase::_SearchForDevice(
     FxQueryInterfaceParams cbParams = { (PVOID*) Callbacks, FX_TYPE_IHASCALLBACKS, 0 };
     PVOID pTag;
 
+    //
+    // Init out parameter.
+    //
+    if (Callbacks != NULL) {
+        *Callbacks = NULL;
+    }
+
     pDeviceBase = Object->GetDeviceBase();
     if (pDeviceBase == NULL) {
         DoTraceLevelMessage(
@@ -237,11 +244,6 @@ FxDeviceBase::_SearchForDevice(
         //
         return pDeviceBase;
     }
-    
-    //
-    // Init out parameter.
-    //
-    *Callbacks = NULL;
 
     pOrigParent = Object;
     pTag = pOrigParent;

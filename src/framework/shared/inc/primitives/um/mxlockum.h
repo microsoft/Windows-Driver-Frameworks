@@ -68,11 +68,11 @@ MxLockNoDynam::Initialize(
 }
 
 
-__inline
+_Use_decl_annotations_
 VOID
-#pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
+#pragma prefast(suppress:__WARNING_IRQL_NOT_SET)
 MxLockNoDynam::Acquire(
-    __out KIRQL * OldIrql
+    KIRQL * OldIrql
     )
 {
     ASSERT_DBGFLAG_INITIALIZED;
@@ -128,9 +128,10 @@ MxLockNoDynam::AcquireAtDpcLevel(
     Acquire(&dontCare);
 }
 
+_Use_decl_annotations_
 __inline
 VOID
-#pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "Can't apply kernel mode annotations.");
+#pragma prefast(suppress:__WARNING_IRQL_NOT_USED);
 MxLockNoDynam::Release(
     KIRQL NewIrql
     )

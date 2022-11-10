@@ -2066,7 +2066,7 @@ VOID
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDEVICE Device,
-    _Out_
+    _Inout_
     PWDF_DEVICE_STATE DeviceState
     );
 
@@ -2076,7 +2076,7 @@ VOID
 WdfDeviceGetDeviceState(
     _In_
     WDFDEVICE Device,
-    _Out_
+    _Inout_
     PWDF_DEVICE_STATE DeviceState
     )
 {

@@ -919,6 +919,7 @@ FxPkgIo::ConfigureForwarding(
     NTSTATUS status;
 
     ASSERT(RequestType <= IRP_MJ_MAXIMUM_FUNCTION);
+    _Analysis_assume_(RequestType <= IRP_MJ_MAXIMUM_FUNCTION && RequestType >= 0);
 
     if(TargetQueue->IsIoEventHandlerRegistered(RequestType) == FALSE){
         status = STATUS_INVALID_DEVICE_REQUEST;

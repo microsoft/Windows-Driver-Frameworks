@@ -4691,7 +4691,7 @@ Return Value:
 __drv_requiresIRQL(DISPATCH_LEVEL)
 VOID
 FxIoQueue::ProcessIdleComplete(
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 
@@ -4744,7 +4744,7 @@ Return Value:
 __drv_requiresIRQL(DISPATCH_LEVEL)
 VOID
 FxIoQueue::ProcessPurgeComplete(
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 
@@ -4795,7 +4795,7 @@ Return Value:
 __drv_requiresIRQL(DISPATCH_LEVEL)
 VOID
 FxIoQueue::ProcessReadyNotify(
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 
@@ -4857,7 +4857,7 @@ Return Value:
 __drv_requiresIRQL(DISPATCH_LEVEL)
 BOOLEAN
 FxIoQueue::ProcessCancelledRequests(
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 
@@ -4941,7 +4941,7 @@ FxIoQueue::ProcessCancelledRequests(
 __drv_requiresIRQL(DISPATCH_LEVEL)
 BOOLEAN
 FxIoQueue::ProcessCancelledRequestsOnQueue(
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 
@@ -5014,7 +5014,7 @@ FxIoQueue::ProcessCancelledRequestsOnQueue(
 __drv_requiresIRQL(DISPATCH_LEVEL)
 BOOLEAN
 FxIoQueue::ProcessPowerEvents(
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 
@@ -5648,7 +5648,7 @@ __drv_requiresIRQL(DISPATCH_LEVEL)
 VOID
 FxIoQueue::ProcessAcknowledgedRequests(
     __in FxRequest* Request,
-    __out PKIRQL PreviousIrql
+    _In_ PKIRQL PreviousIrql
     )
 /*++
 

@@ -102,23 +102,45 @@ typedef struct _WDF_IFR_HEADER {
     PLONG           SequenceNumberPointer;  // Global IFR Sequence Number
 #endif
     CHAR            DriverName[WDF_IFR_HEADER_NAME_LEN];
+    BOOLEAN         UseTimeStamp;           // If true, WDF_IFR_RECORD contains TimeStamp
+    BOOLEAN         PreciseTimeStamp;       // If true, use precise timestamp
 
 } WDF_IFR_HEADER, *PWDF_IFR_HEADER;
 
 
-#define WDF_IFR_RECORD_SIGNATURE 'RL'  // 'LR'
+#define WDF_IFR_RECORD_SIGNATURE_V1 'RL'  // 'LR'
+#define WDF_IFR_RECORD_SIGNATURE    '2L'  // 'L2'
 
 typedef struct _WDF_IFR_RECORD {
 
-    USHORT      Signature;        // 'LR'  Log Record signature
-    USHORT      Length;           // size of record including WDF_IFR_RECORD
+    USHORT      Signature;        // 'L2'  Log Record signature v2
+    USHORT      Length;           // sizeof(record) + variable-sized data
     LONG        Sequence;
     USHORT      PrevOffset;       // offset to previous record
     USHORT      MessageNumber;    // message number   see <GUID>.tmf
     GUID        MessageGuid;      // message GUID     see <GUID>.tmf
 
+    //
+    // TimeStamp is meant to be a LARGE_INTEGER which is a 64-bit integer, and
+    // will align at 8-byte boundary. However, size of v1 RECORD is 0x1c, thus
+    // there will be a 4-byte wasted padding after the last field MessageGuid.
+    // To save space TimeStamp is defined as two 4-byte integers.
+    //
+    struct {
+        DWORD LowPart;
+        LONG  HighPart;
+    } TimeStamp;                  // Current system time (in UTC)
+
 } WDF_IFR_RECORD, *PWDF_IFR_RECORD;
 
+typedef struct _WDF_IFR_RECORD_V1 {
+    USHORT      Signature;        // 'LR'  Log Record signature
+    USHORT      Length;           // sizeof(record) + variable-sized data
+    LONG        Sequence;
+    USHORT      PrevOffset;       // offset to previous record
+    USHORT      MessageNumber;    // message number   see <GUID>.tmf
+    GUID        MessageGuid;      // message GUID     see <GUID>.tmf
+} WDF_IFR_RECORD_V1, *PWDF_IFR_RECORD_V1;
 
 #define WDF_GLOBAL_VALUE_IFR_REPLAY  L"WdfIfrCaptureServiceList" // REG_MULTI_SZ
 

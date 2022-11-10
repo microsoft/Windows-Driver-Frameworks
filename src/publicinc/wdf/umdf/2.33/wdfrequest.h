@@ -896,7 +896,7 @@ VOID
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request,
-    _Out_
+    _Inout_
     PWDF_REQUEST_COMPLETION_PARAMS Params
     );
 
@@ -906,7 +906,7 @@ VOID
 WdfRequestGetCompletionParams(
     _In_
     WDFREQUEST Request,
-    _Out_
+    _Inout_
     PWDF_REQUEST_COMPLETION_PARAMS Params
     )
 {
@@ -1018,7 +1018,7 @@ VOID
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFREQUEST Request,
-    _Out_
+    _Inout_
     PWDF_REQUEST_PARAMETERS Parameters
     );
 
@@ -1028,7 +1028,7 @@ VOID
 WdfRequestGetParameters(
     _In_
     WDFREQUEST Request,
-    _Out_
+    _Inout_
     PWDF_REQUEST_PARAMETERS Parameters
     )
 {

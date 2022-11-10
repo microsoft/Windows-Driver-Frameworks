@@ -94,6 +94,7 @@ MxMemory::MxAllocatePoolWithTag(
     __in ULONG  Tag
     )
 {
+    #pragma warning( suppress : 4996 28751 )
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 

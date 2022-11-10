@@ -40,7 +40,9 @@ extern "C" {
 
 
 VOID
+#if FX_CORE_MODE == FX_CORE_KERNEL_MODE
 __declspec(noreturn)
+#endif
 FxVerifierBugCheckWorker(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in WDF_BUGCHECK_CODES WdfBugCheckCode,
@@ -60,6 +62,23 @@ Returns:
 
 --*/
 {
+#if (FX_CORE_MODE == FX_CORE_USER_MODE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#else
     //
     // Indicate to the BugCheck callback filter which IFR to dump.
     //
@@ -70,6 +89,7 @@ Returns:
                  BugCheckParameter2,
                  BugCheckParameter3,
                  (ULONG_PTR) FxDriverGlobals );
+#endif
 }
 
 VOID
@@ -147,6 +167,23 @@ Returns: VOID
     FxDriverGlobals->FxForceLogsInMiniDump = TRUE;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     FX_VERIFY_WITH_NAME(DRIVER(BadAction, BugCheckCode), TRAPMSG("A UMDF driver "
         "reported a fatal error"), FxDriverGlobals->Public.DriverName);
 #else

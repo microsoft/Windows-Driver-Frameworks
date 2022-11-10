@@ -809,7 +809,7 @@ WDFEXPORT(WdfInterruptGetInfo)(
     PWDF_DRIVER_GLOBALS DriverGlobals,
     __in
     WDFINTERRUPT Interrupt,
-    __out
+    _Inout_
     PWDF_INTERRUPT_INFO    Info
     )
 

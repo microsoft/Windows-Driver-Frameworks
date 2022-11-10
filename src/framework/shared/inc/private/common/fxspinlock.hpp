@@ -46,7 +46,7 @@ public:
         __in USHORT ExtraSize
         );
 
-
+    _At_(this->m_Irql, __drv_savesIRQL)
     __drv_raisesIRQL(DISPATCH_LEVEL)
     __drv_maxIRQL(DISPATCH_LEVEL)
     VOID
@@ -54,6 +54,7 @@ public:
         __in PVOID CallersAddress
         );
     
+    _At_(this->m_Irql, __drv_restoresIRQL)
     __drv_requiresIRQL(DISPATCH_LEVEL)
     VOID
     ReleaseLock(

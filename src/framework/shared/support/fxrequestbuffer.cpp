@@ -242,7 +242,7 @@ FxRequestBuffer::GetBuffer(
         return STATUS_SUCCESS;
 
     case FxRequestBufferMdl:
-        *Buffer = Mx::MxGetSystemAddressForMdlSafe(u.Mdl.Mdl, NormalPagePriority);
+        *Buffer = Mx::MxGetSystemAddressForMdlSafe(u.Mdl.Mdl, NormalPagePriority | MdlMappingNoExecute);
         if (*Buffer != NULL) {
             return STATUS_SUCCESS;
         }
@@ -251,7 +251,7 @@ FxRequestBuffer::GetBuffer(
         }
 
     case FxRequestBufferReferencedMdl:
-        *Buffer = Mx::MxGetSystemAddressForMdlSafe(u.RefMdl.Mdl, NormalPagePriority);
+        *Buffer = Mx::MxGetSystemAddressForMdlSafe(u.RefMdl.Mdl, NormalPagePriority | MdlMappingNoExecute);
         if (*Buffer != NULL) {
             if (u.RefMdl.Offsets != NULL) {
                 *Buffer = WDF_PTR_ADD_OFFSET(*Buffer,
@@ -304,6 +304,7 @@ FxRequestBuffer::AssignValues(
             }
         }
 
+        *PPMdl = NULL;
         *PPBuffer = pBuffer;
         *BufferLength = (ULONG) bufferSize;
         break;

@@ -548,6 +548,8 @@ FxPoxInterface::PowerRequiredCallbackWorker(
 {
     KIRQL irql;
 
+    m_PkgPnp->SaveRequestD0IrpReasonHint(RequestD0ForPowerReqCb);
+
     //
     // Make a note of the fact that device power is required
     //
@@ -617,6 +619,8 @@ Return Value:
     // Mark the directed transition as now in progress.
     //
     SetDirectedTransitionInProgress();
+
+    m_PkgPnp->SaveRequestD0IrpReasonHint(RequestD0ForDfxPowerUp);
 
     //
     // Send the device-power-not-required event to the device power

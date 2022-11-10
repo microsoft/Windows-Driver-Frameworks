@@ -150,12 +150,13 @@ Mx::MxGetCurrentIrql(
     return PASSIVE_LEVEL;
 }
 
+_Use_decl_annotations_
 __inline
 VOID
-#pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
+#pragma prefast(suppress:__WARNING_IRQL_NOT_SET __WARNING_RETURN_UNINIT_VAR)
 Mx::MxRaiseIrql(
-    __in KIRQL  NewIrql,
-    __out PKIRQL  OldIrql
+    KIRQL  NewIrql,
+    PKIRQL OldIrql
     )
 {
     UNREFERENCED_PARAMETER(NewIrql);
@@ -164,11 +165,12 @@ Mx::MxRaiseIrql(
     DO_NOTHING();
 }
 
+_Use_decl_annotations_
 __inline
 VOID
-#pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
+#pragma prefast(suppress:__WARNING_IRQL_NOT_USED)
 Mx::MxLowerIrql(
-    __in KIRQL  NewIrql
+    KIRQL NewIrql
     )
 {
     UNREFERENCED_PARAMETER(NewIrql);
@@ -290,37 +292,6 @@ Mx::MxDelayExecutionThread(
     intervalMillisecond.QuadPart /= 10 * 1000;
 
     SleepEx((DWORD)intervalMillisecond.QuadPart, Alertable);
-}
-
-__inline
-PVOID
-Mx::MxGetSystemRoutineAddress(
-    __in MxFuncName FuncName
-    )
-/*++
-Description:
-
-    This function is meant to be called only by mode agnostic code
-    System routine is assumed to be in ntdll.dll.
-
-    This is because system routines (Rtl*) that can be used both
-    in kernel mode as well as user mode reside in ntdll.dll.
-    Kernel32.dll contains the user mode only Win32 API.
-
-Arguments:
-
-    MxFuncName FuncName -
-
-Return Value:
-
-    NTSTATUS Status code.
---*/
-{
-    HMODULE hMod;
-
-    hMod = GetModuleHandleW(L"ntdll.dll");
-
-    return GetProcAddress(hMod, FuncName);
 }
 
 __inline
@@ -476,11 +447,12 @@ Mx::MxHasEnoughRemainingThreadStack(
     return TRUE;
 }
 
+_Use_decl_annotations_
 __inline
 VOID
-#pragma prefast(suppress:__WARNING_UNMATCHED_DECL_ANNO, "Can't apply kernel mode annotations.");
+#pragma prefast(suppress:__WARNING_IRQL_NOT_USED);
 Mx::ReleaseCancelSpinLock(
-    __in KIRQL  Irql
+    KIRQL  Irql
     )
 {
     UNREFERENCED_PARAMETER(Irql);
@@ -655,16 +627,18 @@ Mx::MxDeletePagedLookasideList(
     ASSERTMSG("Not implemented for UMDF\n", FALSE);
 }
 
+_Use_decl_annotations_
 __inline
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR)
 Mx::MxInitializeNPagedLookasideList(
-    _Out_     PNPAGED_LOOKASIDE_LIST Lookaside,
-    _In_opt_  PALLOCATE_FUNCTION Allocate,
-    _In_opt_  PFREE_FUNCTION Free,
-    _In_      ULONG Flags,
-    _In_      SIZE_T Size,
-    _In_      ULONG Tag,
-    _In_      USHORT Depth
+    PNPAGED_LOOKASIDE_LIST Lookaside,
+    PALLOCATE_FUNCTION Allocate,
+    PFREE_FUNCTION Free,
+    ULONG Flags,
+    SIZE_T Size,
+    ULONG Tag,
+    USHORT Depth
     )
 {
 
@@ -680,16 +654,18 @@ Mx::MxInitializeNPagedLookasideList(
 
 }
 
+_Use_decl_annotations_
 __inline
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR)
 Mx::MxInitializePagedLookasideList(
-    _Out_     PPAGED_LOOKASIDE_LIST Lookaside,
-    _In_opt_  PALLOCATE_FUNCTION Allocate,
-    _In_opt_  PFREE_FUNCTION Free,
-    _In_      ULONG Flags,
-    _In_      SIZE_T Size,
-    _In_      ULONG Tag,
-    _In_      USHORT Depth
+    PPAGED_LOOKASIDE_LIST Lookaside,
+    PALLOCATE_FUNCTION Allocate,
+    PFREE_FUNCTION Free,
+    ULONG Flags,
+    SIZE_T Size,
+    ULONG Tag,
+    USHORT Depth
     )
 {
 
@@ -909,6 +885,20 @@ Mx::MxQuerySystemTime(
     FILETIME filetime;
 
     GetSystemTimeAsFileTime(&filetime);
+
+    CurrentTime->LowPart = filetime.dwLowDateTime;
+    CurrentTime->HighPart = (LONG) filetime.dwHighDateTime;
+}
+
+__inline
+VOID
+Mx::MxQuerySystemTimePrecise(
+    _Out_ PLARGE_INTEGER CurrentTime
+    )
+{
+    FILETIME filetime;
+
+    GetSystemTimePreciseAsFileTime(&filetime);
 
     CurrentTime->LowPart = filetime.dwLowDateTime;
     CurrentTime->HighPart = (LONG) filetime.dwHighDateTime;

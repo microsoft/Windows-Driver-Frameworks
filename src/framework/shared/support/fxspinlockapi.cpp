@@ -108,6 +108,7 @@ WDFEXPORT(WdfSpinLockCreate)(
 __drv_raisesIRQL(DISPATCH_LEVEL)
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+#pragma prefast(suppress:__WARNING_IRQL_NOT_SET, "No IRQL was saved into 'SpinLock'")
 WDFEXPORT(WdfSpinLockAcquire)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -145,6 +146,7 @@ WDFEXPORT(WdfSpinLockAcquire)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 __drv_minIRQL(DISPATCH_LEVEL)
 VOID
+#pragma prefast(suppress:__WARNING_IRQL_NOT_USED, "The IRQL in 'SpinLock' was never restored")
 WDFEXPORT(WdfSpinLockRelease)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

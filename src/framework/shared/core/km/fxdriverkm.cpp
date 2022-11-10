@@ -34,6 +34,7 @@ extern "C" {
 
 _Must_inspect_result_
 NTSTATUS
+#pragma prefast(suppress:__WARNING_INIT_NOT_CLEARED, "AddDevice-like function did not clear DO_DEVICE_INITIALIZING")
 FxDriver::AddDevice(
     __in MdDriverObject DriverObject,
     __in MdDeviceObject PhysicalDeviceObject

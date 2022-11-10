@@ -24,6 +24,7 @@ Revision History:
 
 #include "FxSupportPch.hpp"
 #include "fxldrum.h"
+#include <FeatureStaging-WDF.h>
 
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -35,221 +36,6 @@ extern "C" {
 #include <initguid.h>
 #include "fxIFR.h"       // shared struct between IFR and debug ext.
 #include "fxIFRKm.h"     // kernel mode only IFR definitions
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 _Must_inspect_result_
 NTSTATUS
@@ -358,10 +144,13 @@ FxWmiTraceMessage(
 // Subcomponents for the In-Flight Recorder follow.
 //-----------------------------------------------------------------------------
 
-ULONG
-FxIFRGetSize(
+VOID
+FxIFRGetSettings(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
-    __in PCUNICODE_STRING RegistryPath
+    __in PCUNICODE_STRING RegistryPath,
+    __out ULONG * Size,
+    __out BOOLEAN * UseTimeStamp,
+    __out BOOLEAN * PreciseTimeStamp
     )
 /*++
 
@@ -371,15 +160,18 @@ Routine Description:
 
 Arguments:
     RegistryPath - path to the service
-
-Return Value:
-    The size of the IFR to create in bytes (not pages!)
+    [out] Size - The size of the IFR to create in bytes (not pages!)
+    [out] UseTimeStamp - Whether to store timestamp or not
+    [out] PreciseTimeStamp - Use precise timestamp.
 
   --*/
 {
     FxAutoRegKey service, parameters;
     NTSTATUS status;
     ULONG numPages;
+    ULONG regValue;
+    BOOLEAN useTimeStamp;
+    BOOLEAN preciseTimeStamp;
 
     //
     // This is the value used in case of any error while retrieving 'LogPages'
@@ -387,12 +179,17 @@ Return Value:
     //
     numPages  = FxIFRMinLogPages;
 
+    useTimeStamp = TRUE;
+    preciseTimeStamp = FALSE;
+
     //
     // External representation of the IFR is the "log", so use tha term when
     // overriding the size via the registry.
     //
     DECLARE_CONST_UNICODE_STRING(parametersPath, L"Parameters\\Wdf");
     DECLARE_CONST_UNICODE_STRING(valueName, L"LogPages");
+    DECLARE_CONST_UNICODE_STRING(nameTimeStamp, L"LogUseTimeStamp");
+    DECLARE_CONST_UNICODE_STRING(namePreciseTimeStamp, L"LogPreciseTimeStamp");
 
     //
     // UMDF may not provide this registry path
@@ -418,26 +215,38 @@ Return Value:
     }
 
     status = FxRegKey::_QueryULong(parameters.m_Key, &valueName, &numPages);
-    if (!NT_SUCCESS(status)) {
-        goto defaultValues;
+    if (NT_SUCCESS(status)) {
+        if (numPages == 0) {
+            numPages = FxIFRMinLogPages;
+        }
+        //
+        // This behavior is different from KMDF. KMDF would allocate Average page count (5)
+        // if Verifier is on otherwise 1 page if the request is large.
+        // Since for UMDF the memory is coming from WudfRd, which does not know about verifier
+        // we will give it max pages here.
+        //
+        if (numPages > FxIFRMaxLogPages) {
+            numPages = FxIFRMaxLogPages;
+        }
     }
 
-    if (numPages == 0) {
-        numPages = FxIFRMinLogPages;
+    status = FxRegKey::_QueryULong(parameters.m_Key, &nameTimeStamp, &regValue);
+    if (NT_SUCCESS(status)) {
+        useTimeStamp = (regValue != 0);
+    }
+
+    if (useTimeStamp) {
+        status = FxRegKey::_QueryULong(parameters.m_Key, &namePreciseTimeStamp, &regValue);
+        if (NT_SUCCESS(status)) {
+            preciseTimeStamp = (regValue != 0);
+        }
     }
 
 defaultValues:
-    //
-    // This behavior is different from KMDF. KMDF would allocate Average page count (5)
-    // if Verifier is on otherwise 1 page if the request is large.
-    // Since for UMDF the memory is coming from WudfRd, which does not know about verifier
-    // we will give it max pages here.
-    //
-    if (numPages > FxIFRMaxLogPages) {
-        numPages = FxIFRMaxLogPages;
-    }
 
-    return numPages * PAGE_SIZE;
+    *Size = numPages * PAGE_SIZE;
+    *UseTimeStamp = useTimeStamp;
+    *PreciseTimeStamp = preciseTimeStamp;
 }
 
 VOID
@@ -476,6 +285,8 @@ Returns:
     LONG i;
     DECLARE_UNICODE_STRING_SIZE(svcNameW, WDF_DRIVER_GLOBALS_NAME_LEN);
     NTSTATUS ntStatus;
+    BOOLEAN useTimeStamp;
+    BOOLEAN preciseTimeStamp;
 
     //
     // Return early if IFR is disabled.
@@ -484,8 +295,6 @@ Returns:
         ASSERT(FxDriverGlobals->WdfLogHeader == NULL);
         return;
     }
-
-    WDFCASSERT(FxIFRRecordSignature == WDF_IFR_RECORD_SIGNATURE);
 
     if (FxDriverGlobals == NULL || FxDriverGlobals->WdfLogHeader != NULL) {
         return;
@@ -519,7 +328,9 @@ Returns:
 
     serviceName = &RegistryPath->Buffer[i+1];
 
-    sizeCb = FxIFRGetSize(FxDriverGlobals, RegistryPath);
+    FxIFRGetSettings(FxDriverGlobals, RegistryPath, &sizeCb,
+                     &useTimeStamp, &preciseTimeStamp);
+
     pageCount = sizeCb / PAGE_SIZE;
     umDriverObject = (PDRIVER_OBJECT_UM)DriverObject;
 
@@ -573,6 +384,8 @@ Returns:
 
     pHeader->Base = (PUCHAR) &pHeader[1];
     pHeader->Size = allocatedBufferLengthCb - sizeof(WDF_IFR_HEADER);
+    pHeader->UseTimeStamp = useTimeStamp;
+    pHeader->PreciseTimeStamp = preciseTimeStamp;
 
     pHeader->Offset.u.s.Current  = 0;
     pHeader->Offset.u.s.Previous = 0;
@@ -674,6 +487,7 @@ Returns:
 {
     size_t            size;
     PWDF_IFR_RECORD   record;
+    PWDF_IFR_HEADER  header;
 
     UNREFERENCED_PARAMETER( MessageLevel );
 
@@ -757,22 +571,29 @@ Returns:
         }
     }
 
-    size += sizeof(WDF_IFR_RECORD);
+    header = (PWDF_IFR_HEADER) FxDriverGlobals->WdfLogHeader;
+    ASSERT(header->Size < FxIFRMaxLogSize); // size doesn't include header.
+    ASSERT(header->Size >= header->Offset.u.s.Current);
+    ASSERT(header->Size >= header->Offset.u.s.Previous);
+
+    //
+    // Allocate memory for timestamp only if necessary.
+    //
+    size_t recordSize = header->UseTimeStamp
+                        ? sizeof(WDF_IFR_RECORD)
+                        : sizeof(WDF_IFR_RECORD_V1);
+
+    size += recordSize;
 
     //
     // Allocate log space of the calculated size
     //
     {
-        PWDF_IFR_HEADER  header;
         WDF_IFR_OFFSET   offsetRet;
         WDF_IFR_OFFSET   offsetCur;
         WDF_IFR_OFFSET   offsetNew;
         USHORT           usSize = (USHORT) size;  // for a prefast artifact.
 
-        header = (PWDF_IFR_HEADER) FxDriverGlobals->WdfLogHeader;
-        ASSERT(header->Size < FxIFRMaxLogSize); // size doesn't include header.
-        ASSERT(header->Size >= header->Offset.u.s.Current);
-        ASSERT(header->Size >= header->Offset.u.s.Previous);
 
         //
         // Allocate space for the log in our circular buffer in a lockless way.
@@ -851,12 +672,26 @@ Returns:
         //
         // Build record (fill all fields!)
         //
-        record->Signature     = FxIFRRecordSignature;
         record->Length        = (USHORT) size;
         record->PrevOffset    = (USHORT) offsetRet.u.s.Previous;
         record->MessageNumber = MessageNumber;
         record->Sequence      = InterlockedIncrement(header->SequenceNumberPointer);
         record->MessageGuid   = *MessageGuid;
+
+        if (!header->UseTimeStamp) {
+            record->Signature = WDF_IFR_RECORD_SIGNATURE_V1;
+        } else {
+            record->Signature = WDF_IFR_RECORD_SIGNATURE;
+            LARGE_INTEGER timestamp;
+            if (header->PreciseTimeStamp) {
+                Mx::MxQuerySystemTimePrecise(&timestamp);
+            }
+            else {
+                Mx::MxQuerySystemTime(&timestamp);
+            }
+            record->TimeStamp.LowPart  = timestamp.LowPart;
+            record->TimeStamp.HighPart = timestamp.HighPart;
+        }
     }
 
     //
@@ -868,7 +703,7 @@ Returns:
         PVOID    source;
         PUCHAR   argsData;
 
-        argsData = (UCHAR*) &record[1];
+        argsData = ((UCHAR*)record) + recordSize;
 
         va_start(ap, MessageNumber);
 

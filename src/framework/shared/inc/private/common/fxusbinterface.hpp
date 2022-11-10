@@ -96,7 +96,7 @@ public:
 
     VOID
     GetDescriptor(
-        __in PUSB_INTERFACE_DESCRIPTOR  UsbInterfaceDescriptor,
+        _Out_ PUSB_INTERFACE_DESCRIPTOR  UsbInterfaceDescriptor,
         __in UCHAR SettingIndex
         );
 
@@ -107,6 +107,7 @@ public:
         VOID
         ) ;
 
+    _Success_(return != NULL)
     WDFUSBPIPE
     GetConfiguredPipe(
         __in  UCHAR PipeIndex,

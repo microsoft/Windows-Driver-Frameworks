@@ -47,6 +47,9 @@ typedef enum _WDFFUNCENUM_NUMENTRIES {
 #include "WdfVersionLog.h"
 #include "minwindef.h"
 
+#include "FeatureStagingSupport.h"
+#include <FeatureStaging-WDF.h>
+
 extern "C" {
 //
 // Global triage Info for dbgeng and 0x9F work
@@ -258,8 +261,6 @@ FxLibraryCommonCommission(
     VOID
     )
 {
-    DECLARE_CONST_UNICODE_STRING(usName, L"RtlGetVersion");
-    PFN_RTL_GET_VERSION pRtlGetVersion = NULL;
     NTSTATUS   status;
 
     __Print((LITERAL(WDF_LIBRARY_COMMISSION) "\n"));
@@ -295,19 +296,8 @@ FxLibraryCommonCommission(
         status = STATUS_SUCCESS;
     }
 
-    //
-    // Attempt to load RtlGetVersion (works for > w2k).
-    //
-    pRtlGetVersion = (PFN_RTL_GET_VERSION) MmGetSystemRoutineAddress(
-        (PUNICODE_STRING) &usName
-        );
-
-    //
-    // Now attempt to get this OS's version.
-    //
-    if (pRtlGetVersion != NULL) {
-        pRtlGetVersion(&gOsVersion);
-    }
+    gOsVersion.dwOSVersionInfoSize = sizeof(gOsVersion);
+    RtlGetVersion(&gOsVersion);
 
     __Print(("OsVersion(%d.%d)\n",
              gOsVersion.dwMajorVersion,
@@ -441,14 +431,6 @@ FxLibraryCommonRegisterClient(
             goto Done;
         }
     }
-
-
-
-
-
-
-
-
     else {
 
 
@@ -573,6 +555,63 @@ Done:
     return status;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 _Must_inspect_result_
 NTSTATUS
 FxLibraryCommonUnregisterClient(
@@ -593,6 +632,12 @@ FxLibraryCommonUnregisterClient(
         status = STATUS_SUCCESS;
 
         pFxDriverGlobals = GetFxDriverGlobals(WdfDriverGlobals);
+
+
+
+
+
+
 
         //
         // Destroy this FxDriver instance, if its still indicated.

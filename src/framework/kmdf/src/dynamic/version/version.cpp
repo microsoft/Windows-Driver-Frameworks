@@ -23,6 +23,8 @@ Revision History:
 extern "C" {
 #include <ntddk.h>
 #include <ntstrsafe.h>
+#include <FeatureStagingSupport.h>
+#include <wil/staging.h>
 }
 
 #define  FX_DYNAMICS_GENERATE_TABLE   1
@@ -343,6 +345,11 @@ DriverEntry(
     //
     ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 
+
+
+
+
+
     RtlInitUnicodeString(&string, WDF_REGISTRY_DBGPRINT_ON);
 
     //
@@ -375,7 +382,7 @@ DriverEntry(
     status = FxLibraryCreateDevice(&name);
     if (!NT_SUCCESS(status)) {
         __Print(("ERROR: FxLibraryCreateDevice failed with Status 0x%x\n", status));
-        return status;
+        goto exit;
     }
 
     //
@@ -388,7 +395,7 @@ DriverEntry(
     if (!NT_SUCCESS(status)) {
         __Print(("ERROR: WdfRegisterLibrary failed with Status 0x%x\n", status));
         FxLibraryCleanup();
-        return status;
+        goto exit;
     }
 
     //
@@ -396,7 +403,13 @@ DriverEntry(
     //
     WdfWriteKmdfVersionToRegistry(DriverObject, RegistryPath);
 
-    return STATUS_SUCCESS;
+    status = STATUS_SUCCESS;
+
+exit:
+
+
+
+    return status;
 }
 
 //-----------------------------------------------------------------------------
@@ -420,6 +433,8 @@ DriverUnload(
     // driver, it can be unloaded while there are still outstanding device objects.
     //
     FxLibraryCleanup();
+
+
 }
 
 //-----------------------------------------------------------------------------

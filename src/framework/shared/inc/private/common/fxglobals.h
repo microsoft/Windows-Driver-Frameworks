@@ -829,26 +829,6 @@ FxObjectTypeToHandleName(
     __in WDFTYPE ObjectType
     );
 
-typedef
-NTSTATUS
-(*PFN_WMI_QUERY_TRACE_INFORMATION)(
-    __in      TRACE_INFORMATION_CLASS TraceInformationClass,
-    __out     PVOID TraceInformation,
-    __in      ULONG TraceInformationLength,
-    __out_opt PULONG RequiredLength,
-    __in_opt  PVOID Buffer
-    );
-
-typedef
-NTSTATUS
-(*PFN_WMI_TRACE_MESSAGE_VA)(
-    __in TRACEHANDLE  LoggerHandle,
-    __in ULONG        MessageFlags,
-    __in LPGUID       MessageGuid,
-    __in USHORT       MessageNumber,
-    __in va_list      MessageArgList
-    );
-
 enum FxMachineSleepStates {
     FxMachineS1Index = 0,
     FxMachineS2Index,
@@ -885,45 +865,11 @@ struct FxLibraryGlobalsType {
     //
     PDEVICE_OBJECT LibraryDeviceObject;
 
+
     PFN_IO_CONNECT_INTERRUPT_EX IoConnectInterruptEx;
-
     PFN_IO_DISCONNECT_INTERRUPT_EX IoDisconnectInterruptEx;
-
-    PFN_KE_QUERY_ACTIVE_PROCESSORS KeQueryActiveProcessors;
-
-    PFN_KE_SET_TARGET_PROCESSOR_DPC KeSetTargetProcessorDpc;
-
-    PFN_KE_SET_COALESCABLE_TIMER KeSetCoalescableTimer;
-
-    PFN_IO_UNREGISTER_PLUGPLAY_NOTIFICATION_EX IoUnregisterPlugPlayNotificationEx;
-
-    PFN_POX_REGISTER_DEVICE PoxRegisterDevice;
-
-    PFN_POX_START_DEVICE_POWER_MANAGEMENT PoxStartDevicePowerManagement;
-
-    PFN_POX_UNREGISTER_DEVICE PoxUnregisterDevice;
-
-    PFN_POX_ACTIVATE_COMPONENT PoxActivateComponent;
-
-    PFN_POX_IDLE_COMPONENT PoxIdleComponent;
-
-    PFN_POX_REPORT_DEVICE_POWERED_ON PoxReportDevicePoweredOn;
-
-    PFN_POX_COMPLETE_IDLE_STATE PoxCompleteIdleState;
-
-    PFN_POX_COMPLETE_IDLE_CONDITION PoxCompleteIdleCondition;
-
-    PFN_POX_COMPLETE_DEVICE_POWER_NOT_REQUIRED PoxCompleteDevicePowerNotRequired;
-
-    PFN_POX_SET_DEVICE_IDLE_TIMEOUT PoxSetDeviceIdleTimeout;
-
     PFN_IO_REPORT_INTERRUPT_ACTIVE IoReportInterruptActive;
-
     PFN_IO_REPORT_INTERRUPT_INACTIVE IoReportInterruptInactive;
-
-    PFN_VF_CHECK_NX_POOL_TYPE VfCheckNxPoolType;
-
-    PFN_VF_IS_RULE_CLASS_ENABLED VfIsRuleClassEnabled;
 
 #endif
 
@@ -955,8 +901,6 @@ struct FxLibraryGlobalsType {
     //
     KBUGCHECK_REASON_CALLBACK_RECORD  BugCheckCallbackRecord;
 
-    BOOLEAN ProcessorGroupSupport;
-
 #endif
     //
     // WPP tracing.
@@ -976,8 +920,6 @@ struct FxLibraryGlobalsType {
     //
     PFX_DRIVER_GLOBALS BestDriverForDumpLog;
 #endif
-
-    BOOLEAN PassiveLevelInterruptSupport;
 
     //
     // TRUE if compiled for user-mode
@@ -1042,41 +984,6 @@ struct FxLibraryGlobalsType {
     // timeout policy.
     //
     BOOLEAN WdfDirectedPowerTransitionEnabled;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //
-    // If enabled, for device using SystemManagedIdleTimeout, WDF uses its
-    // internal idle timer instead of letting PoFx to manage the idle timeout.
-    //
-    BOOLEAN UseWdfTimerForPofx;
 };
 
 extern FxLibraryGlobalsType FxLibraryGlobals;
@@ -1294,7 +1201,7 @@ FxIsPassiveLevelInterruptSupported(
     //
     // Passive-level interrupt handling is supported in Win 8 and forward.
     //
-    return FxLibraryGlobals.PassiveLevelInterruptSupport;
+    return TRUE;
 }
 
 __inline

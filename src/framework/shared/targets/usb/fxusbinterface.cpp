@@ -1016,6 +1016,7 @@ Return Value:
     PipeInfo->SettingIndex  = SettingIndex;
 }
 
+_Success_(return != NULL)
 WDFUSBPIPE
 FxUsbInterface::GetConfiguredPipe(
     __in UCHAR PipeIndex,
@@ -1050,7 +1051,7 @@ Return Value:
 
 VOID
 FxUsbInterface::GetDescriptor(
-    __in PUSB_INTERFACE_DESCRIPTOR  UsbInterfaceDescriptor,
+    _Out_ PUSB_INTERFACE_DESCRIPTOR  UsbInterfaceDescriptor,
     __in UCHAR SettingIndex
     )
 /*++

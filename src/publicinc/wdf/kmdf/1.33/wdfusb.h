@@ -974,7 +974,7 @@ NTSTATUS
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFUSBDEVICE UsbDevice,
-    _Out_
+    _Inout_
     PWDF_USB_DEVICE_INFORMATION Information
     );
 
@@ -985,7 +985,7 @@ NTSTATUS
 WdfUsbTargetDeviceRetrieveInformation(
     _In_
     WDFUSBDEVICE UsbDevice,
-    _Out_
+    _Inout_
     PWDF_USB_DEVICE_INFORMATION Information
     )
 {
@@ -2426,7 +2426,7 @@ VOID
     UCHAR SettingIndex,
     _In_
     UCHAR EndpointIndex,
-    _Out_
+    _Inout_
     PWDF_USB_PIPE_INFORMATION EndpointInfo
     );
 
@@ -2440,7 +2440,7 @@ WdfUsbInterfaceGetEndpointInformation(
     UCHAR SettingIndex,
     _In_
     UCHAR EndpointIndex,
-    _Out_
+    _Inout_
     PWDF_USB_PIPE_INFORMATION EndpointInfo
     )
 {
@@ -2542,7 +2542,7 @@ WDFUSBPIPE
     WDFUSBINTERFACE UsbInterface,
     _In_
     UCHAR PipeIndex,
-    _Out_opt_
+    _Inout_opt_
     PWDF_USB_PIPE_INFORMATION PipeInfo
     );
 
@@ -2554,7 +2554,7 @@ WdfUsbInterfaceGetConfiguredPipe(
     WDFUSBINTERFACE UsbInterface,
     _In_
     UCHAR PipeIndex,
-    _Out_opt_
+    _Inout_opt_
     PWDF_USB_PIPE_INFORMATION PipeInfo
     )
 {

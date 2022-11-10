@@ -116,6 +116,7 @@ WDFEXPORT(WdfStringCreate)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+#pragma prefast(suppress:__WARNING_RETURN_UNINIT_VAR, "Returning uninitialized memory '*UnicodeString'")
 WDFEXPORT(WdfStringGetUnicodeString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

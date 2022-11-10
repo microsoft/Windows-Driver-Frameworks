@@ -113,7 +113,20 @@ VOID
 FxOverrideDefaultVerifierSettings(
     __in    HANDLE Key,
     __in    LPWSTR Name,
-    __out   PBOOLEAN OverrideValue
+    _Inout_ PBOOLEAN OverrideValue
+    );
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlQueryRegistryValuesEx(
+    _In_     ULONG RelativeTo,
+    _In_     PCWSTR Path,
+    _Inout_ _At_(*(*QueryTable).EntryContext, _Pre_unknown_)
+        PRTL_QUERY_REGISTRY_TABLE QueryTable,
+    _In_opt_ PVOID Context,
+    _In_opt_ PVOID Environment
     );
 
 //
@@ -443,69 +456,6 @@ FxVerifyObjectTableIsSorted(
     }
 }
 
-typedef
-NTSTATUS
-(*PFN_RTL_GET_VERSION)(
-    __out PRTL_OSVERSIONINFOW VersionInformation
-    );
-
-typedef
-NTSTATUS
-(*PFN_RTL_VERIFY_VERSION_INFO)(
-    __in PRTL_OSVERSIONINFOEXW VersionInfo,
-    __in ULONG TypeMask,
-    __in ULONGLONG  ConditionMask
-    );
-
-typedef
-ULONGLONG
-(*PFN_VER_SET_CONDITION_MASK)(
-    __in  ULONGLONG   ConditionMask,
-    __in  ULONG   TypeMask,
-    __in  UCHAR   Condition
-    );
-
-VOID
-FxLibraryGlobalsVerifyVersion(
-    VOID
-    )
-{
-    RTL_OSVERSIONINFOEXW info;
-    PFN_RTL_VERIFY_VERSION_INFO pRtlVerifyVersionInfo;
-    PFN_VER_SET_CONDITION_MASK pVerSetConditionMask;
-    ULONGLONG condition;
-    NTSTATUS status;
-
-    pRtlVerifyVersionInfo = (PFN_RTL_VERIFY_VERSION_INFO)
-        Mx::MxGetSystemRoutineAddress(MAKE_MX_FUNC_NAME("RtlVerifyVersionInfo"));
-
-    if (pRtlVerifyVersionInfo == NULL) {
-        return;
-    }
-
-    pVerSetConditionMask = (PFN_VER_SET_CONDITION_MASK)
-        Mx::MxGetSystemRoutineAddress(MAKE_MX_FUNC_NAME("VerSetConditionMask"));
-
-    //
-    // Check for Win8 (6.2) and later for passive-level interrupt support.
-    //
-    RtlZeroMemory(&info, sizeof(info));
-    info.dwOSVersionInfoSize = sizeof(info);
-    info.dwMajorVersion = 6;
-    info.dwMinorVersion = 2;
-
-    condition = 0;
-    condition = pVerSetConditionMask(condition, VER_MAJORVERSION, VER_GREATER_EQUAL);
-    condition = pVerSetConditionMask(condition, VER_MINORVERSION, VER_GREATER_EQUAL);
-
-    status = pRtlVerifyVersionInfo(&info,
-                                   VER_MAJORVERSION | VER_MINORVERSION,
-                                   condition);
-    if (NT_SUCCESS(status)) {
-        FxLibraryGlobals.PassiveLevelInterruptSupport = TRUE;
-    }
-}
-
 VOID
 FxLibraryGlobalsQueryRegistrySettings(
     VOID
@@ -558,7 +508,6 @@ FxLibraryGlobalsCommission(
     VOID
     )
 {
-    PFN_RTL_GET_VERSION pRtlGetVersion;
     NTSTATUS status;
 
     //
@@ -596,49 +545,10 @@ FxLibraryGlobalsCommission(
     //
     FxLibraryGlobals.SleepStudyDisabled = FALSE;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    //
+    // Directed Power Transition support
+    //
+    FxLibraryGlobals.WdfDirectedPowerTransitionEnabled = FALSE;
 
     //
     // Query global WDF settings (both KMDF and UMDF).
@@ -648,7 +558,7 @@ FxLibraryGlobalsCommission(
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
     UNICODE_STRING funcName;
 
-    // For DSF support.
+
     RtlInitUnicodeString(&funcName, L"IoConnectInterruptEx");
     FxLibraryGlobals.IoConnectInterruptEx = (PFN_IO_CONNECT_INTERRUPT_EX)
         MmGetSystemRoutineAddress(&funcName);
@@ -657,120 +567,18 @@ FxLibraryGlobalsCommission(
     FxLibraryGlobals.IoDisconnectInterruptEx = (PFN_IO_DISCONNECT_INTERRUPT_EX)
         MmGetSystemRoutineAddress(&funcName);
 
-    // 32 bit: W2k and forward.
-    // 64 bit: W2k -> Windows Server 2008 (obsolete otherwise).
-    RtlInitUnicodeString(&funcName, L"KeQueryActiveProcessors");
-    FxLibraryGlobals.KeQueryActiveProcessors = (PFN_KE_QUERY_ACTIVE_PROCESSORS)
-        MmGetSystemRoutineAddress(&funcName);
-
-    RtlInitUnicodeString(&funcName, L"KeSetTargetProcessorDpc");
-    FxLibraryGlobals.KeSetTargetProcessorDpc = (PFN_KE_SET_TARGET_PROCESSOR_DPC)
-        MmGetSystemRoutineAddress(&funcName);
-
-    // These should always be there (obsolete in 64 bit Win 7 and forward).
-    ASSERT(FxLibraryGlobals.KeQueryActiveProcessors != NULL &&
-           FxLibraryGlobals.KeSetTargetProcessorDpc != NULL);
-
-    // Win 7 and forward.
-    RtlInitUnicodeString(&funcName, L"KeQueryActiveGroupCount");
-    if (MmGetSystemRoutineAddress(&funcName) != NULL) {
-        FxLibraryGlobals.ProcessorGroupSupport = TRUE;
-    }
-
-    // Win 7 and forward.
-    RtlInitUnicodeString(&funcName, L"KeSetCoalescableTimer");
-    FxLibraryGlobals.KeSetCoalescableTimer = (PFN_KE_SET_COALESCABLE_TIMER)
-        MmGetSystemRoutineAddress(&funcName);
-
-    // Win 7 and forward.
-    RtlInitUnicodeString(&funcName, L"IoUnregisterPlugPlayNotificationEx");
-    FxLibraryGlobals.IoUnregisterPlugPlayNotificationEx = (PFN_IO_UNREGISTER_PLUGPLAY_NOTIFICATION_EX)
-        MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxRegisterDevice");
-    FxLibraryGlobals.PoxRegisterDevice =
-      (PFN_POX_REGISTER_DEVICE) MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxStartDevicePowerManagement");
-    FxLibraryGlobals.PoxStartDevicePowerManagement =
-                                    (PFN_POX_START_DEVICE_POWER_MANAGEMENT)
-                                        MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxUnregisterDevice");
-    FxLibraryGlobals.PoxUnregisterDevice =
-                                (PFN_POX_UNREGISTER_DEVICE)
-                                    MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxActivateComponent");
-    FxLibraryGlobals.PoxActivateComponent = (PFN_POX_ACTIVATE_COMPONENT)
-                                          MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxIdleComponent");
-    FxLibraryGlobals.PoxIdleComponent = (PFN_POX_IDLE_COMPONENT)
-                                          MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxReportDevicePoweredOn");
-    FxLibraryGlobals.PoxReportDevicePoweredOn =
-      (PFN_POX_REPORT_DEVICE_POWERED_ON) MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxCompleteIdleState");
-    FxLibraryGlobals.PoxCompleteIdleState =
-      (PFN_POX_COMPLETE_IDLE_STATE) MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxCompleteIdleCondition");
-    FxLibraryGlobals.PoxCompleteIdleCondition =
-      (PFN_POX_COMPLETE_IDLE_CONDITION) MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxCompleteDevicePowerNotRequired");
-    FxLibraryGlobals.PoxCompleteDevicePowerNotRequired =
-      (PFN_POX_COMPLETE_DEVICE_POWER_NOT_REQUIRED) MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
-    RtlInitUnicodeString(&funcName, L"PoFxSetDeviceIdleTimeout");
-    FxLibraryGlobals.PoxSetDeviceIdleTimeout =
-      (PFN_POX_SET_DEVICE_IDLE_TIMEOUT) MmGetSystemRoutineAddress(&funcName);
-
-    // Win 8 and forward
     RtlInitUnicodeString(&funcName, L"IoReportInterruptActive");
     FxLibraryGlobals.IoReportInterruptActive =
       (PFN_IO_REPORT_INTERRUPT_ACTIVE) MmGetSystemRoutineAddress(&funcName);
 
-    // Win 8 and forward
     RtlInitUnicodeString(&funcName, L"IoReportInterruptInactive");
     FxLibraryGlobals.IoReportInterruptInactive =
       (PFN_IO_REPORT_INTERRUPT_INACTIVE) MmGetSystemRoutineAddress(&funcName);
 
-    // Win 8.2 and forward
-    RtlInitUnicodeString(&funcName, L"VfCheckNxPoolType");
-    FxLibraryGlobals.VfCheckNxPoolType =
-      (PFN_VF_CHECK_NX_POOL_TYPE) MmGetSystemRoutineAddress(&funcName);
-
-    // RS5 and forward
-    RtlInitUnicodeString(&funcName, L"VfIsRuleClassEnabled");
-    FxLibraryGlobals.VfIsRuleClassEnabled =
-      (PFN_VF_IS_RULE_CLASS_ENABLED) MmGetSystemRoutineAddress(&funcName);
-
 #endif //((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
 
     FxLibraryGlobals.OsVersionInfo.dwOSVersionInfoSize = sizeof(FxLibraryGlobals.OsVersionInfo);
-
-    // User/Kernel agnostic.
-
-    pRtlGetVersion = (PFN_RTL_GET_VERSION)
-                Mx::MxGetSystemRoutineAddress(MAKE_MX_FUNC_NAME("RtlGetVersion"));
-
-    ASSERT(pRtlGetVersion != NULL);
-    pRtlGetVersion((PRTL_OSVERSIONINFOW) &FxLibraryGlobals.OsVersionInfo);
-    FxLibraryGlobalsVerifyVersion();
+    RtlGetVersion((PRTL_OSVERSIONINFOW) &FxLibraryGlobals.OsVersionInfo);
 
     //
     // Initialize power management-related stuff.
@@ -1093,8 +901,8 @@ Returns:
 
     const ULONG VrfWDFRuleClass = 33;
 
-    if (MmIsDriverVerifying (DriverObject) > 0 && (FxLibraryGlobals.VfIsRuleClassEnabled != NULL)) {
-        isWDFRuleClassTurnedOn = FxLibraryGlobals.VfIsRuleClassEnabled (VrfWDFRuleClass);
+    if (MmIsDriverVerifying (DriverObject) > 0) {
+        isWDFRuleClassTurnedOn = VfIsRuleClassEnabled (VrfWDFRuleClass);
     }
 
     return isWDFRuleClassTurnedOn;
@@ -1613,7 +1421,7 @@ VOID
 FxOverrideDefaultVerifierSettings(
     __in    HANDLE Key,
     __in    LPWSTR Name,
-    __out   PBOOLEAN OverrideValue
+    _Inout_ PBOOLEAN OverrideValue
     )
 {
     UNICODE_STRING valueName;
@@ -1679,13 +1487,7 @@ Arguments:
     ULONG timeoutValue = 0;
     FxAutoRegKey hDriver, hWdf;
 
-    typedef NTSTATUS NTAPI QUERYFN(
-        ULONG, PCWSTR, PRTL_QUERY_REGISTRY_TABLE, PVOID, PVOID);
-
-    QUERYFN* queryFn;
-
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-    UNICODE_STRING FunctionName;
     DECLARE_CONST_UNICODE_STRING(parametersPath, L"Wdf");
     UNREFERENCED_PARAMETER(RegistryPath);
 
@@ -1800,31 +1602,7 @@ Arguments:
     ASSERT(paramTable[i].QueryRoutine == NULL);
     ASSERT(paramTable[i].Name == NULL);
 
-#if (FX_CORE_MODE==FX_CORE_USER_MODE)
-
-    queryFn = (QUERYFN*) GetProcAddress(
-        GetModuleHandle(TEXT("ntdll.dll")),
-        "RtlQueryRegistryValuesEx"
-        );
-
-#else
-
-    RtlInitUnicodeString(&FunctionName, L"RtlQueryRegistryValuesEx");
-
-#pragma warning(push)
-#pragma warning(disable: 4055)
-
-    queryFn  = (QUERYFN*)MmGetSystemRoutineAddress(&FunctionName);
-
-#pragma warning(pop)
-
-#endif
-
-    if (queryFn == NULL) {
-        queryFn = &RtlQueryRegistryValues;
-    }
-
-    status = queryFn(
+    status = RtlQueryRegistryValuesEx(
         RTL_REGISTRY_OPTIONAL | RTL_REGISTRY_HANDLE,
         (PWSTR) hWdf.m_Key,
         &paramTable[0],

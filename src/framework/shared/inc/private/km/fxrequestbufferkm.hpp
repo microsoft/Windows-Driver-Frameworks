@@ -47,7 +47,7 @@ FxRequestBuffer::GetOrAllocateMdlWorker(
     __in PVOID              Buffer,
     __inout size_t*         SizeOfMdl,
     __in BOOLEAN            UnlockWhenFreed,
-    __deref_out_opt PMDL*   MdlToFree
+    __inout PMDL*           MdlToFree
         )
 {
     size_t sizeofCurrentMdl;

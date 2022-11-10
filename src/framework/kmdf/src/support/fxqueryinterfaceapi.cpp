@@ -67,6 +67,17 @@ WDFEXPORT(WdfDeviceAddQueryInterface)(
         return status;
     }
 
+    if (pDevice->IsLegacy()) {
+        status = STATUS_INVALID_DEVICE_REQUEST;
+
+        DoTraceLevelMessage(
+            pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+            "WDFDEVICE 0x%p is not a PnP device %!STATUS!",
+            Device, status);
+
+        goto Done;
+    }
+
     pInterface = InterfaceConfig->Interface;
 
     if (InterfaceConfig->Size != sizeof(WDF_QUERY_INTERFACE_CONFIG)) {

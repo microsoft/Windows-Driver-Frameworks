@@ -24,16 +24,6 @@ Revision History:
 
 #define TolerableDelayUnlimited ((ULONG)-1)
 
-typedef
-BOOLEAN
-(*PFN_KE_SET_COALESCABLE_TIMER) (
-    __inout PKTIMER Timer,
-    __in LARGE_INTEGER DueTime,
-    __in ULONG Period,
-    __in ULONG TolerableDelay,
-    __in_opt PKDPC Dpc
-    );
-
 typedef struct _MdTimer {
     
 

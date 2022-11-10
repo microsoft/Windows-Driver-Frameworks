@@ -1589,6 +1589,11 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
         PwrPolPowerTimeoutExpired | // idle timer fired right before stopping
                                     // pwr policy and before pwr pol could process
                                     // the timeout
+
+        PwrPolS0 | // PwrPolS0 is special handled in PowerPolicyProcessEventInner
+                   // when no valid response is specified. It is still marked as
+                   // a known drop event here to avoid an error trace message.
+
         PwrPolIoPresent |         // I/O arrived while transitioning to the
                                   // stopped state
         PwrPolDevicePowerRequired // Due to a power-related failure, we declared our device state
@@ -1621,6 +1626,15 @@ const POWER_POLICY_STATE_TABLE FxPkgPnp::m_WdfPowerPolicyStates[] =
       { PwrPolSx, WdfDevStatePwrPolSleeping DEBUGGED_EVENT },
       FxPkgPnp::m_PowerPolStartedOtherStates,
       { TRUE,
+#if !defined(WDF_ALLOW_DFX_FOR_NON_IDLE_CAPABLE_DEVICES)
+        PwrPolDeviceDirectedPowerUp | // A not idle-capable device got a directed power down request.
+                                      // This is not supported. Device went from Started state to
+                                      // StartedNotIdleCapableDirectedDown, and back to Started.
+                                      // Now the device got a directed power up, which should be
+                                      // dropped. Note the device power requirement state machine
+                                      // will still complete the directed power up request back to
+                                      // PoFx even though this event is being ignored here.
+#endif
         PwrPolS0 | // If the machine send a query Sx and it fails, it will send
                    // an S0 while in the running state (w/out ever sending a true set Sx irp)
         PwrPolWakeArrived | // If the wake request is failed by the bus in between WakeArrived
@@ -3077,9 +3091,22 @@ FxPowerPolicyMachine::AcknowledgeS0(
     m_Owner->m_PoxInterface.PoxReportDevicePoweredOn();
 }
 
+ULONGLONG
+FxPowerPolicyMachine::CompactStates(
+    VOID
+    )
+{
+    return FxPkgPnp::CompactStatesToBytes(
+                                m_States.History,
+                                FxPowerPolicyEventQueueDepth,
+                                m_HistoryIndex,
+                                WdfDevStatePwrPolObjectCreated);
+}
+
 FxPowerPolicyOwnerSettings::FxPowerPolicyOwnerSettings(
     __in FxPkgPnp* PkgPnp
     ) : m_PoxInterface(PkgPnp)
+      , m_DevicePowerIrpTracker(PkgPnp)
 {
     ULONG i;
 
@@ -3716,6 +3743,7 @@ FxPkgPnp::PowerPolicyProcessEventInner(
                     switch (state) {
 
                     case WdfDevStatePwrPolDevicePowerRequestFailed:
+                    case WdfDevStatePwrPolStopped:
                         //
                         // If a device fails either D0 or Dx during system sleep,
                         // when system wakes up, the device will stay in this
@@ -3748,6 +3776,8 @@ FxPkgPnp::PowerPolicyProcessEventInner(
                         break;
 
                     default:
+
+
 
 
 
@@ -6995,6 +7025,8 @@ Return Value:
 
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolWakeFailedUsbSS);
 
+    This->SaveRequestD0IrpReasonHint(RequestD0ForWakeFailed);
+
     if (This->m_PowerPolicyMachine.m_Owner->m_IdleSettings.UsbSSCapable) {
         This->m_PowerPolicyMachine.UsbSSCallbackProcessingComplete();
     }
@@ -9637,7 +9669,8 @@ Return Value:
 
     devicePowerIrpTracker = &m_PowerPolicyMachine.m_Owner->m_DevicePowerIrpTracker;
 
-    devicePowerIrpTracker->LogRequestDIrpReason(Reason);
+    devicePowerIrpTracker->LogRequestDIrpReason(Reason,
+                                                (DeviceState == PowerDeviceD0));
 
     if (Reason == RequestD0ForS0 || Reason == RequestDxForSx) {
         devicePowerIrpTracker->StartTrackingDevicePowerIrp(Reason);
@@ -9675,7 +9708,8 @@ Return Value:
         //
         // We are no longer requesting a power irp
         //
-        devicePowerIrpTracker->LogRequestDIrpReason(RequestDIrpFailed);
+        devicePowerIrpTracker->LogRequestDIrpReason(RequestDIrpFailed,
+                                                    (DeviceState == PowerDeviceD0));
 
         if (Reason == RequestD0ForS0 || Reason == RequestDxForSx) {
             devicePowerIrpTracker->StopTrackingDevicePowerIrp();
@@ -9960,6 +9994,8 @@ FxPkgPnp::_PowerPolicyUsbSelectiveSuspendCompletionRoutine(
     UNREFERENCED_PARAMETER(DeviceObject);
 
     This = (FxPkgPnp*) Context;
+
+    This->SaveRequestD0IrpReasonHint(RequestD0ForUsbSs);
 
     //
     // Parameters DeviceObejct and Irp are always set to NULL in UMDF, so
@@ -10275,6 +10311,8 @@ Return Value:
   --*/
 {
     ASSERT_PWR_POL_STATE(This, WdfDevStatePwrPolWaitingArmedWakeFailedCancelUsbSS);
+
+    This->SaveRequestD0IrpReasonHint(RequestD0ForWakeFailed);
 
     if (This->PowerPolicyCancelUsbSSIfCapable()) {
         //

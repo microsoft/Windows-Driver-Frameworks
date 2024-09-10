@@ -94,16 +94,17 @@ $RegPath = $RegPathSvc+$Service+"\Parameters\"
 if ($Guid -eq "Unknown") {
     Write-Verbose -message "Looking for $WppRecorderGuidName under key $RegPath"
 
-    $Guid = (Get-ItemProperty -path $RegPath -Name $WppRecorderGuidName -ErrorAction Ignore).$WppRecorderGuidName
-    if (!$Guid) {
+    $regProp = Get-ItemProperty -path $RegPath -Name $WppRecorderGuidName -ErrorAction Ignore
+    if (!$regProp) {
         $RegPath = $RegPathSvc+$Service+"\SharedState\"
-        $Guid = (Get-ItemProperty -path $RegPath -Name $WppRecorderGuidName -ErrorAction Ignore).$WppRecorderGuidName
+        $regProp = Get-ItemProperty -path $RegPath -Name $WppRecorderGuidName -ErrorAction Ignore
     }
-    if (!$Guid) {
+    if (!$regProp) {
         Write-Warning -Message "$WppRecorderGuidName not found under $RegPath Cannot capture WPP recorder trace."
         Write-Warning -Message "You can supply a GUID yourself using the -Guid switch"
         return
     }
+    $Guid = $regProp.$WppRecorderGuidName
 }
 
 #

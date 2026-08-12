@@ -1300,7 +1300,7 @@ WRITE_REGISTER_BUFFER_ULONG64 (
 //       the access have started (but not necessarily completed).
 //
 //  The READ/WRITE_PORT_* calls manipulate I/O registers in PORT
-//  space.  The ARM architecture doesn't have a seperate I/O space.
+//  space.  The ARM architecture doesn't have a separate I/O space.
 //  These operations bugcheck so as to identify incorrect code.
 //
 

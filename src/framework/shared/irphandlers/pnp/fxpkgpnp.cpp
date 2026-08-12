@@ -6603,7 +6603,7 @@ Arguments:
     ProcessPowerEventOnDifferentThread - Once all wake interrupts for the device
         have acknowledged the operation, if this is TRUE, the power state
         machine will process the PowerWakeInterruptCompleteTransition event on a
-        seperate thread.
+        separate thread.
 
 Return Value:
     None

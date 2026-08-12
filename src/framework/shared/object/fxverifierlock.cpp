@@ -56,7 +56,7 @@ FxVerifierOrderMapping FxVerifierCallbackOrderTable[] = {
 // by the current thread if equal, or higher than the lock
 // at the current list head.
 //
-// The hierachy of locks acquired by a thread is seperate for dispatch level
+// The hierarchy of locks acquired by a thread is separate for dispatch level
 // (spinlock) and passive level (mutex) locks. These locks can not be mixed
 // since holding a mutex lock does not prevent a DPC from interrupting the
 // thread and properly acquiring a spinlock, which could appear to be
@@ -243,7 +243,7 @@ FxVerifierLock::Lock(
     }
 
     //
-    // There are seperately sorted lists for passive and dispatch
+    // There are separately sorted lists for passive and dispatch
     // level locks since dispatch level locks of a lower level can interrupt a
     // higher passive level lock, giving a false report.
     //

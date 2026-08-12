@@ -27,7 +27,7 @@ Revision History:
 #define _FXDEVICECALLBACKS_H_
 
 //
-// These delegates are in a seperate file
+// These delegates are in a separate file
 //
 
 //

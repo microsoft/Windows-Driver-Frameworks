@@ -27,7 +27,7 @@ Revision History:
 #define _FXIOQUEUECALLBACKS_H_
 
 //
-// These delegates are in a seperate file since there are many
+// These delegates are in a separate file since there are many
 //
 
 //
